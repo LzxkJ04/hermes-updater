@@ -11,6 +11,7 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 ## 📖 Table of Contents
 
 - [Features](#-features)
+- [Usage Guide](#-usage-guide)
 - [Download](#-download)
 - [Build from source](#-build-from-source)
 - [FAQ](#-faq)
@@ -44,6 +45,39 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 ### Settings
 - 70+ persisted settings across update / network / install / uninstall / appearance / automation
 - Bilingual UI (简体中文 / English), dark mode + follow-system, UI zoom, single-instance lock
+
+## 📘 Usage Guide
+
+### 1. Updating Hermes Agent
+1. **One-click update** — open the *Update* tab and click **Check for updates**; the app auto-detects the available network path (direct / system proxy / manual proxy / mirror), then **Update now**. Updates auto-retry and fall back across network methods.
+2. **What's New preview** — expand *Pending changes* to see upcoming commits with **hash / date / author** before upgrading.
+3. **Update target selector** — in the *Update target* panel pick a **branch or tag** (e.g. `main`, `v2.24.0`). Enable *lock target* to `git checkout` it before every update (safe for offline / weak networks).
+4. **Changelog Center** — click **Generate** to list changes grouped by **tag** from the local repo; search by keyword and **export Markdown**.
+5. **Update hooks** — in *Settings → Hooks* set commands for **pre / post / on-failure**, each with a **timeout**; enable *abort on failure* to stop the update on hook errors.
+6. **Webhook push** — in *Settings → Webhook* enter an incoming webhook URL (WeCom / DingTalk / Slack), choose trigger events, then **Test** to verify.
+7. **Rollback & backup** — an update backup is created automatically; use **Rollback** to return to any past commit and restore.
+
+### 2. Installing Hermes Agent
+1. **Preflight** — on the *Install Hermes* page click **Preflight**; it checks Node / npm / Git and disk space with red/green status.
+2. **Install / Fix-reinstall** — click **Install** when preflight passes; **Fix-reinstall** redeploys while keeping config. *Install history* logs each run.
+3. **Mirror speed test** — click **Speed test** for two-level probing (git smart protocol > HTTP) of candidate mirrors; **Apply** the fastest, with automatic failover if it goes down.
+
+### 3. Uninstalling Hermes Agent
+1. On the *Uninstall* page run **Preflight** (process stop, config backup check).
+2. Choose a mode: **Recycle bin** (recoverable, default) / **Dependencies only** / **Permanent** / **Unlink only**.
+3. Type the Hermes directory name to confirm, then **Uninstall**; config is backed up beforehand.
+
+### 4. Dashboard & Diagnostics
+- **Status pills** show Hermes / Gateway / Network state (ok / warning / error).
+- **Health score card** gives a 0–100 score; **Health report** exports an HTML report.
+- **Quick-action center** jumps to update / restart Gateway / install·uninstall·maintain.
+- **Gateway watchdog** auto-restarts Gateway when offline.
+- **Update statistics** (success rate, monthly trend, top failures) + **heatmap**; **disk cleanup wizard** reclaims space with per-item confirmation.
+
+### 5. Settings
+- 70+ options across **update / network / install / uninstall / appearance / automation**.
+- **Appearance**: language (中文/English), dark or follow-system, UI zoom.
+- **Automation**: scheduled updates, do-not-disturb window, single-instance lock.
 
 ## 📦 Download
 
@@ -112,4 +146,6 @@ Join our community for feedback and feature requests:
 
 ## 📄 License
 
-[MIT](LICENSE)
+Licensed under the [MIT License](LICENSE) — free to use, modify, and distribute, including commercially, provided the copyright notice is retained.
+
+Copyright (c) 2026 LzxkJ04
