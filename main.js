@@ -721,11 +721,26 @@ async function getStatus() {
   if (cnt) { const [a, b] = cnt.split(/\s+/); ahead = parseInt(a) || 0; behind = parseInt(b) || 0; }
   const [gwRc, gwOut] = await runHermes(["gateway", "status"], 60000, env);
   const failed = behind < 0 || !head;
+  // 上次更新是否真正完成: git 已追上远端(head 匹配)但上次 rc!=0 时, 不能误判为"已是最新"
+  let incomplete = false, incompleteReason = "";
+  try {
+    const us = loadUpdateState();
+    if (us && us.incomplete && head && us.head === head && behind <= 0) { incomplete = true; incompleteReason = us.reason || ""; }
+  } catch {}
   return {
-    ok: !failed, version: (version[1] || "").split("\n")[0] || t("ver.fail"),
+    ok: !failed && !incomplete, version: (version[1] || "").split("\n")[0] || t("ver.fail"),
     head, rhead, behind: head ? behind : -1, ahead,
     gateway: (gwOut || "").split("\n")[0] || `(rc=${gwRc})`, method: label,
+    incomplete, incompleteReason,
   };
+}
+
+function updateStateFile() { try { return path.join(app.getPath("userData"), "update-state.json"); } catch { return ""; } }
+function loadUpdateState() {
+  try { const f = updateStateFile(); if (!f || !fs.existsSync(f)) return null; return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; }
+}
+function saveUpdateState(obj) {
+  try { const f = updateStateFile(); if (f) fs.writeFileSync(f, JSON.stringify(obj), "utf8"); } catch {}
 }
 
 function backupBeforeUpdate() {
@@ -1093,6 +1108,8 @@ async function classifyAndFinish(rc, label, win, sendLine) {
     }
     rkey = "fail";
   }
+  // 记录上次更新结果, 供刷新状态判定"是否真正完成" (防止 git pull 成功但依赖构建失败误报已是最新)
+  try { saveUpdateState({ at: Date.now(), head, rc, incomplete: rkey === "fail", reason: rkey === "fail" ? (tag || "") : "" }); } catch {}
   // 更新后清理 (可关; 可选保留 Gateway)
   if (S.cleanup_after !== false) {
     const [kc, kd] = await killHermesProcesses([], S.keep_gateway === false);

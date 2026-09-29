@@ -147,6 +147,7 @@ const STR = {
     // 动态文本
     "st.refreshing": "正在刷新状态...", "st.refreshed": "状态已刷新", "st.failed": "状态获取失败", "st.found": (n) => `发现 ${n} 个更新`,
     "st.checkfail": "检测失败", "st.uptodate": "已是最新", "st.behind": (b, a, r) => `落后 ${b} / 领先 ${a}${r ? " · 远端 " + r : ""}`,
+    "st.incomplete": "更新未完成，请重试", "st.incomplete.reason": (r) => r ? `上次失败: ${r}` : "",
     "st.preview": "预览模式", "st.readyNoCheck": "就绪 (未自动检查)",
     "stats.month": (ok, fail) => `本月统计:  ✅ 成功 ${ok}   ❌ 失败 ${fail}`,
     "trend.legend": "近 20 次 (右新左旧)", "hist.empty": "暂无更新记录", "hist.nomatch": "无匹配记录",
@@ -451,6 +452,7 @@ const STR = {
     // 动态文本
     "st.refreshing": "Refreshing status...", "st.refreshed": "Status refreshed", "st.failed": "Failed to get status", "st.found": (n) => `${n} update(s) available`,
     "st.checkfail": "Detection failed", "st.uptodate": "Up to date", "st.behind": (b, a, r) => `${b} behind / ${a} ahead${r ? " · remote " + r : ""}`,
+    "st.incomplete": "Update incomplete, please retry", "st.incomplete.reason": (r) => r ? `Last failure: ${r}` : "",
     "st.preview": "Preview mode", "st.readyNoCheck": "Ready (no auto check)",
     "stats.month": (ok, fail) => `This month:  ✅ ${ok} ok   ❌ ${fail} failed`,
     "trend.legend": "Last 20 (right=new)", "hist.empty": "No update history yet", "hist.nomatch": "No matching records",
@@ -707,6 +709,7 @@ async function refreshStatus(manual = false) {
     const st = await rpc.getStatus();
     $("#d-version").textContent = st.version || "—";
     if (st.behind < 0) { $("#d-behind").textContent = t("st.checkfail"); }
+    else if (st.incomplete) { $("#d-behind").textContent = t("st.incomplete") + (st.incompleteReason ? `（${st.incompleteReason}）` : ""); }
     else if (st.behind === 0 && st.ahead === 0) { $("#d-behind").textContent = t("st.uptodate"); }
     else { $("#d-behind").textContent = t("st.behind", st.behind, st.ahead, st.rhead); }
     $("#d-gateway").textContent = st.gateway || "—";
@@ -714,7 +717,7 @@ async function refreshStatus(manual = false) {
     updateDashPills(st);
     updateSnoozeUI(st.behind);
     checkInstallCard();
-    setStatus(st.behind > 0 ? t("st.found", st.behind) : t("st.refreshed"), st.behind > 0 ? "warn" : "ok");
+    setStatus(st.incomplete ? t("st.incomplete") : (st.behind > 0 ? t("st.found", st.behind) : t("st.refreshed")), st.incomplete ? "warn" : (st.behind > 0 ? "warn" : "ok"));
     if (manual) toast(t("st.refreshed"), "ok");
   } catch (e) {
     setStatus(t("st.failed"), "err");
@@ -735,7 +738,8 @@ function mockStatus() {
 function updateDashPills(st) {
   const set = (id, txt, cls) => { const el = $(id); if (!el) return; el.textContent = txt; el.className = "pill" + (cls ? " " + cls : ""); };
   set("#pill-ver", `🏷️ ${st.version || "—"}`, "");
-  set("#pill-behind", st.behind > 0 ? `⬆️ ${t("st.behind", st.behind, st.ahead, st.rhead)}` : st.behind === 0 ? `✅ ${t("st.uptodate")}` : `⚠️ ${t("st.checkfail")}`, st.behind > 0 ? "pill-warn" : st.behind === 0 ? "pill-ok" : "");
+  const behindPill = st.incomplete ? `⚠️ ${t("st.incomplete")}` : st.behind > 0 ? `⬆️ ${t("st.behind", st.behind, st.ahead, st.rhead)}` : st.behind === 0 ? `✅ ${t("st.uptodate")}` : `⚠️ ${t("st.checkfail")}`;
+  set("#pill-behind", behindPill, st.incomplete || st.behind > 0 ? "pill-warn" : st.behind === 0 ? "pill-ok" : "");
   set("#pill-gw", `🔌 ${String(st.gateway || "—").slice(0, 42)}`, /running/i.test(st.gateway || "") ? "pill-ok" : "pill-warn");
   set("#pill-net", `🌐 ${st.method || "—"}`, "");
 }

@@ -3,6 +3,16 @@
 All notable changes to HermesUpdater are documented here.
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.0] - 2026-09-30
+
+### Fixed
+- 🐞 修复「更新失败却误报已是最新」的状态判断 bug：刷新状态不再只看 `git` 提交是否追上远端，而是持久化记录上次更新的真实成败。当 `git pull` 成功但后续依赖构建失败（`rc=1`，如 Node 原生模块编译缺少 Visual Studio C++ 工具链）时，状态正确显示为「更新未完成，请重试」并提示上次失败原因，而非误报「已是最新」；更新成功后会自动清除该标记。
+
+## [2.24.0] - 2026-09-29
+
+### Changed
+- 全面代码审查与优化：清理废弃的 `Notification` 全局调用（改用 `require("electron").Notification`）、修正 `http`/`https` 误命名与重复 require、移除 `testUrl()` 死代码、补全缺失 i18n 词条、修复更新日志双重 `reverse` 空操作等。
+
 ## [2.23.0] - 2026-09-29
 
 ### Added

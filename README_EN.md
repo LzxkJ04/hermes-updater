@@ -4,7 +4,7 @@
 
 A polished Windows desktop GUI (Electron) for updating, installing, and maintaining the **Hermes Agent** — with mirror acceleration for mainland-China networks, one-click network self-healing, update hooks, and a full dashboard. Install, update, and maintain Hermes Agent from a single app.
 
-> **Latest release: v2.24.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases).
+> **Latest release: v2.25.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 

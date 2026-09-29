@@ -4,7 +4,7 @@
 
 一款为 **Hermes Agent** 打造的 Windows 桌面更新工具（Electron），针对中国大陆网络做了镜像加速、自动换源、一键网络自愈等深度优化。内置完整仪表盘、安装/卸载套件、更新钩子与 Webhook 推送，让 Hermes Agent 的安装、更新、维护全部在一个界面内完成。
 
-> **最新版本：v2.24.0** — 便携版与安装版见 [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
+> **最新版本：v2.25.0** — 便携版与安装版见 [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 
