@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+<title>HermesUpdater</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="boot-loader">
+  <div class="bl-logo">H</div>
+  <div class="bl-spin"></div>
+  <div class="bl-text" data-i18n="boot.loading">正在加载...</div>
+</div>
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="logo">H</div>
+      <div class="brand-name">HermesUpdater</div>
+      <div class="brand-ver" id="app-ver">v2.23.0 · <span data-i18n="brand.sub">更新工具</span></div>
+    </div>
+    <nav id="nav">
+      <button class="nav-item active" data-page="dash"><span class="ni-icon">📊</span><span data-i18n="nav.dash">仪表盘</span></button>
+      <button class="nav-item" data-page="update"><span class="ni-icon">🔄</span><span data-i18n="nav.update">更新</span></button>
+      <button class="nav-item" data-page="install"><span class="ni-icon">📦</span><span data-i18n="nav.install">安装 Hermes</span></button>
+      <button class="nav-item" data-page="settings"><span class="ni-icon">⚙️</span><span data-i18n="nav.settings">设置</span></button>
+      <button class="nav-item" data-page="diag"><span class="ni-icon">🩺</span><span data-i18n="nav.diag">诊断</span></button>
+      <button class="nav-item" data-page="log"><span class="ni-icon">📜</span><span data-i18n="nav.log">日志</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="dot" id="status-dot"></span><span id="status-text">就绪</span>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header id="topbar">
+      <div>
+        <h1 id="page-title">仪表盘</h1>
+        <p id="page-sub">Hermes Agent 更新总览</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn ghost" id="btn-notif" title="Notifications" data-i18n-title="top.notif">🔔<span id="notif-badge" hidden></span></button>
+        <button class="btn ghost" id="btn-about" title="About" data-i18n-title="top.about">ⓘ</button>
+        <button class="btn ghost" id="btn-theme">🌙</button>
+      </div>
+    </header>
+    <div id="topload"></div>
+    <div id="countdown-bar" class="countdown-bar hidden">
+      <span id="cd-text">⏳</span>
+      <span class="btn-row small">
+        <button class="btn sm success" id="btn-cd-go" data-i18n="btn.cd.go">🚀 立即更新</button>
+        <button class="btn sm" id="btn-cd-skip" data-i18n="btn.cd.skip">⏭️ 本次跳过</button>
+      </span>
+    </div>
+
+    <!-- 仪表盘 -->
+    <section class="page active" id="page-dash">
+      <div class="banner">📊 <div><b data-i18n="dash.banner.t">Hermes Agent 更新仪表盘</b><span data-i18n="dash.banner.s">实时总览 · 每 30 秒自动刷新</span></div></div>
+      <div class="progress-wrap" id="dash-progress-wrap" hidden>
+        <div class="progress-bar" id="dash-progress-bar"></div>
+      </div>
+      <div class="progress-label" id="dash-progress-label" hidden></div>
+      <div class="pill-row" id="dash-pills">
+        <span class="pill" id="pill-ver">🏷️ —</span>
+        <span class="pill" id="pill-behind">⬆️ —</span>
+        <span class="pill" id="pill-gw">🔌 —</span>
+        <span class="pill" id="pill-net">🌐 —</span>
+      </div>
+      <div class="cards">
+        <div class="card accent-blue"><span class="c-icon">🏷️</span><label data-i18n="dash.card.version">当前版本</label><b id="d-version">—</b></div>
+        <div class="card accent-orange"><span class="c-icon">⬆️</span><label data-i18n="dash.card.behind">可更新提交</label><b id="d-behind">—</b></div>
+        <div class="card accent-green"><span class="c-icon">🔌</span><label data-i18n="dash.card.gateway">Gateway 状态</label><b id="d-gateway">—</b></div>
+        <div class="card accent-purple"><span class="c-icon">🌐</span><label data-i18n="dash.card.method">当前网络方式</label><b id="d-method">—</b></div>
+        <div class="card accent-teal"><span class="c-icon">📦</span><label data-i18n="dash.card.install">安装健康</label><b id="d-install">—</b></div>
+        <div class="card accent-green"><span class="c-icon">🩺</span><label data-i18n="dash.card.score">健康评分</label><b id="d-score">—</b></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-check" data-i18n="btn.check">检查更新</button>
+        <button class="btn success" id="btn-update" data-i18n="btn.update">立即更新</button>
+        <button class="btn" id="btn-refresh" data-i18n="btn.refresh">刷新状态</button>
+        <button class="btn" id="btn-installdir"><span data-i18n="btn.installdir">📁 安装目录</span></button>
+        <button class="btn" id="btn-logdir"><span data-i18n="btn.logdir">📂 日志文件夹</span></button>
+        <button class="btn" id="btn-copyinfo"><span data-i18n="btn.copyinfo">📋 复制版本信息</span></button>
+        <button class="btn" id="btn-releases"><span data-i18n="btn.releases">🐙 GitHub Releases</span></button>
+      </div>
+      <div class="panel" id="dash-quick-center">
+        <div class="panel-head">
+          <h3 data-i18n="dash.qc.title">⚡ 快捷操作中心</h3>
+          <button class="btn sm" id="btn-dash-refresh" data-i18n="dt.refresh">🔄 刷新</button>
+        </div>
+        <div class="qc-group">
+          <div class="qc-title" data-i18n="dash.qc.upd">🔄 更新与 Gateway</div>
+          <div class="btn-row">
+            <button class="btn" id="btn-gw-restart" data-i18n="btn.gw.restart">Gateway 重启</button>
+            <button class="btn" id="btn-gw-stop" data-i18n="btn.gw.stop">Gateway 停止</button>
+            <button class="btn" id="btn-doctor" data-i18n="btn.doctor">健康检查 doctor</button>
+            <button class="btn" id="btn-zhpatch" data-i18n="btn.zhpatch">恢复中文补丁</button>
+            <button class="btn warn" id="btn-kill" data-i18n="btn.kill">清理残留进程</button>
+          </div>
+        </div>
+        <div class="qc-group" id="qc-tools" hidden>
+          <div class="qc-title" data-i18n="dash.tools.title">🛠️ 安装 · 卸载 · 维护</div>
+          <div id="dash-tool-status" class="rb-list"></div>
+          <div class="form-grid">
+            <label data-i18n="dt.target">操作目标</label>
+            <div class="path-row"><select id="dt-target"></select><button class="btn sm" id="btn-dt-preflight" data-i18n="dt.preflight">🧭 体检</button></div>
+            <label data-i18n="dt.uninsmode">卸载方式</label>
+            <select id="dt-mode">
+              <option value="trash" data-i18n="unins.m.trash">🗑️ 移入回收站（推荐，可恢复）</option>
+              <option value="modules" data-i18n="unins.m.modules">🧹 仅删除依赖/构建产物（保留源码）</option>
+              <option value="permanent" data-i18n="unins.m.perm">💥 彻底删除（不可恢复）</option>
+              <option value="unregister" data-i18n="unins.m.unreg">📎 仅解除关联（不动文件）</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="btn-dt-backup" data-i18n="dt.backup">📦 备份配置</button>
+            <button class="btn" id="btn-dt-unregister" data-i18n="dt.unregister">📎 解除关联</button>
+            <button class="btn warn" id="btn-dt-unins" data-i18n="dt.unins">🗑️ 快捷卸载</button>
+            <button class="btn success" id="btn-dt-repair" data-i18n="dt.repair">🚀 一键修复重装</button>
+            <button class="btn" id="btn-dt-goinstall" data-i18n="dt.goinstall">📦 打开安装页</button>
+          </div>
+          <div id="dt-result" class="muted" style="font-size:12px"></div>
+        </div>
+      </div>
+      <div class="panel" id="dash-hist-panel" hidden>
+        <h3 data-i18n="dt.hist">🕘 最近安装 / 卸载</h3>
+        <div id="dash-hist-list" class="rb-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="dash.recent">🕘 最近更新</h3>
+          <div class="btn-row small">
+            <button class="btn sm" id="btn-hist-manage" data-i18n="btn.hist.manage">管理历史</button>
+            <button class="btn sm" id="btn-hist-csv" data-i18n="btn.hist.csv">导出 CSV</button>
+          </div>
+        </div>
+        <div class="stats-line" id="d-stats">本月统计: ✅ 成功 0 　❌ 失败 0</div>
+        <div class="stats-line" id="d-nextcheck"></div>
+        <div class="btn-row small" id="snooze-row" hidden>
+          <button class="btn sm" id="btn-snooze-1" data-i18n="btn.snooze1">稍后 1 小时</button>
+          <button class="btn sm" id="btn-snooze-3" data-i18n="btn.snooze3">稍后 3 小时</button>
+          <button class="btn sm" id="btn-snooze-6" data-i18n="btn.snooze6">稍后 6 小时</button>
+          <button class="btn sm warn hidden" id="btn-snooze-off" data-i18n="btn.snooze.off">取消提醒抑制</button>
+        </div>
+        <div class="stats-line" id="snooze-status"></div>
+        <div id="d-trend" class="trend"></div>
+        <h3 class="hm-title" data-i18n="dash.heatmap">🔥 更新热力图 (近 12 周)</h3>
+        <div id="d-heatmap" class="heatmap"></div>
+        <pre id="d-history" class="mono">暂无更新记录</pre>
+      </div>
+    </section>
+
+    <!-- 更新 -->
+    <section class="page" id="page-update">
+      <div class="banner">🔄 <div><b data-i18n="nav.update">更新</b><span data-i18n="upd.banner.s">实时输出更新进度 · 支持回滚到历史版本</span></div></div>
+      <div class="progress-wrap" id="progress-wrap" hidden>
+        <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        <span id="progress-label">准备中...</span>
+      </div>
+      <input id="update-filter" class="filter" placeholder="🔍 过滤更新输出 (错误/阶段/提交)..." data-i18n-ph="upd.filter.ph">
+      <div class="term-wrap">
+        <button class="btn ghost" id="btn-trans" title="Translation panel" data-i18n-title="top.trans">🌐</button>
+        <pre id="update-out" class="terminal"></pre>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-check2" data-i18n="btn.check">检查更新</button>
+        <button class="btn success" id="btn-update2" data-i18n="btn.update">立即更新</button>
+        <button class="btn warn" id="btn-cancel-update" hidden data-i18n="btn.cancel.upd">⛔ 取消更新</button>
+        <button class="btn" id="btn-whatsnew" data-i18n="btn.whatsnew">🆕 更新内容预览</button>
+        <button class="btn" id="btn-rollback" data-i18n="btn.rollback">回滚版本</button>
+        <button class="btn" id="btn-copyout" data-i18n="btn.copyout">📋 复制输出</button>
+        <button class="btn" id="btn-export-out" data-i18n="btn.export.out">📄 导出 txt</button>
+      </div>
+      <div class="panel" id="whatsnew-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="wn.title">🆕 更新内容预览</h3>
+          <div class="btn-row small">
+            <button class="btn sm" id="btn-wn-refresh" data-i18n="wn.refresh">🔄 刷新</button>
+            <button class="btn sm" id="btn-wn-export" data-i18n="wn.export">📄 导出 txt</button>
+          </div>
+        </div>
+        <div id="whatsnew-list" class="rb-list"></div>
+      </div>
+      <div class="panel" id="rollback-panel" hidden>
+        <h3 data-i18n="upd.rb.title">⏪ 回滚到历史提交</h3>
+        <div id="rollback-list" class="rb-list"></div>
+      </div>
+
+      <div class="panel" id="target-panel">
+        <div class="panel-head">
+          <h3 data-i18n="upd.target.title">🎯 更新目标</h3>
+          <span class="muted" id="target-cur" style="font-size:11px"></span>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="upd.target.pick">目标分支 / 标签</label>
+          <div class="path-row">
+            <select id="upd-target-sel"></select>
+            <button class="btn sm" id="btn-target-refresh" data-i18n="upd.target.refresh">🔄 拉取列表</button>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-target-apply" data-i18n="upd.target.apply">📍 切换并保存目标</button>
+          <button class="btn" id="btn-target-clear" data-i18n="upd.target.clear">↩️ 恢复默认分支</button>
+        </div>
+        <div class="hint" data-i18n="upd.target.hint">切换后立即 checkout 远端分支/标签并保存为目标；开启设置页「更新前强制锁定目标」后, 每次更新都会先切到该目标。标签目标会在每次更新成功后重新钉住。</div>
+      </div>
+
+      <div class="panel" id="changelog-panel">
+        <div class="panel-head">
+          <h3 data-i18n="upd.cl.title">📜 更新日志中心</h3>
+          <span class="muted" id="changelog-meta" style="font-size:11px"></span>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-changelog-fetch" data-i18n="upd.cl.fetch">📥 生成更新日志</button>
+          <button class="btn" id="btn-changelog-export" data-i18n="upd.cl.export" disabled>📄 导出 Markdown</button>
+          <input id="changelog-search" type="search" placeholder="🔍 搜索提交 / 作者 / hash" style="flex:1;min-width:160px">
+        </div>
+        <div id="changelog-list" class="rb-list"></div>
+      </div>
+    </section>
+
+    <!-- 安装 Hermes -->
+    <section class="page" id="page-install">
+      <div class="banner">📦 <div><b data-i18n="nav.install">安装 Hermes</b><span data-i18n="ins.banner.s">一键安装 / 修复重装 / 卸载 / 环境预检</span></div></div>
+
+      <div class="panel">
+        <h3 data-i18n="ins.env.title">🧭 环境预检</h3>
+        <div id="ins-env" class="ins-env"><span class="muted" data-i18n="ins.env.idle">尚未检测 — 点击「环境预检」获取 node / npm / git / 磁盘 / 目标目录状态</span></div>
+      </div>
+
+      <div class="panel">
+        <h3 data-i18n="ins.cfg.title">🛠️ 安装配置</h3>
+        <div class="form-grid">
+          <label data-i18n="ins.cfg.repo">源仓库 (Git URL)</label>
+          <input id="ins-repo" type="text" placeholder="https://github.com/.../.git">
+          <label data-i18n="ins.cfg.dir">目标目录</label>
+          <div class="path-row"><input id="ins-dir" type="text" list="ins-dir-list"><datalist id="ins-dir-list"></datalist><button class="btn sm" id="btn-ins-dir-browse" data-i18n="btn.browse">📂 浏览</button></div>
+          <label data-i18n="ins.cfg.ver">版本 (分支 / 标签)</label>
+          <div class="path-row">
+            <input id="ins-ver" type="text" list="ins-ver-list" placeholder="main">
+            <datalist id="ins-ver-list"></datalist>
+            <button class="btn sm" id="btn-ins-vers" data-i18n="ins.cfg.fetchvers">🌐 获取版本列表</button>
+          </div>
+        </div>
+        <div class="hint" data-i18n="ins.cfg.hint">配置会随「开始安装」一并保存；克隆失败且指定分支不存在时自动回退默认分支。已有 git 仓库的目录自动走 fetch 复用模式（即「修复重装」）。</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="btn-ins-preflight" data-i18n="ins.cfg.preflight">🧭 环境预检</button>
+        <button class="btn success" id="btn-ins-start" data-i18n="ins.cfg.start">🚀 开始安装</button>
+        <button class="btn warn hidden" id="btn-ins-cancel" data-i18n="ins.cfg.cancel">⛔ 取消安装</button>
+        <button class="btn" id="btn-ins-fix" data-i18n="ins.cfg.fix">🔧 修复重装</button>
+        <button class="btn danger" id="btn-ins-uninstall" data-i18n="ins.cfg.uninstall">🗑️ 卸载…</button>
+        <button class="btn" id="btn-ins-mirror" data-i18n="ins.mirror.test">🚀 镜像测速</button>
+      </div>
+
+      <div class="panel" id="ins-mirror-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="ins.mirror.title">🚀 安装镜像源测速</h3>
+          <span class="muted" id="ins-mirror-cur" style="font-size:11px"></span>
+        </div>
+        <div id="ins-mirror-list" class="path-cands"></div>
+        <div class="hint" data-i18n="ins.mirror.hint">按 git 协议可达性与延迟排序；点「应用」把该镜像设为安装专用加速前缀（克隆失败也会自动换源重试）。</div>
+      </div>
+
+      <div class="panel">
+        <div class="ins-progress" id="ins-progress" hidden><div class="ins-progress-bar" id="ins-progress-bar"></div></div>
+        <pre id="ins-out" class="terminal short" data-i18n="ins.out.idle">等待安装任务…</pre>
+      </div>
+
+      <div class="panel" id="unins-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="unins.title">🗑️ 卸载 Hermes</h3>
+          <button class="btn sm ghost" id="btn-unins-close" data-i18n="btn.close">关闭</button>
+        </div>
+        <div id="unins-info" class="ins-env"></div>
+        <div class="form-grid">
+          <label data-i18n="unins.mode">卸载方式</label>
+          <select id="u-mode">
+            <option value="trash" data-i18n="unins.m.trash">🗑️ 移入回收站（推荐，可恢复）</option>
+            <option value="modules" data-i18n="unins.m.modules">🧹 仅删除依赖/构建产物（保留源码）</option>
+            <option value="permanent" data-i18n="unins.m.perm">💥 彻底删除（不可恢复）</option>
+            <option value="unregister" data-i18n="unins.m.unreg">📎 仅解除关联（不动文件）</option>
+          </select>
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="u-backup" checked><span data-i18n="unins.opt.backup">卸载前自动备份配置（config.yaml / zh-patches → 文档目录备份区）</span></label>
+          <label class="check"><input type="checkbox" id="u-stop" checked><span data-i18n="unins.opt.stop">卸载前停止占用的 Hermes 进程</span></label>
+        </div>
+        <div class="form-grid" id="unins-confirm-row" hidden>
+          <label data-i18n="unins.confirm.label">为防误删，请输入目录名以确认彻底删除</label>
+          <input id="u-confirm" autocomplete="off">
+        </div>
+        <div class="btn-row">
+          <button class="btn danger" id="btn-unins-run" data-i18n="unins.run">🗑️ 执行卸载</button>
+          <span id="unins-result" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 data-i18n="ins.hist.title">🕘 安装历史</h3>
+        <pre id="ins-hist" class="mono small">暂无安装记录</pre>
+      </div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="page" id="page-settings">
+      <div class="banner">⚙️ <div><b data-i18n="nav.settings">设置</b><span data-i18n="set.banner.s">代理 / 更新行为 / 系统集成 / 维护</span></div></div>
+      <div class="save-bar" id="save-bar">
+        <span class="dirty-dot" id="dirty-dot" hidden></span>
+        <span id="dirty-text" data-i18n="set.savednone">所有修改已保存 ✔</span>
+        <span class="tr-flex"></span>
+        <button class="btn sm ghost" id="btn-revert-settings" data-i18n="btn.revert">↩ 撤销修改</button>
+        <button class="btn warn sm" id="btn-reset-settings" data-i18n="btn.reset">恢复默认</button>
+        <button class="btn primary sm" id="btn-save-top" data-i18n="btn.save2">💾 保存设置</button>
+      </div>
+      <input id="settings-filter" class="filter" placeholder="🔍 搜索设置项..." data-i18n-ph="set.filter.ph">
+      <div id="settings-nomatch" class="tr-empty" hidden data-i18n="set.nomatch">没有匹配的设置项</div>
+      <div class="panel">
+        <h3 data-i18n="set.net">🌐 网络代理</h3>
+        <div class="form-grid">
+          <label data-i18n="label.switch">网络方式</label>
+          <select id="s-switch">
+            <option value="auto" data-i18n="opt.auto">自动探测（推荐）</option>
+            <option value="direct" data-i18n="opt.direct">直连</option>
+            <option value="system" data-i18n="opt.system">系统代理</option>
+            <option value="manual" data-i18n="opt.manual">手动代理</option>
+            <option value="mirror" data-i18n="opt.mirror">GitHub 镜像</option>
+          </select>
+          <label data-i18n="label.manual">手动代理</label><input id="s-manual" placeholder="http://127.0.0.1:7890">
+          <div></div><button class="btn sm" id="btn-test-conn" data-i18n="btn.test.conn">🔌 测试连接</button>
+          <label data-i18n="label.mirror">镜像地址</label><input id="s-mirror" placeholder="https://ghproxy.cn/">
+          <label data-i18n="label.install">安装路径</label>
+          <div class="path-row">
+            <input id="s-install" list="path-history-list">
+            <datalist id="path-history-list"></datalist>
+            <button class="btn" id="btn-detect-path" data-i18n-title="path.detect.title" title="自动识别安装路径">🔍</button>
+            <button class="btn" id="btn-browse-path" data-i18n-title="path.browse" title="浏览...">📂</button>
+          </div>
+          <div id="path-status" class="path-status" hidden></div>
+          <div id="path-cands" class="path-cands" hidden></div>
+          <div id="installs-box" class="installs-box">
+            <div class="installs-head"><b data-i18n="label.known">已知安装</b><button class="btn sm" id="btn-install-save" data-i18n="btn.known.save">➕ 保存当前</button></div>
+            <div id="installs-list"></div>
+          </div>
+          <label data-i18n="label.branch">分支</label><input id="s-branch" placeholder="main">
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-pathauto"><span data-i18n="chk.pathauto">启动时自动识别安装路径（当前路径无效时探测常见位置）</span></label>
+          <label class="check"><input type="checkbox" id="s-pathapply"><span data-i18n="chk.pathapply">自动切换到识别到的有效安装路径（关闭则仅提醒）</span></label>
+          <label class="check"><input type="checkbox" id="s-pathdeep"><span data-i18n="chk.pathdeep">深度扫描所有盘符（更全面，稍慢）</span></label>
+          <label class="check"><input type="checkbox" id="s-pathwatch"><span data-i18n="chk.pathwatch">运行时监控安装路径（失效时自动提醒并尝试修复）</span></label>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.behavior">🔄 更新行为</h3>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-gateway"><span data-i18n="chk.gateway">更新后自动启动 Gateway</span></label>
+          <label class="check"><input type="checkbox" id="s-ks"><span data-i18n="chk.ks">保留本地改动 (--keep-stash)</span></label>
+          <label class="check"><input type="checkbox" id="s-kill"><span data-i18n="chk.kill">更新前清理残留 Hermes 进程</span></label>
+          <label class="check"><input type="checkbox" id="s-rzp"><span data-i18n="chk.rzp">更新后恢复中文补丁</span></label>
+          <label class="check"><input type="checkbox" id="s-notify"><span data-i18n="chk.notify">发现新版本时提醒</span></label>
+          <label class="check"><input type="checkbox" id="s-autoupd"><span data-i18n="chk.autoupd">定时自动检查新版本</span></label>
+          <label class="check"><input type="checkbox" id="s-fallback"><span data-i18n="chk.fallback">直连失败时自动切换镜像源</span></label>
+          <label class="check"><input type="checkbox" id="s-autoretry"><span data-i18n="chk.autoretry">更新失败后自动重试（换网络方式重试）</span></label>
+          <label class="check"><input type="checkbox" id="s-diskcheck"><span data-i18n="chk.diskcheck">更新前检查磁盘剩余空间</span></label>
+          <label class="check"><input type="checkbox" id="s-notifcenter"><span data-i18n="chk.notifcenter">启用应用内通知中心</span></label>
+          <label class="check"><input type="checkbox" id="s-desktopnot"><span data-i18n="chk.desktopnot">桌面系统通知（更新完成 / 失败 / 新版本，最小化到托盘也能收到，点击通知回到窗口）</span></label>
+          <label class="check"><input type="checkbox" id="s-autoexec"><span data-i18n="chk.autoexec">自动检查发现新版本后自动执行更新</span></label>
+          <label class="check"><input type="checkbox" id="s-injectmirror"><span data-i18n="chk.injectmirror">内置自动修复：注入 Electron/npm 镜像环境（打包阶段不再直连 GitHub，尽量一次成功）</span></label>
+          <label class="check"><input type="checkbox" id="s-autorepair"><span data-i18n="chk.autorepair">重试时自动叠加代理环境（上次失败于打包/依赖下载阶段）</span></label>
+          <label class="check"><input type="checkbox" id="s-preflight"><span data-i18n="chk.preflight">更新前自动预检（安装路径 / git 仓库 / 磁盘剩余，路径失效时尝试自动识别修复）</span></label>
+          <label class="check"><input type="checkbox" id="s-postsmoke"><span data-i18n="chk.postsmoke">🩺 更新成功后自动冒烟验证（运行 hermes --version 确认新版本可用）</span></label>
+          <label class="check"><input type="checkbox" id="s-watchdog"><span data-i18n="chk.watchdog">🐕 Gateway 守护：掉线时自动拉起（与掉线提醒互补）</span></label>
+          <label class="check"><input type="checkbox" id="s-upd-lock"><span data-i18n="chk.upd.lock">🎯 更新前强制锁定到「更新目标」（更新页可设置分支/标签目标）</span></label>
+          <label class="check"><input type="checkbox" id="s-chg-group"><span data-i18n="chk.chg.group">📜 更新日志按 tag 分组展示</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.wnmax">更新内容预览条数(10-100)</label><input id="s-wnmax" type="number" min="10" max="100">
+          <label data-i18n="label.watchdogmin">守护巡检间隔(分钟, ≥2)</label><input id="s-watchdog-min" type="number" min="2" max="60">
+          <label data-i18n="label.chgmax">更新日志拉取条数(50-1000)</label><input id="s-chgmax" type="number" min="50" max="1000">
+          <label data-i18n="label.zsrc">zh-patches 母本目录</label><input id="s-zsrc" placeholder="D:\path\to\zh-patches">
+          <label data-i18n="label.bkp">备份保留份数</label><input id="s-bkp" type="number" min="0" max="20">
+          <label data-i18n="label.interval">自动检查间隔(分钟)</label><input id="s-interval" type="number" min="15" max="1440">
+          <label data-i18n="label.gittimeout">git 超时(秒)</label><input id="s-gittimeout" type="number" min="30" max="1800">
+          <label data-i18n="label.maxretry">自动重试次数(0-5)</label><input id="s-maxretry" type="number" min="0" max="5">
+          <label data-i18n="label.countdown">自动更新倒计时(秒, 0=立即, ≤600)</label><input id="s-countdown" type="number" min="0" max="600">
+          <label data-i18n="label.netwatch">网络巡检间隔(分钟, 0=关闭)</label><input id="s-netwatch" type="number" min="0" max="120">
+          <label data-i18n="label.minfree">预检磁盘剩余下限(GB)</label><input id="s-minfree" type="number" min="0" max="500">
+          <label data-i18n="label.ins-timeout">安装整体超时(分钟)</label><input id="s-ins-timeout" type="number" min="5" max="240">
+          <label data-i18n="label.ins-histkeep">安装历史保留条数</label><input id="s-ins-histkeep" type="number" min="1" max="50">
+          <label data-i18n="label.ins-npmmirror">安装 npm 源</label>
+          <select id="s-ins-npmmirror">
+            <option value="default" data-i18n="opt.npm.default">默认 (跟随系统)</option>
+            <option value="npmmirror" data-i18n="opt.npm.npmmirror">npmmirror 国内镜像</option>
+            <option value="custom" data-i18n="opt.npm.custom">自定义</option>
+          </select>
+          <label data-i18n="label.ins-npmcustom">自定义 npm registry</label><input id="s-ins-npmcustom" placeholder="https://registry.example.com">
+          <label data-i18n="label.ins.mirror">安装专用加速前缀（空=沿用镜像地址）</label><input id="s-ins-mirror" placeholder="https://ghproxy.cn/">
+          <label data-i18n="label.unins.mode">默认卸载方式</label>
+          <select id="s-unins-mode">
+            <option value="trash" data-i18n="unins.m.trash">🗑️ 移入回收站</option>
+            <option value="modules" data-i18n="unins.m.modules">🧹 仅删依赖</option>
+            <option value="permanent" data-i18n="unins.m.perm">💥 彻底删除</option>
+            <option value="unregister" data-i18n="unins.m.unreg">📎 仅解除关联</option>
+          </select>
+          <label data-i18n="label.sched.days">定时计划 (周几, 0=周日)</label>
+          <div class="path-row"><input id="s-sched-days" placeholder="1,3,5" style="max-width:140px"><input id="s-sched-time" type="time" value="09:00" style="max-width:120px"></div>
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-ins-gitaccel"><span data-i18n="chk.ins.gitaccel">安装克隆走镜像加速</span></label>
+          <label class="check"><input type="checkbox" id="s-ins-autovalidate"><span data-i18n="chk.ins.autovalidate">安装完成自动验证</span></label>
+          <label class="check"><input type="checkbox" id="s-ins-autoapply"><span data-i18n="chk.ins.autoapply">验证通过自动设为当前管理路径</span></label>
+          <label class="check"><input type="checkbox" id="s-ins-shortcut"><span data-i18n="chk.ins.shortcut">安装后创建桌面快捷方式</span></label>
+          <label class="check"><input type="checkbox" id="s-ins-mirrorfb"><span data-i18n="chk.ins.mirrorfb">安装克隆失败时自动换候选镜像重试</span></label>
+          <label class="check"><input type="checkbox" id="s-unins-backup"><span data-i18n="chk.unins.backup">卸载前自动备份配置（卸载面板中可临时取消）</span></label>
+          <label class="check"><input type="checkbox" id="s-unins-stop"><span data-i18n="chk.unins.stop">卸载前自动停止占用的 Hermes 进程</span></label>
+          <label class="check"><input type="checkbox" id="s-unins-unreg"><span data-i18n="chk.unins.unreg">卸载（回收站/彻底删除）后自动从「已知安装」移除该路径</span></label>
+          <label class="check"><input type="checkbox" id="s-unins-strict"><span data-i18n="chk.unins.strict">彻底删除需输入目录名二次确认（防误删）</span></label>
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-confirm"><span data-i18n="chk.confirm">更新前弹出确认对话框</span></label>
+          <label class="check"><input type="checkbox" id="s-cleanup"><span data-i18n="chk.cleanup">更新完成后清理多余 Hermes 进程</span></label>
+          <label class="check"><input type="checkbox" id="s-keepgw"><span data-i18n="chk.keepgw">清理时保留 Gateway 进程</span></label>
+          <label class="check"><input type="checkbox" id="s-gwwatch"><span data-i18n="chk.gwwatch">Gateway 掉线/恢复托盘提醒（每 5 分钟检测）</span></label>
+          <label class="check"><input type="checkbox" id="s-notifydone"><span data-i18n="chk.notifydone">更新完成后托盘气泡通知</span></label>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.system">🖥️ 系统集成 / 外观</h3>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-tray"><span data-i18n="chk.tray">关闭时最小化到托盘</span></label>
+          <label class="check"><input type="checkbox" id="s-boot"><span data-i18n="chk.boot">开机自动启动</span></label>
+          <label class="check"><input type="checkbox" id="s-ontop"><span data-i18n="chk.ontop">窗口置顶（始终保持在最前）</span></label>
+          <label class="check"><input type="checkbox" id="s-dark"><span data-i18n="chk.dark">深色主题</span></label>
+          <label class="check"><input type="checkbox" id="s-themesys"><span data-i18n="chk.themesys">跟随系统深浅色（开启时忽略上方选项）</span></label>
+          <label class="check"><input type="checkbox" id="s-checkstart"><span data-i18n="chk.checkstart">启动时自动检查版本</span></label>
+          <label class="check"><input type="checkbox" id="s-logauto"><span data-i18n="chk.logauto">日志页自动刷新（每 5 秒）</span></label>
+          <label data-i18n="label.quiet.start">免打扰开始（自动检查）</label><input id="s-quiet-start" type="time">
+          <label data-i18n="label.quiet.end">免打扰结束</label><input id="s-quiet-end" type="time">
+          <label class="check"><input type="checkbox" id="s-backupauto"><span data-i18n="chk.backupauto">每日自动备份数据包（存文档目录）</span></label>
+          <label data-i18n="label.backupkeep">备份保留份数(1-30)</label><input id="s-backupkeep" type="number" min="1" max="30">
+          <label class="check"><input type="checkbox" id="s-traybadge"><span data-i18n="chk.traybadge">托盘角标：有可更新提交时显示 ⬆️N</span></label>
+          <label class="check"><input type="checkbox" id="s-autosave"><span data-i18n="chk.autosave">修改设置后自动保存（无需手动点保存按钮）</span></label>
+          <label class="check"><input type="checkbox" id="s-unsavedguard"><span data-i18n="chk.unsavedguard">离开设置页时提醒未保存的修改</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.startpage">启动页</label>
+          <select id="s-startpage">
+            <option value="dash" data-i18n="opt.page.dash">📊 仪表盘</option>
+            <option value="update" data-i18n="opt.page.update">🔄 更新</option>
+            <option value="settings" data-i18n="opt.page.settings">⚙️ 设置</option>
+            <option value="diag" data-i18n="opt.page.diag">🩺 诊断</option>
+            <option value="log" data-i18n="opt.page.log">📜 运行日志</option>
+          </select>
+          <label data-i18n="label.accent">强调色</label>
+          <select id="s-accent">
+            <option value="blue" data-i18n="opt.accent.blue">🔵 蓝色（默认）</option>
+            <option value="green" data-i18n="opt.accent.green">🟢 绿色</option>
+            <option value="purple" data-i18n="opt.accent.purple">🟣 紫色</option>
+            <option value="orange" data-i18n="opt.accent.orange">🟠 橙色</option>
+            <option value="teal" data-i18n="opt.accent.teal">🩵 青色</option>
+          </select>
+          <label data-i18n="label.lang">界面语言</label>
+          <select id="s-lang">
+            <option value="zh">简体中文</option>
+            <option value="en">English</option>
+          </select>
+          <label data-i18n="label.zoom">界面缩放</label>
+          <select id="s-zoom">
+            <option value="90">90%</option>
+            <option value="100">100%（默认）</option>
+            <option value="110">110%</option>
+            <option value="125">125%</option>
+          </select>
+          <label data-i18n="label.termfont">终端字号(px)</label><input id="s-termfont" type="number" min="9" max="20">
+          <label data-i18n="label.trmscheme">终端配色</label>
+          <select id="s-trmscheme">
+            <option value="theme" data-i18n="opt.trm.theme">跟随深浅主题</option>
+            <option value="black" data-i18n="opt.trm.black">经典黑（两主题都黑底）</option>
+            <option value="custom" data-i18n="opt.trm.custom">自定义颜色</option>
+          </select>
+          <label data-i18n="label.trmcolors">终端颜色（背景/文字，自定义时生效）</label>
+          <span style="display:flex;gap:8px;align-items:center;">
+            <input id="s-termbg" type="color" style="width:44px;height:30px;padding:2px;">
+            <input id="s-termfg" type="color" style="width:44px;height:30px;padding:2px;">
+            <span id="trm-colors-tip" style="font-size:11px;color:var(--muted);"></span>
+          </span>
+          <label data-i18n="label.refresh">状态自动刷新(秒)</label><input id="s-refresh" type="number" min="10" max="600">
+          <label data-i18n="label.logdays">日志保留天数</label><input id="s-logdays" type="number" min="1" max="365">
+          <label data-i18n="label.histmax">历史上限(条)</label><input id="s-histmax" type="number" min="10" max="500">
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-dashtools"><span data-i18n="chk.dashtools">仪表盘显示「安装 · 卸载 · 维护」快捷中心</span></label>
+          <label class="check"><input type="checkbox" id="s-dashconfirm"><span data-i18n="chk.dashconfirm">仪表盘快捷卸载前需二次确认</span></label>
+          <label class="check"><input type="checkbox" id="s-dashhist"><span data-i18n="chk.dashhist">仪表盘显示最近安装/卸载记录摘要</span></label>
+          <label data-i18n="label.dashhistrows">安装记录摘要条数(1-10)</label><input id="s-dashhistrows" type="number" min="1" max="10">
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.profiles">💼 配置方案</h3>
+        <p class="prof-tip" data-i18n="set.profiles.tip">保存多套「安装路径 + 分支 + 网络方式」组合, 一键切换。</p>
+        <div class="form-grid">
+          <label data-i18n="label.prof.name">方案名称</label><input id="s-prof-name" placeholder="Home / Office ...">
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-prof-save" data-i18n="btn.prof.save">💾 保存当前为方案</button>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.prof.list">已有方案</label><select id="s-prof-list"></select>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-prof-apply" data-i18n="btn.prof.apply">📥 应用方案</button>
+          <button class="btn warn" id="btn-prof-delete" data-i18n="btn.prof.delete">🗑 删除方案</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.hooks">🪝 更新钩子</h3>
+        <p class="prof-tip" data-i18n="set.hooks.tip">在更新前 / 成功后 / 失败后自动执行自定义命令（如通知、清理、备份）。前置钩子可选「失败即中止更新」。</p>
+        <div id="hooks-list" class="rb-list"></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-hook-add" data-i18n="btn.hook.add">➕ 添加钩子</button>
+          <button class="btn primary" id="btn-hook-save" data-i18n="btn.hook.save">💾 保存钩子</button>
+        </div>
+        <div class="hint" data-i18n="set.hooks.hint">超时范围 5-600 秒；前置(pre)钩子失败且勾选「失败中止」时本次更新不会开始。</div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.webhook">🌐 Webhook 推送</h3>
+        <p class="prof-tip" data-i18n="set.webhook.tip">更新/安装/卸载完成时向自定义 URL POST 一条 JSON（适合接入企业微信/钉钉/Slack 机器人）。</p>
+        <div class="form-grid">
+          <label data-i18n="label.webhook.url">Webhook URL</label><input id="s-webhook-url" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+          <label data-i18n="label.webhook.secret">密钥请求头 (X-Hermes-Secret, 可空)</label><input id="s-webhook-secret" placeholder="">
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-wh-ok"><span data-i18n="chk.wh.ok">推送更新成功</span></label>
+          <label class="check"><input type="checkbox" id="s-wh-fail"><span data-i18n="chk.wh.fail">推送更新失败</span></label>
+          <label class="check"><input type="checkbox" id="s-wh-ins"><span data-i18n="chk.wh.ins">推送安装/卸载完成</span></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-webhook-test" data-i18n="btn.wh.test">📡 发送测试</button>
+          <span id="webhook-test-result" class="muted" style="font-size:12px"></span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.trans">🌐 翻译 / 输出</h3>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-lintime"><span data-i18n="chk.lintime">更新输出显示行时间戳（[时:分:秒] 前缀）</span></label>
+          <label class="check"><input type="checkbox" id="s-transauto"><span data-i18n="chk.transauto">输出行自动实时翻译（翻译面板开启时逐行翻译）</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.trantarget">翻译目标语言</label>
+          <select id="s-trans-target">
+            <option value="zh-CN" data-i18n="opt.tgt.zh">简体中文</option>
+            <option value="en" data-i18n="opt.tgt.en">English</option>
+          </select>
+          <label data-i18n="label.tranprovider">翻译引擎</label>
+          <select id="s-trans-provider">
+            <option value="auto" data-i18n="opt.prov.auto">自动（多引擎依次切换 + 熔断）</option>
+            <option value="google" data-i18n="opt.prov.google">Google 翻译</option>
+            <option value="gcloud" data-i18n="opt.prov.gcloud">Google 备用端点（Chrome 接口）</option>
+            <option value="deepl" data-i18n="opt.prov.deepl">DeepL（免密钥）</option>
+            <option value="lingva" data-i18n="opt.prov.lingva">Lingva（Google 开源前端）</option>
+            <option value="mymemory" data-i18n="opt.prov.mymemory">MyMemory（免密钥）</option>
+            <option value="youdao" data-i18n="opt.prov.youdao">有道翻译（免密钥）</option>
+            <option value="offline" data-i18n="opt.prov.offline">仅离线词典（无需联网）</option>
+          </select>
+          <label data-i18n="label.tranorder">引擎顺序（自动模式用，逗号分隔，留空=默认）</label><input id="s-trans-order" data-i18n-ph="ph.tranorder" placeholder="google,deepl,mymemory,youdao,lingva,gcloud">
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <label data-i18n="label.trandict">自定义词典（每行 英文=中文）</label>
+          <textarea id="s-trans-dict" rows="4" style="resize:vertical;font-family:Consolas,monospace;font-size:12px;" placeholder="stale=过期&#10;fetch failed=拉取失败"></textarea>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="set.maint">🧹 维护</h3>
+        <div class="btn-row">
+          <button class="btn" id="btn-export-settings" data-i18n="btn.export.settings">导出设置</button>
+          <button class="btn" id="btn-import-settings" data-i18n="btn.import.settings">导入设置</button>
+          <button class="btn" id="btn-export-data" data-i18n="btn.export.data">📦 备份数据包</button>
+          <button class="btn" id="btn-import-data" data-i18n="btn.import.data">📥 恢复数据包</button>
+          <button class="btn" id="btn-open-backups" data-i18n="btn.open.backups">📂 打开备份目录</button>
+          <button class="btn" id="btn-restore-latest" data-i18n="btn.restore.latest">♻️ 从最新备份恢复</button>
+          <button class="btn" id="btn-backup-list" data-i18n="btn.backup.list">🕘 备份列表</button>
+          <button class="btn" id="btn-export-report" data-i18n="btn.export.report">🩺 导出诊断报告</button>
+        </div>
+        <div id="backup-list-panel" hidden>
+          <div id="backup-list" class="rb-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 诊断 -->
+    <section class="page" id="page-diag">
+      <div class="banner">🩺 <div><b data-i18n="nav.diag">诊断</b><span data-i18n="diag.banner.s">网络可达性 / 健康检查</span></div></div>
+      <pre id="diag-out" class="terminal short"></pre>
+      <div class="btn-row">
+        <button class="btn primary" id="btn-doctor2" data-i18n="btn.doctor2">运行 doctor</button>
+        <button class="btn" id="btn-netprobe" data-i18n="btn.netprobe">🌐 网络探测</button>
+        <button class="btn" id="btn-speedtest" data-i18n="btn.speedtest">🚀 测速对比</button>
+        <button class="btn" id="btn-repo" data-i18n="btn.repo">🌿 Git 工作区检查</button>
+        <button class="btn warn hidden" id="btn-back2branch" data-i18n="btn.back2branch">⬅️ 回到分支</button>
+        <button class="btn" id="btn-repair" data-i18n="btn.repair">🔧 修复依赖</button>
+        <button class="btn" id="btn-maintain" data-i18n="btn.maintain">🧹 一键维护 (git gc + npm cache)</button>
+        <button class="btn" id="btn-health-report" data-i18n="btn.healthreport">📑 导出健康报告</button>
+        <button class="btn" id="btn-dirsize" data-i18n="btn.dirsize">💾 体积分析</button>
+        <button class="btn" id="btn-cleanup" data-i18n="btn.cleanup">🧽 空间清理</button>
+        <button class="btn" id="btn-netheal" data-i18n="btn.netheal">🧙 一键网络自愈</button>
+        <button class="btn" id="btn-envinfo" data-i18n="btn.envinfo">🖥️ 环境信息</button>
+        <button class="btn" id="btn-proclist" data-i18n="btn.proclist">⚙️ 进程管理</button>
+        <button class="btn" id="btn-upstats" data-i18n="btn.upstats">📊 更新统计</button>
+        <button class="btn" id="btn-copydiag" data-i18n="btn.copydiag">📋 复制结果</button>
+        <button class="btn" id="btn-export-diag" data-i18n="btn.export.diag">📄 导出结果</button>
+      </div>
+      <div class="panel" id="proc-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="proc.title">⚙️ Hermes 进程管理</h3>
+          <button class="btn sm" id="btn-proc-refresh" data-i18n="proc.refresh">🔄 刷新</button>
+        </div>
+        <div id="proc-list" class="path-cands"></div>
+        <div class="hint" data-i18n="proc.hint">仅列出命令行指向当前 Hermes 安装目录的进程；结束前会二次确认。</div>
+      </div>
+      <div class="panel" id="stats-panel" hidden>
+        <h3 data-i18n="stats.title">📊 更新统计</h3>
+        <div id="d-upstats"></div>
+      </div>
+      <div class="panel" id="cleanup-panel" hidden>
+        <h3 data-i18n="cln.title">🧽 可清理项目</h3>
+        <div id="cleanup-list" class="checks"></div>
+        <div class="btn-row"><button class="btn warn sm" id="btn-cleanup-run" data-i18n="cln.run">🧹 清理勾选项目</button><span id="cln-summary" class="muted"></span></div>
+      </div>
+      <div class="panel" id="probe-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="diag.probe">🌐 网络可达性探测</h3>
+          <button class="btn sm primary" id="btn-apply-proxy" data-i18n="btn.apply.proxy">✅ 应用到设置</button>
+        </div>
+        <div id="probe-list"></div>
+      </div>
+      <div class="panel" id="speed-panel" hidden>
+        <div class="panel-head">
+          <h3 data-i18n="diag.speed">🚀 网络方案测速对比</h3>
+          <span class="trend-legend" data-i18n="diag.speed.hint">点行尾「应用」一键切换到该方案</span>
+        </div>
+        <div id="speed-list" class="path-cands"></div>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="diag.weekly">📈 近 7 天更新周报</h3>
+        <pre id="d-weekly" class="mono">暂无数据</pre>
+      </div>
+      <div class="panel">
+        <h3 data-i18n="diag.conn">🔌 最近连通性测试（最多 5 条）</h3>
+        <div id="conn-list" class="path-cands"></div>
+      </div>
+    </section>
+
+    <!-- 日志 -->
+    <section class="page" id="page-log">
+      <div class="banner">📜 <div><b data-i18n="nav.log">运行日志</b><span data-i18n="log.banner.s">工具运行记录</span></div></div>
+      <div class="progress-wrap" id="log-progress-wrap" hidden>
+        <div class="progress-bar" id="log-progress-bar"></div>
+      </div>
+      <div class="progress-label" id="log-progress-label" hidden></div>
+      <div class="btn-row">
+        <input id="log-filter" class="filter" placeholder="🔍 过滤关键字..." data-i18n-ph="log.filter.ph">
+        <select id="log-level" class="filter" style="width:auto">
+          <option value="all" data-i18n="log.lv.all">全部级别</option>
+          <option value="info" data-i18n="log.lv.info">仅常规</option>
+          <option value="warn" data-i18n="log.lv.warn">警告</option>
+          <option value="err" data-i18n="log.lv.err">错误</option>
+        </select>
+      </div>
+      <pre id="log-out" class="terminal tall"></pre>
+      <div class="btn-row">
+        <button class="btn" id="btn-log-refresh" data-i18n="btn.log.refresh">立即刷新</button>
+        <button class="btn" id="btn-log-copy" data-i18n="btn.log.copy">📋 复制</button>
+        <button class="btn" id="btn-log-open" data-i18n="btn.log.open">打开日志文件</button>
+        <button class="btn warn" id="btn-log-clear" data-i18n="btn.log.clear">清空日志</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 翻译面板 (可拖拽调宽) -->
+  <div id="trans-resize" title=""></div>
+  <aside id="trans-panel">
+    <div class="tr-head">
+      <span data-i18n="trans.title">🌐 实时翻译</span>
+      <span class="tr-flex"></span>
+      <button class="btn sm" id="btn-tall" data-i18n="trans.all">翻译全部输出</button>
+      <button class="btn sm ghost" id="btn-tclear" data-i18n="trans.clear">清空</button>
+      <button class="btn sm ghost" id="btn-tclose">✕</button>
+    </div>
+    <div id="trans-list">
+      <div class="tr-empty" data-i18n="trans.hint">更新运行时, 输出将在此逐行实时显示翻译</div>
+    </div>
+    <div class="tr-foot">
+      <input id="tr-input" data-i18n-ph="trans.input.ph" placeholder="输入文本手动翻译...">
+      <button class="btn primary sm" id="tr-go" data-i18n="trans.send">翻译</button>
+    </div>
+  </aside>
+</div>
+<div id="toast-box"></div>
+<dialog id="hist-dialog">
+  <div class="panel hist-panel">
+    <h3 data-i18n="hist.dlg">🕘 更新历史管理</h3>
+    <input id="hist-filter" class="filter" placeholder="🔍 过滤 (时间/结果/原因)..." style="width:100%" data-i18n-ph="hist.filter.ph">
+    <div id="hist-list"></div>
+    <div class="btn-row">
+      <button class="btn" id="btn-hist-export2" data-i18n="btn.hist.csv">导出 CSV</button>
+      <button class="btn warn" id="btn-hist-clearall" data-i18n="btn.hist.clearall">清空全部</button>
+      <button class="btn" id="btn-hist-close" data-i18n="btn.close">关闭</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="notif-dialog">
+  <div class="panel hist-panel">
+    <h3 data-i18n="notif.title">🔔 通知中心</h3>
+    <div id="notif-list"></div>
+    <div class="btn-row">
+      <button class="btn warn" id="btn-notif-clear" data-i18n="btn.notif.clear">清空通知</button>
+      <button class="btn" id="btn-notif-close" data-i18n="btn.close">关闭</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="about-dialog">
+  <div class="panel hist-panel">
+    <h3 data-i18n="about.title">ℹ️ 关于 HermesUpdater</h3>
+    <div class="about-grid">
+      <div><span data-i18n="about.version">版本</span></div><b id="about-ver">—</b>
+      <div>Electron</div><b id="about-electron">—</b>
+      <div>Node</div><b id="about-node">—</b>
+      <div data-i18n="about.data">数据目录</div><b class="mono" id="about-datadir">—</b>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btn-about-open" data-i18n="btn.about.open">📂 打开数据目录</button>
+      <button class="btn" id="btn-about-close" data-i18n="btn.close">关闭</button>
+    </div>
+  </div>
+</dialog>
+<script src="app.js"></script>
+</body>
+</html>

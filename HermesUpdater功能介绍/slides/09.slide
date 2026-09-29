@@ -1,0 +1,19 @@
+<Slide style={{ width: 1280, height: 720, background: '#0F172A', position: 'relative', overflow: 'hidden' }}>
+  <Text style={{ position: 'absolute', right: 40, bottom: -60, fontSize: 420, fontWeight: 'bold', color: 'rgba(59,130,246,0.12)' }}>03</Text>
+  <Box style={{ position: 'absolute', left: 80, top: 250, width: 720 }}>
+    <Box style={{ width: 64, height: 6, background: '#F59E0B', borderRadius: 3, marginBottom: 30 }} />
+    <Text style={{ fontSize: 24, color: '#64748B', letterSpacing: 6, marginBottom: 14 }}>CHAPTER 03</Text>
+    <Text style={{ fontSize: 62, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.2 }}>路径·健康·诊断</Text>
+    <Text style={{ fontSize: 20, color: '#94A3B8', marginTop: 26, lineHeight: 1.6 }}>
+      安装路径找得到、健康状态看得见、问题自己会说话
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 80, bottom: 60, flexDirection: 'row', gap: 26 }}>
+    {['三级识别引擎', '启动自愈', '运行时监控', '健康评分'].map((t) => (
+      <Box key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <svg width={14} height={14} viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='none' stroke='#3B82F6' strokeWidth='2' /></svg>
+        <Text style={{ fontSize: 15, color: '#CBD5E1' }}>{t}</Text>
+      </Box>
+    ))}
+  </Box>
+</Slide>

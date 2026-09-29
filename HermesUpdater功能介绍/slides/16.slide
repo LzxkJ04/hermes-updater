@@ -1,0 +1,54 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>四层通知与提醒体系</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第五章 · 通知·体验·稳定</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 500, flexDirection: 'row', gap: 28 }}>
+    <Box style={{ width: 640, justifyContent: 'center', background: '#F8FAFC', borderRadius: 16, padding: 20 }}>
+      <svg width={600} height={460} viewBox='0 0 600 460'>
+        <rect x='60' y='14' width='480' height='88' rx='12' fill='#0F172A' />
+        <text x='90' y='50' fontSize='16' fontWeight='bold' fill='#FFFFFF'>🔔 应用内通知中心</text>
+        <text x='90' y='76' fontSize='12.5' fill='#94A3B8'>100 条滚动保存 · 未读角标 · 事件分类（更新/路径/网络/网关）</text>
+        <line x1='300' y1='102' x2='300' y2='128' stroke='#94A3B8' strokeWidth='2' />
+        <rect x='60' y='128' width='480' height='88' rx='12' fill='#FFFFFF' stroke='#3B82F6' strokeWidth='2' />
+        <text x='90' y='164' fontSize='16' fontWeight='bold' fill='#0F172A'>🖥 桌面系统通知</text>
+        <text x='90' y='190' fontSize='12.5' fill='#64748B'>最小化到托盘也能收到 · 点击通知回到窗口 · 窗口聚焦时不打扰</text>
+        <line x1='300' y1='216' x2='300' y2='242' stroke='#94A3B8' strokeWidth='2' />
+        <rect x='60' y='242' width='480' height='88' rx='12' fill='#FFFFFF' stroke='#F59E0B' strokeWidth='2' />
+        <text x='90' y='278' fontSize='16' fontWeight='bold' fill='#0F172A'>📌 托盘角标 + 气泡</text>
+        <text x='90' y='304' fontSize='12.5' fill='#64748B'>图标旁 ⬆️N 显示落后提交数 · 更新完成自动清零 · 重建托盘后自动恢复</text>
+        <line x1='300' y1='330' x2='300' y2='356' stroke='#94A3B8' strokeWidth='2' />
+        <rect x='60' y='356' width='480' height='88' rx='12' fill='#EFF6FF' stroke='#06B6D4' strokeWidth='2' />
+        <text x='90' y='392' fontSize='16' fontWeight='bold' fill='#0F172A'>🔕 降噪护栏</text>
+        <text x='90' y='418' fontSize='12.5' fill='#64748B'>免打扰时段（跨午夜）· 稍后提醒 1/3/6 小时 · 各类通知独立开关</text>
+      </svg>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 18 }}>
+      <Text style={{ fontSize: 17, color: '#334155', lineHeight: 1.7 }}>
+        更新完成、失败、发现新版本、网关掉线、路径失效——<span style={{ fontWeight: 'bold', color: '#0F172A' }}>每类事件都有直达通道</span>，且都可以单独开关。
+      </Text>
+      {[
+        ['bell', '#3B82F6', '发现新版本', '托盘角标 ⬆️N + 通知 + 气泡三连击，每个版本只提醒一次不骚扰'],
+        ['check-circle', '#10B981', '更新结果回报', '成功/失败实时桌面通知，最小化时也不错过结果'],
+        ['moon', '#8B5CF6', '安静时段', '免打扰时间内自动检查静默；稍后提醒随时抑制，手动更新不受限'],
+      ].map(([ic, c, t, d]) => (
+        <Box key={t} style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
+          <Box style={{ width: 46, height: 46, borderRadius: 12, background: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
+            <FAIcon name={ic} style={{ fill: c, width: 24, height: 24 }} />
+          </Box>
+          <Box style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0F172A' }}>{t}</Text>
+            <Text style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>{d}</Text>
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>16 / 19</Text>
+  </Box>
+</Slide>

@@ -1,0 +1,26 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', position: 'relative', overflow: 'hidden', padding: '20px 60px' }}>
+  <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 720, background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, rgba(255,255,255,0) 60%)' }} />
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center', position: 'relative' }}>
+    <Box style={{ width: 6, height: 44, background: '#F59E0B', borderRadius: 3, marginRight: 16 }} />
+    <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>用数字说话</Text>
+  </Box>
+  <Box style={{ height: 480, position: 'relative' }}>
+    {[
+      ['v2.18.0', '当前版本 · 12 轮功能迭代', 84, '#0F172A', 40, 30, 420],
+      ['40+', '独立功能项 · 全部带设置开关', 110, '#F59E0B', 460, 90, 340],
+      ['453', '组中英双语词条全量对齐', 90, '#0F172A', 850, 40, 290],
+      ['60', '个 IPC 通道主/渲染全配对', 90, '#3B82F6', 90, 300, 320],
+      ['8', '个镜像候选 · 5 种网络方案', 90, '#06B6D4', 460, 330, 340],
+      ['100%', '每批迭代三重校验通过率', 96, '#F59E0B', 820, 290, 330],
+    ].map(([n, d, fs, c, l, t, w]) => (
+      <Box key={d} style={{ position: 'absolute', left: l, top: t, width: w }}>
+        <Text style={{ fontSize: fs, fontWeight: 'bold', color: c, lineHeight: 1.1 }}>{n}</Text>
+        <Text style={{ fontSize: 16, color: '#64748B', marginTop: 8 }}>{d}</Text>
+      </Box>
+    ))}
+  </Box>
+  <Box style={{ height: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+    <Text style={{ fontSize: 15, color: '#94A3B8' }}>静态校验（词条/键值/IPC 交叉）→ CDP 真机动态测试 → 打包冒烟 22 秒</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>18 / 19</Text>
+  </Box>
+</Slide>

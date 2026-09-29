@@ -1,0 +1,19 @@
+<Slide style={{ width: 1280, height: 720, background: '#0F172A', position: 'relative', overflow: 'hidden' }}>
+  <Text style={{ position: 'absolute', right: 40, bottom: -60, fontSize: 420, fontWeight: 'bold', color: 'rgba(59,130,246,0.12)' }}>04</Text>
+  <Box style={{ position: 'absolute', left: 80, top: 250, width: 720 }}>
+    <Box style={{ width: 64, height: 6, background: '#F59E0B', borderRadius: 3, marginBottom: 30 }} />
+    <Text style={{ fontSize: 24, color: '#64748B', letterSpacing: 6, marginBottom: 14 }}>CHAPTER 04</Text>
+    <Text style={{ fontSize: 62, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.2 }}>数据·备份·日志</Text>
+    <Text style={{ fontSize: 20, color: '#94A3B8', marginTop: 26, lineHeight: 1.6 }}>
+      每一次更新都有迹可循，每一份配置都有备份可退
+    </Text>
+  </Box>
+  <Box style={{ position: 'absolute', left: 80, bottom: 60, flexDirection: 'row', gap: 26 }}>
+    {['更新热力图', '每日自动备份', '配置方案', '日志着色过滤'].map((t) => (
+      <Box key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <svg width={14} height={14} viewBox='0 0 14 14'><circle cx='7' cy='7' r='6' fill='none' stroke='#06B6D4' strokeWidth='2' /></svg>
+        <Text style={{ fontSize: 15, color: '#CBD5E1' }}>{t}</Text>
+      </Box>
+    ))}
+  </Box>
+</Slide>

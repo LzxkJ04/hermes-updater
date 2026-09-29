@@ -1,0 +1,82 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>更新全流程：预检 → 执行 → 兜底</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第一章 · 核心更新能力</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 500, flexDirection: 'row', gap: 30 }}>
+    <Box style={{ width: 660, justifyContent: 'center', background: '#F8FAFC', borderRadius: 16, padding: 20 }}>
+      <svg width={620} height={460} viewBox='0 0 620 460'>
+        <defs>
+          <linearGradient id='g1' x1='0' y1='0' x2='1' y2='0'>
+            <stop offset='0' stopColor='#3B82F6' /><stop offset='1' stopColor='#06B6D4' />
+          </linearGradient>
+        </defs>
+        <rect x='20' y='20' width='150' height='58' rx='12' fill='#FFFFFF' stroke='#3B82F6' strokeWidth='2.5' />
+        <text x='95' y='45' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#0F172A'>更新前预检</text>
+        <text x='95' y='66' textAnchor='middle' fontSize='11' fill='#64748B'>路径 / git 仓库 / 磁盘剩余</text>
+        <rect x='235' y='20' width='150' height='58' rx='12' fill='#FFFFFF' stroke='#F59E0B' strokeWidth='2.5' />
+        <text x='310' y='45' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#0F172A'>倒计时确认</text>
+        <text x='310' y='66' textAnchor='middle' fontSize='11' fill='#64748B'>可立即更新 / 跳过本次</text>
+        <rect x='450' y='20' width='150' height='58' rx='12' fill='url(#g1)' />
+        <text x='525' y='45' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#FFFFFF'>执行更新</text>
+        <text x='525' y='66' textAnchor='middle' fontSize='11' fill='rgba(255,255,255,0.85)' style={{ fill: 'rgba(255,255,255,0.9)' }}>实时流式输出</text>
+        <line x1='170' y1='49' x2='235' y2='49' stroke='#94A3B8' strokeWidth='2' markerEnd='none' />
+        <polygon points='231,43 241,49 231,55' fill='#94A3B8' />
+        <line x1='385' y1='49' x2='450' y2='49' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='446,43 456,49 446,55' fill='#94A3B8' />
+        <line x1='95' y1='78' x2='95' y2='150' stroke='#94A3B8' strokeWidth='1.5' strokeDasharray='4 3' />
+        <rect x='20' y='150' width='150' height='58' rx='12' fill='#FEF3C7' stroke='#F59E0B' strokeWidth='2' />
+        <text x='95' y='175' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#92400E'>⛔ 取消更新</text>
+        <text x='95' y='196' textAnchor='middle' fontSize='11' fill='#B45309'>终止进程树 · 短路重试</text>
+        <rect x='235' y='150' width='150' height='58' rx='12' fill='#FEF3C7' stroke='#F59E0B' strokeWidth='2' />
+        <text x='310' y='175' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#92400E'>🛡 防睡眠保护</text>
+        <text x='310' y='196' textAnchor='middle' fontSize='11' fill='#B45309'>更新期间阻止休眠</text>
+        <line x1='525' y1='78' x2='525' y2='150' stroke='#94A3B8' strokeWidth='1.5' strokeDasharray='4 3' />
+        <rect x='450' y='150' width='150' height='58' rx='12' fill='#FFFFFF' stroke='#94A3B8' strokeWidth='2' />
+        <text x='525' y='175' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#0F172A'>❌ 失败</text>
+        <text x='525' y='196' textAnchor='middle' fontSize='11' fill='#64748B'>按失败类型分类</text>
+        <line x1='450' y1='179' x2='385' y2='179' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='389,173 379,179 389,185' fill='#94A3B8' />
+        <rect x='235' y='252' width='365' height='58' rx='12' fill='#EFF6FF' stroke='#3B82F6' strokeWidth='2' />
+        <text x='417' y='277' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#1D4ED8'>自动重试（0-5 次）+ 镜像环境自动叠加</text>
+        <text x='417' y='298' textAnchor='middle' fontSize='11' fill='#3B82F6'>打包 / 依赖下载失败 → 注入 Electron / npm 镜像重试</text>
+        <line x1='525' y1='208' x2='525' y2='252' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='519,248 525,258 531,248' fill='#94A3B8' />
+        <rect x='20' y='252' width='150' height='58' rx='12' fill='#FFFFFF' stroke='#06B6D4' strokeWidth='2.5' />
+        <text x='95' y='277' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#0F172A'>⏪ 回滚版本</text>
+        <text x='95' y='298' textAnchor='middle' fontSize='11' fill='#64748B'>回到任意历史提交</text>
+        <line x1='235' y1='281' x2='170' y2='281' stroke='#94A3B8' strokeWidth='1.5' strokeDasharray='4 3' />
+        <rect x='20' y='360' width='580' height='76' rx='12' fill='#0F172A' />
+        <text x='310' y='390' textAnchor='middle' fontSize='15' fontWeight='bold' fill='#FFFFFF'>三层网络兜底：直连失败 → 系统代理 → 镜像前缀式回退</text>
+        <text x='310' y='415' textAnchor='middle' fontSize='12' fill='#94A3B8'>git fetch 失败自动识别 · 网络探测后择优继续，尽量一次成功</text>
+        <line x1='417' y1='310' x2='417' y2='360' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='411,356 417,366 423,356' fill='#94A3B8' />
+      </svg>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 18 }}>
+      {[
+        ['shield', '#3B82F6', '更新前预检', '路径有效性 / git 仓库完整性 / 磁盘剩余空间三重检查，路径失效自动识别修复后继续更新'],
+        ['hourglass-half', '#F59E0B', '倒计时确认', '自动更新触发前 60 秒倒计时（可设 0-600 秒），可立即执行或跳过本次，防止在不合适的时机打断工作'],
+        ['ban', '#EF4444', '随时可取消', '更新页一键取消，强制终止整棵进程树并跳过后续重试，更新期间系统不会休眠'],
+        ['history', '#06B6D4', '可回滚', '任意历史提交一键回滚，更新失败也有退路'],
+      ].map(([ic, c, t, d]) => (
+        <Box key={t} style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
+          <Box style={{ width: 46, height: 46, borderRadius: 12, background: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
+            <FAIcon name={ic} style={{ fill: c, width: 24, height: 24 }} />
+          </Box>
+          <Box style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0F172A' }}>{t}</Text>
+            <Text style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>{d}</Text>
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>04 / 19</Text>
+  </Box>
+</Slide>

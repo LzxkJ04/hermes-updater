@@ -1,0 +1,49 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>更新历史与统计分析</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第四章 · 数据·备份·日志</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 508, flexDirection: 'row', gap: 36 }}>
+    <Box style={{ width: 430, justifyContent: 'center' }}>
+      <Text style={{ fontSize: 96, fontWeight: 'bold', color: '#3B82F6', lineHeight: 1 }}>100<span style={{ fontSize: 40, color: '#1D4ED8' }}>条</span></Text>
+      <Text style={{ fontSize: 19, color: '#334155', lineHeight: 1.65, marginTop: 16 }}>
+        完整更新历史本地持久化——<span style={{ fontWeight: 'bold', color: '#0F172A' }}>时间精确到秒</span>，含触发方式、耗时、提交前后哈希与失败原因，让每次更新都有据可查
+      </Text>
+      <Box style={{ flexDirection: 'row', gap: 12, marginTop: 26 }}>
+        {['CSV 导出', '历史管理面板', '旧格式兼容解析'].map((t) => (
+          <Box key={t} style={{ padding: '7px 16px', borderRadius: 999, background: '#EFF6FF' }}>
+            <Text style={{ fontSize: 13.5, color: '#1D4ED8', fontWeight: 'bold' }}>{t}</Text>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+    <Box style={{ flex: 1, background: '#F8FAFC', borderRadius: 16, padding: '12px 26px', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 19, fontWeight: 'bold', color: '#0F172A', marginBottom: 6 }}>GitHub 风格更新热力图（近 12 周）</Text>
+      <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 18 }}>颜色越深 = 当天更新次数越多，悬停显示日期与次数明细</Text>
+      {[3, 1, 0, 2, 1, 4, 0, 1, 2, 3, 0, 1].map((row, r) => (
+        <Box key={r} style={{ flexDirection: 'row', gap: 5, marginBottom: 5 }}>
+          {Array.from({ length: 20 }).map((_, c) => {
+            const lv = (r * 7 + c * 3) % 5;
+            const col = ['#E2E8F0', '#BBF7D0', '#4ADE80', '#16A34A', '#15803D'][lv];
+            return <Box key={c} style={{ width: 26, height: 26, borderRadius: 5, background: col }} />;
+          })}
+        </Box>
+      ))}
+      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
+        <Text style={{ fontSize: 12, color: '#94A3B8' }}>少</Text>
+        {['#E2E8F0', '#BBF7D0', '#4ADE80', '#16A34A', '#15803D'].map((c) => (
+          <Box key={c} style={{ width: 16, height: 16, borderRadius: 4, background: c }} />
+        ))}
+        <Text style={{ fontSize: 12, color: '#94A3B8' }}>多</Text>
+        <Text style={{ fontSize: 12.5, color: '#64748B', marginLeft: 20 }}>同步提供：近 7 天周报 · 本月成功/失败统计 · 下次自动检查倒计时</Text>
+      </Box>
+    </Box>
+  </Box>
+  <Box style={{ height: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>13 / 19</Text>
+  </Box>
+</Slide>

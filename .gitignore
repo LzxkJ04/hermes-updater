@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs (installer artifacts are attached to GitHub Releases)
+release/
+release*/
+
+# Runtime data
+*.log
+dist/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
+
+# Binary docs kept out of git (attached to releases instead)
+*.pptx
+*.genie
+HermesUpdater功能介绍/.cache/
+*.zip

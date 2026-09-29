@@ -1,0 +1,64 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>五种网络方案与智能探测</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第二章 · 网络与镜像系统</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 500, flexDirection: 'row', gap: 30 }}>
+    <Box style={{ width: 360, justifyContent: 'center', flexDirection: 'column', gap: 20 }}>
+      <Text style={{ fontSize: 17, color: '#334155', lineHeight: 1.75 }}>
+        直连、系统代理、手动代理、镜像加速、自动探测<span style={{ fontWeight: 'bold', color: '#0F172A' }}>五种方案</span>自由切换，
+        更新失败时自动重试并叠加镜像环境。
+      </Text>
+      <Box style={{ background: '#EFF6FF', borderRadius: 12, padding: '16px 20px', borderLeft: '4px solid #3B82F6' }}>
+        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#1D4ED8' }}>自动探测优先级</Text>
+        <Text style={{ fontSize: 13.5, color: '#334155', lineHeight: 1.6, marginTop: 6 }}>
+          直连 GitHub → 系统代理 → 可用镜像 → 手动代理 → 系统代理兜底，逐级降级直到连通
+        </Text>
+      </Box>
+      <Box style={{ background: '#FFFBEB', borderRadius: 12, padding: '16px 20px', borderLeft: '4px solid #F59E0B' }}>
+        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#B45309' }}>镜像假活识别</Text>
+        <Text style={{ fontSize: 13.5, color: '#334155', lineHeight: 1.6, marginTop: 6 }}>
+          部分失效镜像返回 200 + 网页内容——工具用 git 协议级探测（要求 upload-pack 响应头）识破，避免误判可用
+        </Text>
+      </Box>
+    </Box>
+    <Box style={{ flex: 1, justifyContent: 'center', background: '#F8FAFC', borderRadius: 16, padding: 12 }}>
+      <svg width={740} height={470} viewBox='0 0 740 470'>
+        <rect x='20' y='18' width='700' height='86' rx='12' fill='#FFFFFF' stroke='#3B82F6' strokeWidth='2' />
+        <circle cx='58' cy='61' r='20' fill='#EFF6FF' stroke='#3B82F6' strokeWidth='2' />
+        <text x='58' y='67' textAnchor='middle' fontSize='16' fill='#3B82F6' fontWeight='bold'>1</text>
+        <text x='95' y='52' fontSize='17' fontWeight='bold' fill='#0F172A'>直连 GitHub</text>
+        <text x='95' y='78' fontSize='12' fill='#64748B'>无需任何配置，网络通畅时首选，延迟最低</text>
+        <text x='660' y='67' fontSize='13' fill='#10B981' fontWeight='bold'>⚡ 最快</text>
+        <rect x='20' y='114' width='700' height='86' rx='12' fill='#FFFFFF' stroke='#06B6D4' strokeWidth='2' />
+        <circle cx='58' cy='157' r='20' fill='#ECFEFF' stroke='#06B6D4' strokeWidth='2' />
+        <text x='58' y='163' textAnchor='middle' fontSize='16' fill='#0891B2' fontWeight='bold'>2</text>
+        <text x='95' y='148' fontSize='17' fontWeight='bold' fill='#0F172A'>系统代理</text>
+        <text x='95' y='174' fontSize='12' fill='#64748B'>自动读取 Windows 注册表代理设置，无需手动填写</text>
+        <text x='660' y='163' fontSize='13' fill='#0891B2'>自动识别</text>
+        <rect x='20' y='210' width='700' height='86' rx='12' fill='#FFFFFF' stroke='#8B5CF6' strokeWidth='2' />
+        <circle cx='58' cy='253' r='20' fill='#F5F3FF' stroke='#8B5CF6' strokeWidth='2' />
+        <text x='58' y='259' textAnchor='middle' fontSize='16' fill='#7C3AED' fontWeight='bold'>3</text>
+        <text x='95' y='244' fontSize='17' fontWeight='bold' fill='#0F172A'>手动代理</text>
+        <text x='95' y='270' fontSize='12' fill='#64748B'>自定义 HTTP/SOCKS 地址，支持多套配置方案保存</text>
+        <text x='660' y='259' fontSize='13' fill='#7C3AED'>可自定义</text>
+        <rect x='20' y='306' width='700' height='86' rx='12' fill='#FFFFFF' stroke='#F59E0B' strokeWidth='2' />
+        <circle cx='58' cy='349' r='20' fill='#FEF3C7' stroke='#F59E0B' strokeWidth='2' />
+        <text x='58' y='355' textAnchor='middle' fontSize='16' fill='#B45309' fontWeight='bold'>4</text>
+        <text x='95' y='340' fontSize='17' fontWeight='bold' fill='#0F172A'>镜像加速（前缀式）</text>
+        <text x='95' y='366' fontSize='12' fill='#64748B'>ghproxy 系 8 个候选镜像，git url 重写实现透明加速，主镜像失效自动轮换</text>
+        <text x='660' y='355' fontSize='13' fill='#B45309'>8 候选轮换</text>
+        <rect x='20' y='402' width='700' height='52' rx='12' fill='#0F172A' />
+        <text x='58' y='434' textAnchor='middle' fontSize='16' fill='#F59E0B' fontWeight='bold'>AUTO</text>
+        <text x='95' y='434' fontSize='14' fill='#E2E8F0'>自动探测模式：实时测速择优，一条探测链打通所有方案</text>
+      </svg>
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>07 / 19</Text>
+  </Box>
+</Slide>

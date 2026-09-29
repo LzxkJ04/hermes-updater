@@ -1,0 +1,69 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>安装路径智能管理</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第三章 · 路径·健康·诊断</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 500, flexDirection: 'row', gap: 28 }}>
+    <Box style={{ width: 620, justifyContent: 'center', background: '#F8FAFC', borderRadius: 16, padding: 16 }}>
+      <svg width={590} height={468} viewBox='0 0 590 468'>
+        <rect x='20' y='16' width='550' height='70' rx='12' fill='#EFF6FF' stroke='#3B82F6' strokeWidth='2' />
+        <text x='40' y='45' fontSize='16' fontWeight='bold' fill='#0F172A'>🚀 三级识别引擎（启动 / 手动均可触发）</text>
+        <text x='40' y='70' fontSize='12.5' fill='#334155'>环境变量位 → 盘符浅扫/深扫 → where.exe 反推安装目录</text>
+        <line x1='295' y1='86' x2='295' y2='120' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='289,116 295,126 301,116' fill='#94A3B8' />
+        <rect x='20' y='126' width='265' height='92' rx='12' fill='#FFFFFF' stroke='#10B981' strokeWidth='2' />
+        <text x='40' y='156' fontSize='15' fontWeight='bold' fill='#065F46'>✅ 候选路径验证</text>
+        <text x='40' y='180' fontSize='12' fill='#334155'>逐个校验：目录存在 / hermes 命令 /</text>
+        <text x='40' y='200' fontSize='12' fill='#334155'>Agent 目录 / git 仓库 / 可写性 / 磁盘剩余</text>
+        <rect x='305' y='126' width='265' height='92' rx='12' fill='#FFFFFF' stroke='#F59E0B' strokeWidth='2' />
+        <text x='325' y='156' fontSize='15' fontWeight='bold' fill='#92400E'>🔁 启动自愈</text>
+        <text x='325' y='180' fontSize='12' fill='#334155'>启动时发现路径失效 → 自动探测 →</text>
+        <text x='325' y='200' fontSize='12' fill='#334155'>命中即切换并通知界面（可开关）</text>
+        <line x1='295' y1='218' x2='295' y2='252' stroke='#94A3B8' strokeWidth='2' />
+        <polygon points='289,248 295,258 301,248' fill='#94A3B8' />
+        <rect x='20' y='258' width='550' height='70' rx='12' fill='#FFFFFF' stroke='#06B6D4' strokeWidth='2' />
+        <text x='40' y='287' fontSize='15' fontWeight='bold' fill='#0F172A'>👁 运行时路径监控（60 秒轮询）</text>
+        <text x='40' y='312' fontSize='12.5' fill='#334155'>路径从有效变失效立即告警提醒，安装被移动/删除第一时间知道</text>
+        <rect x='20' y='352' width='265' height='92' rx='12' fill='#FFFFFF' stroke='#8B5CF6' strokeWidth='2' />
+        <text x='40' y='382' fontSize='15' fontWeight='bold' fill='#5B21B6'>🕘 路径历史</text>
+        <text x='40' y='406' fontSize='12' fill='#334155'>最近 8 个有效路径记忆，</text>
+        <text x='40' y='426' fontSize='12' fill='#334155'>输入框 datalist 快速回选</text>
+        <rect x='305' y='352' width='265' height='92' rx='12' fill='#FFFFFF' stroke='#3B82F6' strokeWidth='2' />
+        <text x='325' y='382' fontSize='15' fontWeight='bold' fill='#1D4ED8'>📦 已知安装管理</text>
+        <text x='325' y='406' fontSize='12' fill='#334155'>多套 Hermes 安装登记在案，</text>
+        <text x='325' y='426' fontSize='12' fill='#334155'>一键校验有效性并快速切换</text>
+      </svg>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 20 }}>
+      <Text style={{ fontSize: 17, color: '#334155', lineHeight: 1.7 }}>
+        换过目录、搬过盘、重装过系统？<span style={{ fontWeight: 'bold', color: '#0F172A' }}>路径从来不用手填</span>——工具自己找到、自己验证、自己修复。
+      </Text>
+      {[
+        ['search-location', '#3B82F6', '一键重新识别', '路径失效时仪表盘卡片一键跳转识别，深扫模式翻遍盘符也不放过'],
+        ['bell', '#F59E0B', '失效主动告警', '60 秒轮询 + 状态翻转触发，失效瞬间弹通知，不等更新失败才发现'],
+      ].map(([ic, c, t, d]) => (
+        <Box key={t} style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
+          <Box style={{ width: 46, height: 46, borderRadius: 12, background: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
+            <FAIcon name={ic} style={{ fill: c, width: 24, height: 24 }} />
+          </Box>
+          <Box style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0F172A' }}>{t}</Text>
+            <Text style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>{d}</Text>
+          </Box>
+        </Box>
+      ))}
+      <Box style={{ background: '#ECFDF5', borderRadius: 12, padding: '14px 18px', borderLeft: '4px solid #10B981' }}>
+        <Text style={{ fontSize: 14, color: '#065F46', lineHeight: 1.6 }}>
+          实测：注入无效路径后 <span style={{ fontWeight: 'bold' }}>1 秒内自动切回真实安装</span>，更新流程无感继续
+        </Text>
+      </Box>
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>10 / 19</Text>
+  </Box>
+</Slide>

@@ -1,0 +1,41 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>目录 · 五大能力域</Text>
+  </Box>
+  <Box style={{ height: 460, flexDirection: 'row', gap: 36 }}>
+    <Box style={{ width: 300, justifyContent: 'center' }}>
+      <Text style={{ fontSize: 22, color: '#334155', lineHeight: 1.7 }}>
+        从更新引擎到体验细节，<br />
+        <span style={{ fontWeight: 'bold', color: '#0F172A' }}>40+ 项功能</span>覆盖更新管理的<br />
+        全部环节——每个功能都<br />
+        配有后台设置项，可按需开关。
+      </Text>
+      <Box style={{ marginTop: 30, width: 120, height: 6, background: 'linear-gradient(90deg, #3B82F6 0%, #06B6D4 100%)', borderRadius: 3 }} />
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
+      {[
+        ['01', '核心更新能力', '预检 · 倒计时确认 · 取消与防睡眠 · 自动重试 · 镜像回退 · 回滚'],
+        ['02', '网络与镜像系统', '五种方案 · 八大镜像 · git 协议级探测 · 测速对比 · 网络巡检'],
+        ['03', '路径·健康·诊断', '三级路径识别 · 启动自愈 · 健康评分 · 六大诊断工具 · 报告导出'],
+        ['04', '数据·备份·日志', '更新热力图与周报 · 每日自动备份 · 配置导入导出 · 日志过滤'],
+        ['05', '通知·体验·稳定', '四层通知体系 · 免打扰 · 深浅主题 · 中英双语 · 单实例锁'],
+      ].map(([n, t, d]) => (
+        <Box key={n} style={{ flexDirection: 'row', alignItems: 'center', gap: 20, background: '#F8FAFC', borderRadius: 12, padding: '14px 22px', borderLeft: `4px solid ${n === '01' ? '#F59E0B' : '#3B82F6'}` }}>
+          <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#3B82F6', width: 56 }}>{n}</Text>
+          <Box style={{ flex: 1 }}>
+            <Text style={{ fontSize: 19, fontWeight: 'bold', color: '#0F172A' }}>{t}</Text>
+            <Text style={{ fontSize: 14, color: '#64748B', marginTop: 3 }}>{d}</Text>
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <svg width={18} height={18} viewBox='0 0 20 20'><path d='M10 1l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L1.3 7.3l6.1-.7z' fill='#94A3B8' /></svg>
+      <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    </Box>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>02 / 19</Text>
+  </Box>
+</Slide>

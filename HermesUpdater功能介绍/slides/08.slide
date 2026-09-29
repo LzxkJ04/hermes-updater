@@ -1,0 +1,61 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', position: 'relative', overflow: 'hidden', padding: '20px 60px' }}>
+  <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 720, background: 'radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.10) 0%, rgba(255,255,255,0) 55%)' }} />
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center', position: 'relative' }}>
+    <Box style={{ width: 6, height: 44, background: '#F59E0B', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>测速对比：一键切换最快路线</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第二章 · 网络与镜像系统</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 508, position: 'relative' }}>
+    <Box style={{ position: 'absolute', left: 0, top: 30 }}>
+      <Text style={{ fontSize: 112, fontWeight: 'bold', color: '#F59E0B', lineHeight: 1 }}>1044<span style={{ fontSize: 46, color: '#B45309' }}>ms</span></Text>
+      <Text style={{ fontSize: 19, color: '#334155', marginTop: 14, lineHeight: 1.55, width: 520 }}>
+        实测最快镜像 ghproxy.net 的延迟——<span style={{ fontWeight: 'bold', color: '#0F172A' }}>点一下「应用」</span>，立即切换到最优网络路线
+      </Text>
+      <Box style={{ flexDirection: 'row', gap: 16, marginTop: 24 }}>
+        <Box style={{ background: '#F8FAFC', borderRadius: 12, padding: '11px 18px', borderLeft: '4px solid #3B82F6', width: 250 }}>
+          <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A' }}>并发实测</Text>
+          <Text style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>直连 + 系统代理 + 手动代理 + 全部 8 个镜像，一次点击全部并发测速</Text>
+        </Box>
+        <Box style={{ background: '#F8FAFC', borderRadius: 12, padding: '11px 18px', borderLeft: '4px solid #06B6D4', width: 250 }}>
+          <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A' }}>网络巡检</Text>
+          <Text style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>后台定时巡检，连续失败告警、恢复即通知，间隔可设</Text>
+        </Box>
+      </Box>
+      <Box style={{ flexDirection: 'row', gap: 16, marginTop: 12 }}>
+        <Box style={{ background: '#F8FAFC', borderRadius: 12, padding: '11px 18px', borderLeft: '4px solid #10B981', width: 250 }}>
+          <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A' }}>连通性测试</Text>
+          <Text style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>与真实更新一致的网络链路实测 github.com，保留最近 5 条历史</Text>
+        </Box>
+        <Box style={{ background: '#F8FAFC', borderRadius: 12, padding: '11px 18px', borderLeft: '4px solid #F59E0B', width: 250 }}>
+          <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A' }}>一键应用</Text>
+          <Text style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, marginTop: 3 }}>结果按可达→延迟排序，⚡标记最快，行尾按钮直接切换</Text>
+        </Box>
+      </Box>
+    </Box>
+    <Box style={{ position: 'absolute', right: 0, top: 20, width: 380, background: '#0F172A', borderRadius: 16, padding: '22px 24px' }}>
+      <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#94A3B8', marginBottom: 14 }}>实测结果样例（2026-09）</Text>
+      {[
+        ['✅', '镜像 ghproxy.net', '⚡ 1044ms', '#F59E0B'],
+        ['✅', '镜像 ghproxy.link', '1092ms', '#E2E8F0'],
+        ['✅', '镜像 gh.ddlc.top', '1796ms', '#E2E8F0'],
+        ['✅', '镜像 ghproxy.cn', '2072ms', '#E2E8F0'],
+        ['✅', '直连 GitHub', '8049ms', '#94A3B8'],
+      ].map(([m, n, t, c]) => (
+        <Box key={n} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid rgba(148,163,184,0.15)' }}>
+          <Box style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+            <Text style={{ fontSize: 13 }}>{m}</Text>
+            <Text style={{ fontSize: 14, color: c === '#F59E0B' ? '#F59E0B' : '#CBD5E1', fontWeight: c === '#F59E0B' ? 'bold' : 'normal' }}>{n}</Text>
+          </Box>
+          <Text style={{ fontSize: 14, color: c, fontWeight: c === '#F59E0B' ? 'bold' : 'normal' }}>{t}</Text>
+        </Box>
+      ))}
+      <Text style={{ fontSize: 12, color: '#64748B', marginTop: 12 }}>延迟数据来自工具内置测速功能真实输出</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>08 / 19</Text>
+  </Box>
+</Slide>

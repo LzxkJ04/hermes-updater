@@ -1,0 +1,26 @@
+<Slide style={{ width: 1280, height: 720, background: '#0F172A', position: 'relative', overflow: 'hidden' }}>
+  <Image src="assets/cover_hero.png" style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 768, objectFit: 'cover', opacity: 0.85 }} />
+  <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 720, background: 'linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.55) 55%, rgba(15,23,42,0.15) 100%)' }} />
+  <Box style={{ position: 'absolute', left: 80, top: 210, width: 660 }}>
+    <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 26 }}>
+      <Box style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 24, color: '#FFFFFF', fontWeight: 'bold' }}>H</Text>
+      </Box>
+      <Text style={{ fontSize: 18, color: '#94A3B8', letterSpacing: 4 }}>HERMES AGENT UPDATE MANAGER</Text>
+    </Box>
+    <Text style={{ fontSize: 68, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.15 }}>
+      Hermes<span style={{ color: '#F59E0B' }}>Updater</span>
+    </Text>
+    <Text style={{ fontSize: 30, color: '#E2E8F0', marginTop: 22, lineHeight: 1.4 }}>
+      让 Hermes Agent 永不落后的<span style={{ color: '#F59E0B', fontWeight: 'bold' }}>桌面更新管家</span>
+    </Text>
+    <Box style={{ flexDirection: 'row', gap: 14, marginTop: 40 }}>
+      {['一键更新', '全自动守护', '智能网络', '健康可诊'].map((t) => (
+        <Box key={t} style={{ padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(148,163,184,0.5)', background: 'rgba(15,23,42,0.45)' }}>
+          <Text style={{ fontSize: 16, color: '#CBD5E1' }}>{t}</Text>
+        </Box>
+      ))}
+    </Box>
+    <Text style={{ fontSize: 15, color: '#64748B', marginTop: 42 }}>v2.18.0 · Windows 桌面端 · Electron 构建 · 功能全景介绍</Text>
+  </Box>
+</Slide>

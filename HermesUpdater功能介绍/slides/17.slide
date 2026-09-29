@@ -1,0 +1,50 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>界面体验与工程稳定</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第五章 · 通知·体验·稳定</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 508, gap: 22, flexDirection: 'row' }}>
+    {[
+      ['palette', '界面体验', '#3B82F6', [
+        ['深浅双主题', '深色 / 浅色 / 跟随系统三档切换，终端面板同步适配，5 种强调色个性点缀'],
+        ['中英双语', '453 组词条全量覆盖界面与通知，一键切换即时生效'],
+        ['终端配色自定义', '更新输出与翻译面板配色可选：跟随主题 / 经典黑 / 自定义前景背景色'],
+        ['设置搜索', '40+ 设置项关键词秒搜，改过未保存黄点提示、离开二次确认'],
+      ]],
+      ['language', '翻译与多语言输出', '#06B6D4', [
+        ['实时翻译栏', '更新输出即时翻译为中文，失败原因秒懂'],
+        ['熔断翻译链', 'google → gcloud → deepl → lingva → mymemory → youdao → 离线词典，七级降级保可用'],
+        ['自定义词典', '专有名词人工兜底，翻译越来越准'],
+        ['面板拖拽记忆', '翻译面板宽度拖拽持久化，布局随你习惯'],
+      ]],
+      ['shield', '工程稳定性', '#F59E0B', [
+        ['单实例锁', '重复启动自动退出并聚焦已有窗口，杜绝配置文件读写竞争'],
+        ['窗口记忆', '位置尺寸实时防抖保存，异常退出也不丢'],
+        ['输入防御', '设置写入严格类型校验，脏数据直接拒绝'],
+        ['三重校验发布', '静态交叉校验 → CDP 真机动态测试 → 打包冒烟，每批迭代全链路验证'],
+      ]],
+    ].map(([ic, title, color, items]) => (
+      <Box key={title} style={{ flex: 1, background: '#F8FAFC', borderRadius: 16, padding: '22px 20px', flexDirection: 'column', borderLeft: `4px solid ${color}` }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <FAIcon name={ic} style={{ fill: color, width: 30, height: 30 }} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#0F172A' }}>{title}</Text>
+        </Box>
+        <Box style={{ flexDirection: 'column', gap: 12 }}>
+          {items.map(([t, d]) => (
+            <Box key={t}>
+              <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A' }}>{t}</Text>
+              <Text style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, marginTop: 2 }}>{d}</Text>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    ))}
+  </Box>
+  <Box style={{ height: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>17 / 19</Text>
+  </Box>
+</Slide>

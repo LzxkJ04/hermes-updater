@@ -1,0 +1,59 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: '20px 60px' }}>
+  <Box style={{ height: 100, flexDirection: 'row', alignItems: 'center' }}>
+    <Box style={{ width: 6, height: 44, background: '#3B82F6', borderRadius: 3, marginRight: 16 }} />
+    <Box>
+      <Text style={{ fontSize: 34, fontWeight: 'bold', color: '#0F172A' }}>健康评分与诊断工具箱</Text>
+      <Text style={{ fontSize: 14, color: '#94A3B8', marginTop: 4 }}>第三章 · 路径·健康·诊断</Text>
+    </Box>
+  </Box>
+  <Box style={{ height: 500, flexDirection: 'row', gap: 28 }}>
+    <Box style={{ width: 560, justifyContent: 'center', background: '#F8FAFC', borderRadius: 16, padding: 18, flexDirection: 'row', gap: 24, alignItems: 'center' }}>
+      <svg width={230} height={230} viewBox='0 0 230 230'>
+        <circle cx='115' cy='115' r='92' fill='none' stroke='#E2E8F0' strokeWidth='16' />
+        <circle cx='115' cy='115' r='92' fill='none' stroke='#10B981' strokeWidth='16' strokeDasharray='578 578' strokeLinecap='round' transform='rotate(-90 115 115)' />
+        <text x='115' y='108' textAnchor='middle' fontSize='58' fontWeight='bold' fill='#10B981'>100</text>
+        <text x='115' y='146' textAnchor='middle' fontSize='18' fill='#64748B'>/100 优秀</text>
+      </svg>
+      <Box style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0F172A' }}>五维健康评分</Text>
+        {[
+          ['路径存在', '20 分', '#10B981'],
+          ['hermes 命令可用', '20 分', '#10B981'],
+          ['Agent 目录完整', '20 分', '#10B981'],
+          ['git 仓库正常', '20 分', '#10B981'],
+          ['磁盘剩余 ≥5GB', '20 分', '#10B981'],
+        ].map(([t, s]) => (
+          <Box key={t} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 13.5, color: '#334155' }}>✔ {t}</Text>
+            <Text style={{ fontSize: 13.5, fontWeight: 'bold', color: '#10B981' }}>{s}</Text>
+          </Box>
+        ))}
+        <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>≥90 优秀 · ≥70 良好 · 否则需关注，悬停看明细</Text>
+      </Box>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+      <Text style={{ fontSize: 17, fontWeight: 'bold', color: '#0F172A' }}>六大诊断与维护工具（诊断页一键直达）</Text>
+      {[
+        ['stethoscope', '运行 doctor', 'Hermes 官方自检全流程，输出实时着色'],
+        ['code-branch', 'Git 工作区检查', '分支 / 未提交更改 / 冲突状态一屏掌握'],
+        ['wrench', '修复依赖', 'node_modules 损坏时自动重装恢复'],
+        ['broom', '一键维护', 'git gc 仓库瘦身 + npm 缓存校验，流式输出进度'],
+        ['hdd', '体积分析', '安装目录 Top25 大小排行 + 柱状条可视化'],
+        ['file-export', '报告导出', '诊断结果 / 环境信息 / 健康报告（HTML）一键导出'],
+      ].map(([ic, t, d]) => (
+        <Box key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, background: '#F8FAFC', borderRadius: 10, padding: '9px 14px' }}>
+          <FAIcon name={ic} style={{ fill: '#3B82F6', width: 22, height: 22 }} />
+          <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#0F172A', width: 150 }}>{t}</Text>
+          <Text style={{ fontSize: 13, color: '#64748B', flex: 1 }}>{d}</Text>
+        </Box>
+      ))}
+      <Box style={{ background: '#FFFBEB', borderRadius: 10, padding: '10px 14px', borderLeft: '4px solid #F59E0B' }}>
+        <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 1.55 }}>环境信息一键收集：系统 / 版本 / 网络方式汇总，问题反馈不再来回截图</Text>
+      </Box>
+    </Box>
+  </Box>
+  <Box style={{ height: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>HermesUpdater · 功能全景</Text>
+    <Text style={{ fontSize: 14, color: '#94A3B8' }}>11 / 19</Text>
+  </Box>
+</Slide>
