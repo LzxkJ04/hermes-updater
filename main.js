@@ -1,11 +1,12 @@
 // HermesUpdater Electron 版 - 主进程
 // 移植自 tkinter 版 hermes_updater.py 的后端逻辑
-const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, shell, dialog, nativeImage, nativeTheme, net, powerSaveBlocker } = require("electron");
+const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, shell, dialog, nativeImage, nativeTheme, net, powerSaveBlocker, Notification } = require("electron");
 const { spawn, execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const http = require("https");
+const http = require("http");
+const https = require("https");
 
 const APP_NAME = "HermesUpdater";
 const APP_DIR = path.join(os.homedir(), "AppData", "Roaming", APP_NAME);
@@ -398,7 +399,7 @@ function sendWebhook(event, extra = {}) {
   if (!url || !/^https?:\/\//.test(url)) return;
   try {
     const u = new URL(url);
-    const mod = u.protocol === "https:" ? require("https") : http;
+    const mod = u.protocol === "https:" ? https : http;
     const payload = JSON.stringify({ event, app: "HermesUpdater", version: app.getVersion(), time: new Date().toISOString(), ...extra });
     const req = mod.request(u, {
       method: "POST", timeout: 10000,
@@ -442,23 +443,6 @@ function getFreeDiskGB(dir) {
 }
 
 // ---------------- 网络探测 ----------------
-function testUrl(url, proxy, timeout = 8000) {
-  return new Promise((resolve) => {
-    try {
-      const u = new URL(url);
-      const req = http.request({
-        hostname: u.hostname, port: u.port || 443, path: u.pathname,
-        method: "GET", timeout,
-        ...(proxy ? { host: new URL(proxy).hostname, port: new URL(proxy).port || 80 } : {}),
-      }, (res) => resolve([200, 301, 302, 403].includes(res.statusCode)));
-      req.on("timeout", () => { req.destroy(); resolve(false); });
-      req.on("error", () => resolve(false));
-      req.end();
-    } catch { resolve(false); }
-  });
-}
-// 注意: http.request 走 https URL 需要 https 模块; 这里统一用 https
-const https = require("https");
 function testUrl2(url, proxy, timeout = 8000) {
   return new Promise((resolve) => {
     try {
@@ -2848,8 +2832,7 @@ ipcMain.handle("changelog-fetch", async () => {
         groups[0].commits.push(c);
       }
     }
-    groups.reverse(); // 旧 -> 新? 不: log 是新->旧, groups 头是最新的未发布组; reverse 后最新组在尾部, 改为保持最新在前
-    groups.reverse();
+    // git log 已是新->旧, 标签组按出现顺序即新->旧, 保持最新在前
   } else groups = [{ tag: "", hash: commits[0] ? commits[0].hash : "", date: commits[0] ? commits[0].date : "", commits }];
   return { ok: true, total: commits.length, groups };
 });
@@ -2888,7 +2871,7 @@ ipcMain.handle("webhook-test", async () => {
   return await new Promise((resolve) => {
     try {
       const u = new URL(url);
-      const mod = u.protocol === "https:" ? require("https") : http;
+      const mod = u.protocol === "https:" ? https : http;
       const payload = JSON.stringify({ event: "test", app: "HermesUpdater", version: app.getVersion(), time: new Date().toISOString() });
       const req = mod.request(u, { method: "POST", timeout: 10000, headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload), ...(S.webhook_secret ? { "X-Hermes-Secret": String(S.webhook_secret) } : {}) } }, (res) => {
         res.resume();
