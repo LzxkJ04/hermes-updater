@@ -89,19 +89,24 @@ The WeChat QR code is valid for 7 days. When it expires, please join the QQ grou
 
 Join our community for feedback and feature requests:
 
-### QQ Group
+<div align="center">
 
-**Group ID: 1127744195**
+<table>
+  <tr>
+    <th>QQ Group</th>
+    <th>WeChat Group</th>
+  </tr>
+  <tr>
+    <td align="center"><b>Group ID: 1127744195</b></td>
+    <td align="center">Scan to join</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/qq-group.jpg" alt="QQ Group QR" width="240"></td>
+    <td align="center"><img src="docs/wechat-group.png" alt="WeChat Group QR" width="240"></td>
+  </tr>
+</table>
 
-<p align="center">
-  <img src="docs/qq-group.jpg" alt="QQ Group QR" width="320">
-</p>
-
-### WeChat Group
-
-<p align="center">
-  <img src="docs/wechat-group.png" alt="WeChat Group QR" width="320">
-</p>
+</div>
 
 > The WeChat QR code is **valid for 7 days (until 2026-10-07)**. If expired, join the QQ group above.
 

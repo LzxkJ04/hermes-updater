@@ -89,19 +89,24 @@ node check.js        # 静态一致性校验（i18n / IPC / DOM id）
 
 欢迎加入交流群反馈问题、提出功能建议：
 
-### QQ 群
+<div align="center">
 
-**群号：1127744195**
+<table>
+  <tr>
+    <th>QQ 群</th>
+    <th>微信群</th>
+  </tr>
+  <tr>
+    <td align="center"><b>群号：1127744195</b></td>
+    <td align="center">扫码加入</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/qq-group.jpg" alt="QQ 群二维码" width="240"></td>
+    <td align="center"><img src="docs/wechat-group.png" alt="微信群二维码" width="240"></td>
+  </tr>
+</table>
 
-<p align="center">
-  <img src="docs/qq-group.jpg" alt="QQ 群二维码" width="320">
-</p>
-
-### 微信群
-
-<p align="center">
-  <img src="docs/wechat-group.png" alt="微信群二维码" width="320">
-</p>
+</div>
 
 > 微信群二维码 **7 天内（2026-10-07 前）有效**，过期请加入上方 QQ 群。
 
