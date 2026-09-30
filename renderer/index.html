@@ -172,6 +172,7 @@
         <button class="btn" id="btn-rollback" data-i18n="btn.rollback">回滚版本</button>
         <button class="btn" id="btn-copyout" data-i18n="btn.copyout">📋 复制输出</button>
         <button class="btn" id="btn-export-out" data-i18n="btn.export.out">📄 导出 txt</button>
+        <button class="btn" id="btn-em-probe-out" data-i18n="em.probe.mirror">🔍 镜像测速</button>
       </div>
       <div class="panel" id="whatsnew-panel" hidden>
         <div class="panel-head">
@@ -353,6 +354,60 @@
           <label class="check"><input type="checkbox" id="s-pathdeep"><span data-i18n="chk.pathdeep">深度扫描所有盘符（更全面，稍慢）</span></label>
           <label class="check"><input type="checkbox" id="s-pathwatch"><span data-i18n="chk.pathwatch">运行时监控安装路径（失效时自动提醒并尝试修复）</span></label>
         </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="set.em">🚀 国内镜像统一加速（28 类工具链）</h3>
+          <span class="muted" id="em-cur" style="font-size:11px"></span>
+        </div>
+        <p class="hint" data-i18n="set.em.tip">💡 打包阶段 Electron 会从 GitHub 下载 electron 二进制与 nsis / winCodeSign 工具包，国内直连常见 <b>TypeError: fetch failed</b>。开启后自动注入国内镜像，并在多个源之间探测最快、失败自动切换。</p>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-em-enabled"><span data-i18n="chk.em.enabled">启用国内 Electron 镜像加速</span></label>
+          <label class="check"><input type="checkbox" id="s-em-probe"><span data-i18n="chk.em.probe">注入前探测各镜像延迟，自动选最快的可用源</span></label>
+          <label class="check"><input type="checkbox" id="s-em-before-update"><span data-i18n="chk.em.before">每次更新前强制重新探测（忽略缓存）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-skip-direct"><span data-i18n="chk.em.skipdirect">能直连 GitHub 时跳过镜像（走官方源）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-fallback"><span data-i18n="chk.em.fallback">上次打包失败时自动换下一个候选镜像重试</span></label>
+          <label class="check"><input type="checkbox" id="s-em-verbose"><span data-i18n="chk.em.verbose">在更新输出中打印每个镜像的探测结果</span></label>
+          <label class="check"><input type="checkbox" id="s-em-onstart"><span data-i18n="chk.em.onstart">启动后后台预热探测一次（打开本页更快）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-npmauto"><span data-i18n="chk.em.npmauto">同时把 npm registry 指向国内源</span></label>
+          <label class="check"><input type="checkbox" id="s-em-pergroup"><span data-i18n="chk.em.pergroup">逐组自动选源（每个工具链单独探测最优站点）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-detect"><span data-i18n="chk.em.detect">自动识别本机已安装的工具链（where.exe）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-onlyinstalled"><span data-i18n="chk.em.onlyinstalled">只注入已安装工具链的镜像变量（避免污染无关进程）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-pypipiponly"><span data-i18n="chk.em.pypipiponly">Python 只设 PIP_INDEX_URL（不覆盖 uv / poetry 的源）</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.em.preset">镜像源预设</label>
+          <div class="path-row">
+            <select id="s-em-preset"></select>
+            <button class="btn" id="btn-em-apply" data-i18n="em.btn.auto">⚡ 探测并自动选择</button>
+          </div>
+          <label data-i18n="label.em.electron">Electron 镜像 (ELECTRON_MIRROR)</label><input id="s-em-electron" data-i18n-ph="ph.em.electron" placeholder="留空=沿用预设">
+          <label data-i18n="label.em.builder">工具包镜像 (ELECTRON_BUILDER_BINARIES_MIRROR)</label><input id="s-em-builder" data-i18n-ph="ph.em.builder" placeholder="留空=沿用预设">
+          <label data-i18n="label.em.npm">npm 源 (registry)</label><input id="s-em-npm" data-i18n-ph="ph.em.npm" placeholder="留空=沿用预设">
+          <label data-i18n="label.em.node">Node 头文件镜像 (disturl)</label><input id="s-em-node" data-i18n-ph="ph.em.node" placeholder="留空=沿用预设">
+          <label data-i18n="label.em.dir">版本目录 (ELECTRON_CUSTOM_DIR)</label><input id="s-em-custom-dir" placeholder="v">
+          <label data-i18n="label.em.timeout">单源探测超时(秒, 2-30)</label><input id="s-em-timeout" type="number" min="2" max="30">
+          <label data-i18n="label.em.cache">探测结果缓存(分钟, 0=不缓存)</label><input id="s-em-cache" type="number" min="0" max="1440">
+          <label data-i18n="label.em.retry">镜像失败重试次数(0-5)</label><input id="s-em-retry" type="number" min="0" max="5">
+          <label data-i18n="label.em.missing">站点缺该仓库时</label>
+          <select id="s-em-missing">
+            <option value="official" data-i18n="opt.em.missing.official">回退到官方源（推荐）</option>
+            <option value="skip" data-i18n="opt.em.missing.skip">跳过，不注入该变量</option>
+          </select>
+          <label data-i18n="label.em.extra">额外环境变量（每行 KEY=VALUE）</label><textarea id="s-em-extra" rows="3" data-i18n-ph="ph.em.extra" placeholder="例：SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-em-probe" data-i18n="em.btn.probe">🔍 立即探测所有镜像</button>
+          <button class="btn" id="btn-em-detect" data-i18n="em.btn.detect">🧭 识别本机工具链</button>
+          <button class="btn" id="btn-em-preview" data-i18n="em.btn.preview">📋 预览将注入的变量</button>
+          <button class="btn" id="btn-em-npmrc-on" data-i18n="em.btn.npmrc.on">📝 写入 ~/.npmrc</button>
+          <button class="btn warn" id="btn-em-npmrc-off" data-i18n="em.btn.npmrc.off">🧹 移除 ~/.npmrc 配置</button>
+          <button class="btn" id="btn-em-npmrc-open" data-i18n="em.btn.npmrc.open">📂 打开 .npmrc 位置</button>
+        </div>
+        <p class="hint" data-i18n="em.groups.tip">⬇️ 下面是全部工具链分组：可逐组开关、逐组指定镜像站点（未指定则跟随探测结果）。带 🧭 表示本机检测到该工具链。</p>
+        <div id="em-group-list" class="path-cands"></div>
+        <div id="em-probe-out" class="path-cands" hidden></div>
+        <pre id="em-preview-out" class="terminal short" hidden></pre>
       </div>
       <div class="panel">
         <h3 data-i18n="set.behavior">🔄 更新行为</h3>

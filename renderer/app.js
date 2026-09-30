@@ -277,6 +277,47 @@ const STR = {
     "ins.mirror.fastest": "最快", "ins.mirror.hint": "按 git 协议可达性与延迟排序；点「应用」把该镜像设为安装专用加速前缀（克隆失败也会自动换源重试）。",
     "label.ins.mirror": "安装专用加速前缀（空=沿用镜像地址）",
     "chk.ins.mirrorfb": "安装克隆失败时自动换候选镜像重试",
+    // ---- 国内镜像统一加速 ----
+    "set.em": "🚀 国内镜像统一加速（28 类工具链）",
+    "set.em.tip": "💡 打包阶段 Electron 会从 GitHub 下载 electron 二进制与 nsis / winCodeSign 工具包，国内直连常见 TypeError: fetch failed。开启后自动注入国内镜像，并在多个源之间探测最快、失败自动切换；同时覆盖 npm / Node / Python / Go / Rust / Maven 等 28 类工具链。",
+    "chk.em.enabled": "启用国内镜像统一加速",
+    "chk.em.probe": "注入前探测各镜像延迟，自动选最快的可用源",
+    "chk.em.before": "每次更新前强制重新探测（忽略缓存）",
+    "chk.em.skipdirect": "能直连 GitHub 时跳过镜像（走官方源）",
+    "chk.em.fallback": "上次打包失败时自动换下一个候选镜像重试",
+    "chk.em.verbose": "在更新输出中打印每个镜像的探测结果",
+    "chk.em.onstart": "启动后后台预热探测一次（打开本页更快）",
+    "chk.em.npmauto": "同时把 npm registry 指向国内源",
+    "label.em.preset": "镜像源预设", "label.em.electron": "Electron 镜像 (ELECTRON_MIRROR)",
+    "label.em.builder": "工具包镜像 (ELECTRON_BUILDER_BINARIES_MIRROR)", "label.em.npm": "npm 源 (registry)",
+    "label.em.node": "Node 头文件镜像 (disturl)", "label.em.dir": "版本目录 (ELECTRON_CUSTOM_DIR)",
+    "label.em.timeout": "单源探测超时(秒, 2-30)", "label.em.cache": "探测结果缓存(分钟, 0=不缓存)",
+    "label.em.retry": "镜像失败重试次数(0-5)", "label.em.extra": "额外环境变量（每行 KEY=VALUE）",
+    "ph.em.electron": "留空=沿用预设", "ph.em.builder": "留空=沿用预设", "ph.em.npm": "留空=沿用预设",
+    "ph.em.node": "留空=沿用预设", "ph.em.extra": "例：SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/",
+    "em.btn.probe": "🔍 立即探测所有镜像", "em.btn.auto": "⚡ 探测并自动选择",
+    "em.btn.npmrc.on": "📝 写入 ~/.npmrc", "em.btn.npmrc.off": "🧹 移除 ~/.npmrc 配置",
+    "em.btn.npmrc.open": "📂 打开 .npmrc 位置",
+    "em.cur": (l) => `当前: ${l}`, "em.noresult": "（还没有探测结果，点上面「立即探测所有镜像」）",
+    "em.probing": "正在探测各镜像延迟…", "em.probe.ok": (n, ms) => `✅ 探测完成：${n} 个可用，最快 ${ms}ms`,
+    "em.probe.none": "❌ 所有国内镜像都不可达（检查本机网络/代理）",
+    "em.applied": (l) => `已切换到最快的镜像源：${l} ✔`, "em.probe.fail": "探测失败",
+    "em.ms": (ms) => `${ms}ms`, "em.fail": "不可达", "em.ok": "可用",
+    "em.npmrc.on": (p) => `已写入 npm 镜像配置: ${p}`, "em.npmrc.off": (p) => `已移除 npm 镜像配置: ${p}`,
+    "em.probe.mirror": "🔍 镜像测速",
+    "chk.em.pergroup": "逐组自动选源（每个工具链单独探测最优站点）",
+    "chk.em.detect": "自动识别本机已安装的工具链（where.exe）",
+    "chk.em.onlyinstalled": "只注入已安装工具链的镜像变量（避免污染无关进程）",
+    "chk.em.pypipiponly": "Python 只设 PIP_INDEX_URL（不覆盖 uv / poetry 的源）",
+    "label.em.missing": "站点缺该仓库时",
+    "opt.em.missing.official": "回退到官方源（推荐）",
+    "opt.em.missing.skip": "跳过，不注入该变量",
+    "em.btn.detect": "🧭 识别本机工具链", "em.btn.preview": "📋 预览将注入的变量",
+    "em.groups.tip": "⬇️ 下面是全部工具链分组：可逐组开关、逐组指定镜像站点（未指定则跟随探测结果）。带 🧭 表示本机检测到该工具链。",
+    "em.grp.toggle": "启用/停用该组镜像注入", "em.grp.auto": "跟随探测/全局站点",
+    "em.grp.none": "(站点无此仓库)", "em.grp.saved": "已保存该分组的镜像站点 ✔",
+    "em.detected": (n, all) => `🧭 检测到 ${n}/${all} 个工具链`, "em.preview.count": (n) => `共 ${n} 个环境变量`,
+    "em.preview.empty": "（当前没有要注入的变量：可能总开关关闭、或所有分组都被停用）",
     "unins.title": "🗑️ 卸载 Hermes", "unins.mode": "卸载方式",
     "unins.m.trash": "🗑️ 移入回收站（推荐，可恢复）", "unins.m.modules": "🧹 仅删除依赖/构建产物（保留源码）",
     "unins.m.perm": "💥 彻底删除（不可恢复）", "unins.m.unreg": "📎 仅解除关联（不动文件）",
@@ -631,6 +672,47 @@ const STR = {
     "ins.mirror.fastest": "fastest", "ins.mirror.hint": "Sorted by git-protocol reachability and latency; click \"Apply\" to set it as the install mirror prefix (clone failures retry with another mirror automatically).",
     "label.ins.mirror": "Install mirror prefix (empty = use main mirror)",
     "chk.ins.mirrorfb": "Retry clone with another mirror automatically when it fails",
+    // ---- CN Electron mirror acceleration ----
+    "set.em": "🚀 CN Mirror Acceleration (28 toolchains)",
+    "set.em.tip": "💡 During packaging Electron downloads its binary and the nsis / winCodeSign toolkits from GitHub, which often fails inside China with TypeError: fetch failed. Enable this to inject a CN mirror, pick the fastest one automatically, and switch on failure.",
+    "chk.em.enabled": "Enable CN Electron mirror acceleration",
+    "chk.em.probe": "Probe mirror latency before injecting and pick the fastest reachable one",
+    "chk.em.before": "Always re-probe before every update (ignore cache)",
+    "chk.em.skipdirect": "Skip mirrors when GitHub is directly reachable",
+    "chk.em.fallback": "On packaging failure, auto-switch to the next candidate mirror and retry",
+    "chk.em.verbose": "Print each mirror probe result in the update output",
+    "chk.em.onstart": "Warm up a probe in the background on startup",
+    "chk.em.npmauto": "Also point the npm registry at a CN mirror",
+    "label.em.preset": "Mirror preset", "label.em.electron": "Electron mirror (ELECTRON_MIRROR)",
+    "label.em.builder": "Toolkit mirror (ELECTRON_BUILDER_BINARIES_MIRROR)", "label.em.npm": "npm registry",
+    "label.em.node": "Node headers mirror (disturl)", "label.em.dir": "Version dir (ELECTRON_CUSTOM_DIR)",
+    "label.em.timeout": "Per-mirror probe timeout (sec, 2-30)", "label.em.cache": "Probe result cache (min, 0=off)",
+    "label.em.retry": "Mirror retry count (0-5)", "label.em.extra": "Extra env vars (one KEY=VALUE per line)",
+    "ph.em.electron": "Empty = use preset", "ph.em.builder": "Empty = use preset", "ph.em.npm": "Empty = use preset",
+    "ph.em.node": "Empty = use preset", "ph.em.extra": "e.g. SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/",
+    "em.btn.probe": "🔍 Probe all mirrors now", "em.btn.auto": "⚡ Probe & auto-select",
+    "em.btn.npmrc.on": "📝 Write ~/.npmrc", "em.btn.npmrc.off": "🧹 Remove ~/.npmrc config",
+    "em.btn.npmrc.open": "📂 Reveal .npmrc",
+    "em.cur": (l) => `Current: ${l}`, "em.noresult": "(No probe result yet — click \"Probe all mirrors now\")",
+    "em.probing": "Probing mirror latency…", "em.probe.ok": (n, ms) => `✅ Done: ${n} reachable, fastest ${ms}ms`,
+    "em.probe.none": "❌ No CN mirror reachable (check your network/proxy)",
+    "em.applied": (l) => `Switched to the fastest mirror: ${l} ✔`, "em.probe.fail": "probe failed",
+    "em.ms": (ms) => `${ms}ms`, "em.fail": "unreachable", "em.ok": "OK",
+    "em.npmrc.on": (p) => `Wrote npm mirror config: ${p}`, "em.npmrc.off": (p) => `Removed npm mirror config: ${p}`,
+    "em.probe.mirror": "🔍 Mirror speed test",
+    "chk.em.pergroup": "Per-group auto-select (probe each toolchain separately)",
+    "chk.em.detect": "Auto-detect installed toolchains (where.exe)",
+    "chk.em.onlyinstalled": "Only inject mirror vars for installed toolchains",
+    "chk.em.pypipiponly": "Python: only set PIP_INDEX_URL (leave uv / poetry alone)",
+    "label.em.missing": "When the site lacks that repo",
+    "opt.em.missing.official": "Fall back to the official source (recommended)",
+    "opt.em.missing.skip": "Skip — inject nothing for it",
+    "em.btn.detect": "🧭 Detect local toolchains", "em.btn.preview": "📋 Preview injected vars",
+    "em.groups.tip": "⬇️ All toolchain groups below: toggle each one, or pin a mirror site per group (unset = follow probe result). 🧭 means the toolchain was detected locally.",
+    "em.grp.toggle": "Enable/disable this group", "em.grp.auto": "Follow probe/global site",
+    "em.grp.none": "(site has no such repo)", "em.grp.saved": "Mirror site saved for this group ✔",
+    "em.detected": (n, all) => `🧭 Detected ${n}/${all} toolchains`, "em.preview.count": (n) => `${n} env vars`,
+    "em.preview.empty": "(No vars to inject: master switch off, or every group disabled)",
     "unins.title": "🗑️ Uninstall Hermes", "unins.mode": "Uninstall mode",
     "unins.m.trash": "🗑️ Move to Recycle Bin (recommended, recoverable)", "unins.m.modules": "🧹 Delete deps/build only (keep source)",
     "unins.m.perm": "💥 Delete permanently (unrecoverable)", "unins.m.unreg": "📎 Unregister only (keep files)",
@@ -1163,6 +1245,31 @@ async function loadSettingsUI() {
   $("#s-ins-shortcut").checked = !!s.ins_shortcut;
   $("#s-ins-mirror").value = s.ins_mirror_url || "";
   $("#s-ins-mirrorfb").checked = s.ins_mirror_fallback !== false;
+  // 国内 Electron 镜像加速
+  $("#s-em-enabled").checked = s.em_enabled !== false;
+  $("#s-em-probe").checked = s.em_auto_probe !== false;
+  $("#s-em-before-update").checked = s.em_before_update !== false;
+  $("#s-em-skip-direct").checked = !!s.em_skip_if_direct;
+  $("#s-em-fallback").checked = s.em_fallback_next !== false;
+  $("#s-em-verbose").checked = s.em_verbose !== false;
+  $("#s-em-onstart").checked = !!s.em_on_start;
+  $("#s-em-npmauto").checked = s.em_npm_auto !== false;
+  $("#s-em-pergroup").checked = s.em_per_group !== false;
+  $("#s-em-detect").checked = s.em_detect_tools !== false;
+  $("#s-em-onlyinstalled").checked = s.em_only_installed !== false;
+  $("#s-em-pypipiponly").checked = !!s.em_pypi_pip_only;
+  $("#s-em-missing").value = s.em_missing_policy === "skip" ? "skip" : "official";
+  await refreshEmGroups();
+  $("#s-em-electron").value = s.em_electron || "";
+  $("#s-em-builder").value = s.em_builder || "";
+  $("#s-em-npm").value = s.em_npm || "";
+  $("#s-em-node").value = s.em_node || "";
+  $("#s-em-custom-dir").value = s.em_custom_dir || "v";
+  $("#s-em-timeout").value = parseInt(s.em_probe_timeout) || 6;
+  $("#s-em-cache").value = (parseInt(s.em_cache_min) || 0) === 0 ? 0 : (parseInt(s.em_cache_min) || 30);
+  $("#s-em-retry").value = parseInt(s.em_retry) || 0;
+  $("#s-em-extra").value = s.em_extra || "";
+  await initEmPresets(s.em_preset || "npmmirror");
   $("#s-unins-backup").checked = s.unins_backup !== false;
   $("#s-unins-stop").checked = s.unins_stop_procs !== false;
   $("#s-unins-unreg").checked = s.unins_unregister !== false;
@@ -1309,6 +1416,32 @@ function collectSettings() {
     ins_shortcut: $("#s-ins-shortcut").checked,
     ins_mirror_url: $("#s-ins-mirror").value.trim(),
     ins_mirror_fallback: $("#s-ins-mirrorfb").checked,
+    // 国内 Electron 镜像加速
+    em_enabled: $("#s-em-enabled").checked,
+    em_preset: $("#s-em-preset").value || "npmmirror",
+    em_auto_probe: $("#s-em-probe").checked,
+    em_before_update: $("#s-em-before-update").checked,
+    em_skip_if_direct: $("#s-em-skip-direct").checked,
+    em_fallback_next: $("#s-em-fallback").checked,
+    em_verbose: $("#s-em-verbose").checked,
+    em_on_start: $("#s-em-onstart").checked,
+    em_npm_auto: $("#s-em-npmauto").checked,
+    em_per_group: $("#s-em-pergroup").checked,
+    em_detect_tools: $("#s-em-detect").checked,
+    em_only_installed: $("#s-em-onlyinstalled").checked,
+    em_pypi_pip_only: $("#s-em-pypipiponly").checked,
+    em_missing_policy: $("#s-em-missing").value,
+    // 只在分组矩阵真的渲染出来了才回写, 否则会把用户的逐组开关清空
+    ...(Object.keys(emGroupsFromUI()).length ? { em_groups: emGroupsFromUI() } : {}),
+    em_electron: $("#s-em-electron").value.trim(),
+    em_builder: $("#s-em-builder").value.trim(),
+    em_npm: $("#s-em-npm").value.trim(),
+    em_node: $("#s-em-node").value.trim(),
+    em_custom_dir: $("#s-em-custom-dir").value.trim() || "v",
+    em_probe_timeout: Math.min(Math.max(parseInt($("#s-em-timeout").value) || 6, 2), 30),
+    em_cache_min: Math.min(Math.max(parseInt($("#s-em-cache").value) || 0, 0), 1440),
+    em_retry: Math.min(Math.max(parseInt($("#s-em-retry").value) || 0, 0), 5),
+    em_extra: $("#s-em-extra").value,
     unins_backup: $("#s-unins-backup").checked,
     unins_stop_procs: $("#s-unins-stop").checked,
     unins_unregister: $("#s-unins-unreg").checked,
@@ -1378,7 +1511,13 @@ function collectSettings() {
     language: LANG,
   };
 }
-function applyTheme(dark) { document.body.classList.toggle("light", !dark); $("#btn-theme").textContent = dark ? "🌙" : "☀️"; }
+function applyTheme(dark) {
+  document.body.classList.toggle("light", !dark);
+  $("#btn-theme").textContent = dark ? "🌙" : "☀️";
+  // 强调色是行内变量, 不随 CSS 的 body.light 覆盖 -> 切主题后要按新主题重新取色
+  const sel = $("#s-accent");
+  applyAccent((sel && sel.value) || "blue");
+}
 // 终端配色: theme=跟随主题(CSS变量) / black=强制经典黑 / custom=用户自定义颜色 (更新输出与翻译面板共用)
 // 注意: 变量必须设在 body 上 —— body.light 在 body 上定义了同名变量, 设在 html 会被遮蔽
 function applyTermTheme(s) {
@@ -2137,14 +2276,20 @@ $("#btn-cd-skip").addEventListener("click", () => { if (rpc) { rpc.countdownActi
 
 
 // ---------------- 强调色 ----------------
+// 强调色分深浅两套: 浅色主题下用加深版本, 否则「白底上的彩色文字」和「白字彩色底」对比都不够
+// (applyAccent 是行内样式, 优先级高于 CSS, 所以必须在 JS 里按主题取色)
 const ACCENTS = {
-  blue: ["#3B82F6", "#6366F1"], green: ["#10B981", "#14B8A6"], purple: ["#8B5CF6", "#6366F1"],
-  orange: ["#F59E0B", "#F97316"], teal: ["#06B6D4", "#3B82F6"],
+  blue: { dark: ["#3B82F6", "#6366F1"], light: ["#2563EB", "#4F46E5"] },
+  green: { dark: ["#10B981", "#14B8A6"], light: ["#047857", "#0F766E"] },
+  purple: { dark: ["#8B5CF6", "#6366F1"], light: ["#6D28D9", "#4F46E5"] },
+  orange: { dark: ["#F59E0B", "#F97316"], light: ["#B45309", "#C2410C"] },
+  teal: { dark: ["#06B6D4", "#3B82F6"], light: ["#0E7490", "#1D4ED8"] },
 };
 function applyAccent(name) {
-  const [p, p2] = ACCENTS[name] || ACCENTS.blue;
-  document.documentElement.style.setProperty("--primary", p);
-  document.documentElement.style.setProperty("--primary2", p2);
+  const a = ACCENTS[name] || ACCENTS.blue;
+  const pal = document.body.classList.contains("light") ? a.light : a.dark;
+  document.documentElement.style.setProperty("--primary", pal[0]);
+  document.documentElement.style.setProperty("--primary2", pal[1]);
 }
 $("#s-accent").addEventListener("change", async () => {
   const v = $("#s-accent").value;
@@ -2665,7 +2810,7 @@ $("#btn-upstats").addEventListener("click", async () => {
       <div class="stat-card"><label>${t("stats.thismonth")}</label><b style="font-size:14px">${s.thisMonth.ok}/${s.thisMonth.fail}/${s.thisMonth.cancel}</b></div>
     </div>
     <div class="stat-line"><b>${t("stats.monthly")}</b></div>
-    ${s.months.map((m) => `<div class="stat-bar-row"><span class="mono" style="width:64px">${m.month}</span><span class="stat-bar-track">${seg(m.ok, maxMonth, "#22C55E")}${seg(m.cancel, maxMonth, "#94A3B8")}${seg(m.fail, maxMonth, "#EF4444")}</span><span class="muted" style="width:88px;text-align:right">${m.ok}/${m.fail}/${m.cancel}</span></div>`).join("")}
+    ${s.months.map((m) => `<div class="stat-bar-row"><span class="mono" style="width:64px">${m.month}</span><span class="stat-bar-track">${seg(m.ok, maxMonth, "var(--success)")}${seg(m.cancel, maxMonth, "var(--muted)")}${seg(m.fail, maxMonth, "var(--danger)")}</span><span class="muted" style="width:88px;text-align:right">${m.ok}/${m.fail}/${m.cancel}</span></div>`).join("")}
     ${s.labels.length ? `<div class="stat-line"><b>${t("stats.bylabel")}</b></div>` + s.labels.map((l) => `<div class="stat-bar-row"><span style="width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(l.label)}</span><span class="muted">${t("stats.ok")} ${l.ok} · ${t("stats.fail")} ${l.fail} · ${t("stats.cancel")} ${l.cancel}</span></div>`).join("") : ""}
     ${s.reasons.length ? `<div class="stat-line"><b>${t("stats.byreason")}</b></div>` + s.reasons.map((r) => `<div class="stat-bar-row"><span style="width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(strip(r.reason))}</span><span class="muted">× ${r.n}</span></div>`).join("") : ""}
   `;
@@ -2823,6 +2968,168 @@ $("#btn-bk-scope-def").addEventListener("click", () => {
   toast(t("bk.scope.reset"), "ok", 2200);
   onSettingsEdited();
 });
+
+// ---------------- 国内 Electron 镜像加速 (v2.29.0) ----------------
+let EM_PRESETS_CACHE = [];
+async function initEmPresets(cur) {
+  const sel = $("#s-em-preset");
+  if (!sel || !rpc) return;
+  if (!EM_PRESETS_CACHE.length) {
+    try { EM_PRESETS_CACHE = (await rpc.emPresets()) || []; } catch { EM_PRESETS_CACHE = []; }
+  }
+  if (!EM_PRESETS_CACHE.length) return;
+  const want = cur || sel.value || "npmmirror";
+  sel.innerHTML = EM_PRESETS_CACHE.map((p) => `<option value="${escHtml(p.key)}">${escHtml(p.label)}</option>`).join("");
+  sel.value = EM_PRESETS_CACHE.some((p) => p.key === want) ? want : "npmmirror";
+  refreshEmCur();
+}
+async function refreshEmCur() {
+  const el = $("#em-cur");
+  if (!el || !rpc) return;
+  try {
+    const r = await rpc.emResolved();
+    if (!r) return;
+    const label = ((EM_PRESETS_CACHE.find((p) => p.key === r.key) || {}).label) || r.key;
+    el.textContent = t("em.cur", `${label} · ${r.electron}`);
+  } catch {}
+}
+function renderEmProbe(res) {
+  const box = $("#em-probe-out");
+  if (!box) return;
+  box.hidden = false;
+  const list = res || [];
+  box.innerHTML = list.length ? list.map((r) => {
+    const good = !!r.ok;
+    return `<div class="path-cand ${good ? "valid" : ""}"><span class="badge">${good ? "✅" : "❌"}</span>`
+      + `<span class="p">${escHtml(r.label || r.key)}</span>`
+      + `<span class="meta">${escHtml(good ? t("em.ms", r.ms) : t("em.fail"))}</span></div>`;
+  }).join("") : `<div class="path-cand-tip">${escHtml(t("em.noresult"))}</div>`;
+}
+async function runEmProbe(btn, silent) {
+  if (!rpc) { toast(t("em.probe.fail"), "err"); return null; }
+  if (btn) busy(btn, true);
+  if (!silent) toast(t("em.probing"), "info", 3000);
+  try {
+    const res = await rpc.emProbe();
+    renderEmProbe(res);
+    refreshEmGroups(); // 探测后主进程会重算逐组选源, 刷新矩阵
+    const good = (res || []).filter((r) => r.ok);
+    if (!good.length) { toast(t("em.probe.none"), "err", 5000); return res; }
+    if (!silent) toast(t("em.probe.ok", good.length, good[0].ms), "ok", 4000);
+    return res;
+  } catch (e) { toast(t("em.probe.fail") + ": " + e, "err", 4000); return null; }
+  finally { if (btn) busy(btn, false); }
+}
+// 工具链分组矩阵: 逐组开关 + 逐组选站点 + 本机检测标记
+let EM_GROUP_ROWS = [];
+async function refreshEmGroups(groups) {
+  const box = $("#em-group-list");
+  if (!box || !rpc) return;
+  let rows = groups;
+  if (!rows) { try { rows = await rpc.emGroups(); } catch { rows = []; } }
+  EM_GROUP_ROWS = rows || [];
+  box.innerHTML = "";
+  if (!EM_GROUP_ROWS.length) { box.innerHTML = `<div class="path-cand-tip">${escHtml(t("em.noresult"))}</div>`; return; }
+  for (const g of EM_GROUP_ROWS) {
+    const row = document.createElement("div");
+    row.className = "path-cand" + (g.enabled ? " valid" : "");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = g.enabled !== false; cb.dataset.grp = g.key; cb.className = "em-grp-cb";
+    cb.title = t("em.grp.toggle");
+    const name = document.createElement("span");
+    name.className = "p";
+    name.innerHTML = `${g.detected ? "🧭 " : ""}<b>${escHtml(g.label)}</b> <span class="muted" style="font-size:11px">${escHtml((g.vars || []).slice(0, 3).join(", "))}${(g.vars || []).length > 3 ? " …" : ""}</span>`;
+    const sel = document.createElement("select");
+    sel.className = "em-grp-site"; sel.dataset.grp = g.key;
+    sel.style.width = "auto"; sel.style.minWidth = "150px"; sel.style.padding = "4px 8px"; sel.style.fontSize = "12px";
+    sel.innerHTML = `<option value="">${escHtml(t("em.grp.auto"))}</option>`
+      + (g.options || []).map((o) => `<option value="${escHtml(o.key)}">${escHtml(o.label)}</option>`).join("");
+    sel.value = g.site && (g.options || []).some((o) => o.key === g.site) ? g.site : "";
+    const meta = document.createElement("span");
+    meta.className = "meta"; meta.style.maxWidth = "42%"; meta.style.overflow = "hidden"; meta.style.textOverflow = "ellipsis"; meta.style.whiteSpace = "nowrap";
+    meta.textContent = g.value || t("em.grp.none");
+    meta.title = g.value || "";
+    row.append(cb, name, sel, meta);
+    box.appendChild(row);
+  }
+  // 逐组开关: 直接落到设置里 (走 em_groups)
+  box.querySelectorAll(".em-grp-cb").forEach((cb) => cb.addEventListener("change", () => {
+    const k = cb.dataset.grp;
+    EM_GROUP_ROWS = EM_GROUP_ROWS.map((g) => (g.key === k ? { ...g, enabled: cb.checked } : g));
+    markEmDirty();
+  }));
+  box.querySelectorAll(".em-grp-site").forEach((s) => s.addEventListener("change", async () => {
+    const r = await rpc.emSetSite({ group: s.dataset.grp, site: s.value });
+    if (r && r.ok) { await refreshEmGroups(r.groups); toast(t("em.grp.saved"), "ok", 2200); }
+  }));
+}
+function markEmDirty() { try { updateDirtyUI(); } catch {} }
+function emGroupsFromUI() {
+  const map = {};
+  $$("#em-group-list .em-grp-cb").forEach((cb) => { map[cb.dataset.grp] = cb.checked; });
+  return map;
+}
+$("#btn-em-detect").addEventListener("click", async () => {
+  const btn = $("#btn-em-detect");
+  busy(btn, true);
+  try {
+    const rows = await rpc.emDetect();
+    await refreshEmGroups(rows);
+    const n = (rows || []).filter((g) => g.detected).length;
+    toast(t("em.detected", n, (rows || []).length), "ok", 4000);
+  } catch (e) { toast(t("em.probe.fail") + ": " + e, "err", 4000); }
+  finally { busy(btn, false); }
+});
+$("#btn-em-preview").addEventListener("click", async () => {
+  const out = $("#em-preview-out");
+  if (!rpc || !out) return;
+  try {
+    const r = await rpc.emEnvPreview();
+    out.hidden = false;
+    const env = (r && r.env) || {};
+    const keys = Object.keys(env).sort();
+    out.textContent = keys.length
+      ? keys.map((k) => `${k}=${env[k]}`).join("\n") + `\n\n${t("em.preview.count", keys.length)}`
+      : t("em.preview.empty");
+  } catch (e) { toast(t("em.probe.fail") + ": " + e, "err", 4000); }
+});
+$("#btn-em-probe").addEventListener("click", () => runEmProbe($("#btn-em-probe")));
+$("#btn-em-apply").addEventListener("click", async () => {
+  const btn = $("#btn-em-apply");
+  if (!rpc) return;
+  busy(btn, true);
+  try {
+    const r = await rpc.emApplyProbe();
+    renderEmProbe(r && r.results);
+    if (r && r.ok) { await initEmPresets(r.key); toast(t("em.applied", r.label), "ok", 4500); }
+    else toast(t("em.probe.none"), "err", 5000);
+  } catch (e) { toast(t("em.probe.fail") + ": " + e, "err", 4000); }
+  finally { busy(btn, false); }
+});
+$("#btn-em-npmrc-on").addEventListener("click", async () => {
+  const r = await rpc.emNpmrc(true);
+  toast((r && r.msg) || t("em.probe.fail"), r && r.ok ? "ok" : "err", 6000);
+});
+$("#btn-em-npmrc-off").addEventListener("click", async () => {
+  const r = await rpc.emNpmrc(false);
+  toast((r && r.msg) || t("em.probe.fail"), r && r.ok ? "ok" : "err", 6000);
+});
+$("#btn-em-npmrc-open").addEventListener("click", () => rpc.openPath("npmrc"));
+$("#s-em-preset").addEventListener("change", refreshEmCur);
+// 更新页快捷测速: 结果同时打印到更新输出区, 方便排障时留痕
+$("#btn-em-probe-out").addEventListener("click", async () => {
+  const res = await runEmProbe($("#btn-em-probe-out"), true);
+  if (!res) return;
+  for (const r of res) appendUpdateLine(`${r.ok ? "✅" : "❌"} [镜像] ${r.label} ${r.ok ? r.ms + "ms" : "不可达"}`);
+  const good = res.filter((r) => r.ok);
+  toast(good.length ? t("em.probe.ok", good.length, good[0].ms) : t("em.probe.none"), good.length ? "ok" : "err", 4500);
+});
+// 启动预热: 设置项打开时后台探测一次, 结果留在主进程缓存, 打开设置页/更新时直接用
+setTimeout(() => {
+  if (rpc && BOOT_SETTINGS && BOOT_SETTINGS.em_enabled !== false && BOOT_SETTINGS.em_on_start) {
+    rpc.emProbe().catch(() => {});
+  }
+}, 6000);
 
 // ---------------- 仪表盘快捷中心: 安装 · 卸载 · 维护 (v2.22.0) ----------------
 const DT_MODE_KEY = { trash: "unins.m.trash", modules: "unins.m.modules", permanent: "unins.m.perm", unregister: "unins.m.unreg" };

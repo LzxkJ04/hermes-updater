@@ -3,6 +3,30 @@
 All notable changes to HermesUpdater are documented here.
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.29.0] - 2026-09-30
+
+### Added
+- 🚀 **国内镜像统一加速（8 站点 × 28 工具链分组）**：把原先只覆盖 Electron 的镜像注入升级为通用镜像引擎。内置站点：`mix`（推荐组合）、`npmmirror`、`cdn`（npmmirror CDN 二进制）、`huawei`（华为云）、`ustc`（中科大）、`tuna`（清华）、`official`（官方源）、`custom`（完全自定义）。站点与分组解耦成矩阵，任一站点缺某个仓库时可回退官方源或直接跳过
+- 🧩 **28 类工具链分组**，覆盖你日常会遇到的全部下载源：npm（npm/pnpm/yarn/bun/deno registry）、Node 二进制与头文件（含 nvm）、Electron、electron-builder 工具包、Playwright、Puppeteer、Selenium、ChromeDriver、GeckoDriver、EdgeDriver、node-sass、sharp、sqlite3、bcrypt、canvas、esbuild、Turbo、Parcel、Rollup、Bun、Python（uv / pip / poetry / conda）、Go（GOPROXY）、Cargo、Rustup、HuggingFace、Julia、Maven（含 Gradle）、Helm
+- ⚡ **自动探测与自动切换**：一键「🔍 立即探测所有镜像」实测各站点延迟（Electron 用真实文件 `SHASUMS256.txt` 探测，避免目录列表被禁导致误判），结果按快慢排序；「⚡ 探测并自动选择」直接把最快可用源写回设置。更新时若上次打包失败会自动换下一个候选镜像重试
+- 🎯 **逐组自动选源**：开启后每个工具链单独探测各自最优站点，而不是全局一刀切；设置页下方是完整的「站点 × 分组」矩阵，可逐组开关、逐组手动指定站点（留空则跟随探测结果）
+- 🧭 **工具链自动识别**：通过 `where.exe` 自动检测本机装了哪些工具链（npm/pnpm/yarn/bun/deno、python/uv/pip/poetry/conda、go、cargo/rustup、mvn/gradle/java、helm、julia 等），矩阵里带 🧭 标记；可选「只注入已安装工具链的镜像变量」避免污染无关进程
+- 📝 **~/.npmrc 托管写入**：一键把国内源写进 `~/.npmrc`，用 `# >>> HermesUpdater managed` / `# <<< HermesUpdater managed` 标记块包裹，**不会动你自己写的配置**；可一键移除托管块，也可直接在资源管理器里打开该文件位置
+- 📋 **注入预览**：「📋 预览将注入的变量」列出本次更新实际会注入的全部环境变量（默认 48 个）与取值，一目了然；额外环境变量支持每行 `KEY=VALUE` 自定义追加
+- 🔍 更新页新增「🔍 镜像测速」按钮，不用切到设置页就能测速
+- ⚙️ **25 项镜像设置**：总开关、镜像源预设、4 个手动覆盖地址（Electron / builder 工具包 / npm registry / Node disturl）、Electron 版本目录（支持 `{{ version }}` 模板）、单源探测超时(2-30s)、探测结果缓存(0-1440 分钟)、镜像失败重试次数(0-5)、站点缺仓库时策略（回退官方/跳过）、额外环境变量；开关类 12 项：注入前探测、每次更新前强制重探、能直连 GitHub 时跳过镜像、失败自动换源、输出中打印探测结果、启动后后台预热、同时改 npm registry、逐组自动选源、自动识别工具链、只注入已装工具链、Python 只设 PIP_INDEX_URL
+- 🧪 **离线自测脚本 `selftest_em.js`**：覆盖站点清单、28 组全覆盖与逐个环境变量校验、站点×分组解析与回退、逐组开关与工具链检测、`emEnvAll` 48 变量、额外变量、分组矩阵、`.npmrc` 写入/移除且保留用户配置、真实网络探测，共 92 项断言
+
+### Fixed
+- 🐞 **镜像地址失效**：实测 curl 校验发现阿里云 / 腾讯云 / 中科大 / 清华 / 163 / 上交 / 浙大的 `/electron/` 路径全部返回 404，只有 `npmmirror.com/mirrors/electron/`、`cdn.npmmirror.com/binaries/electron/`、`mirrors.huaweicloud.com/electron/` 真实可用。已删掉 5 个无效预设，只保留实测通过的源
+- 🐞 **「站点缺该仓库时→跳过」不生效**：`emGroupValue` 先回退官方源再判断策略，导致 skip 形同虚设；已调整为先判断策略再决定是否回退
+- 🐞 **`ELECTRON_CUSTOM_DIR` 默认值写死 `v`**：会拼出 `v<版本>` 之外的错误路径；改为留空让 electron 自行使用 `v{version}`，同时支持 `{{ version }}` 模板
+- 🎨 **进度条颜色不显眼（浅色主题）**：根因有两个 —— ① 轨道用的是 `var(--panel2)`，在浅色主题下和页面底色几乎一样，看不出「槽」；② `body.updating .progress > .progress-bar` 的 `background-image` 只写了条纹渐变，把填充渐变整个覆盖掉，导致填充变成透明。现在轨道改用专用 `--track-bg` + `--track-border` + 内阴影，条纹改为**拼接**在填充渐变之后（不再覆盖）
+- 🎨 **全面配色审计**：进度条 8px→18px 并加轨道边框/内阴影/填充辉光；百分比文案改成「白字实心药丸」贴在填充条上，浅色主题下不再糊成一片；浅色主题新增语义色暗色变体（`--primary: #2563EB`、`--success: #15803D`、`--danger: #DC2626` 等，原亮色在白底上看不清）；安装页进度条、趋势条、热力图、顶部加载条、toast、卡片强调值一并改为语义变量驱动；主题强调色预设改为「深色/浅色各一套」，切主题后自动重算强调色
+- 🐞 硬编码颜色清理：月度统计条里写死的 `#22C55E` / `#94A3B8` / `#EF4444` 改为 `var(--success)` / `var(--muted)` / `var(--danger)`，跟随主题
+- 🐞 **「保留份数」按时间戳计数而非按份数计数**：同一秒内创建的多个备份会被合并成一个时间戳，导致 keep=2 时实际留下 3 份以上（自测里就出现过 8 份清完还剩 3 份）。改为按备份条目逐个计数，清理结果严格等于设定份数
+- 🐞 **清理后 `.meta.json` 残留**：删除 meta 时用的是不带备注的 `HermesAgent-<时间戳>` 前缀名，而真实 meta 名带备注（`HermesAgent-<时间戳>-<备注>.meta.json`），导致每次清理都留下一堆孤立 meta 文件。改为按备份本体名推导 meta 路径，一并删除
+
 ## [2.28.0] - 2026-09-30
 
 ### Fixed

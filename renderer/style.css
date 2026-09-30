@@ -5,11 +5,23 @@
   --primary: #3B82F6; --primary2: #6366F1; --success: #22C55E; --warning: #F59E0B;
   --danger: #EF4444; --purple: #8B5CF6; --shadow: rgba(0,0,0,.35);
   --term-bg: #0F172A; --term-fg: #E2E8F0; --term-muted: #94A3B8; --term-border: #334155;
+  /* 语义色 (只在深色主题下可直接当文本色用) */
+  --teal-fg: #14B8A6;
+  /* 进度条: 轨道 / 描边 / 填充 (两种结构共用, 保证浅色主题也有足够对比) */
+  --track-bg: #16203A; --track-border: #33415C;
+  --fill-a: #3B82F6; --fill-b: #8B5CF6; --fill-glow: rgba(99,102,241,.60);
 }
+/* 浅色主题: 语义色整体加深一档 —— 同一套变量既做"文本色"也做"白字背景", 两种用法都要够对比
+   (#3B82F6 白底 3.7:1 / 白字 3.7:1 都偏低; 加深到 #2563EB 后 5.2:1) */
 body.light {
   --bg: #F1F5F9; --bg2: #FFFFFF; --panel: #FFFFFF; --panel2: #E8EEF7;
   --border: #D7DFEA; --text: #1E293B; --muted: #64748B; --shadow: rgba(15,23,42,.12);
   --term-bg: #F8FAFC; --term-fg: #1E293B; --term-muted: #64748B; --term-border: #CBD5E1;
+  --primary: #2563EB; --primary2: #4F46E5;
+  --success: #15803D; --warning: #B45309; --danger: #DC2626; --purple: #6D28D9;
+  --teal-fg: #0F766E;
+  --track-bg: #D5DFEF; --track-border: #AFC0DA;
+  --fill-a: #1D4ED8; --fill-b: #7C3AED; --fill-glow: rgba(99,102,241,.45);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -82,7 +94,7 @@ body {
 .card.accent-orange::before { background: var(--warning); }
 .card.accent-green::before { background: var(--success); }
 .card.accent-purple::before { background: var(--purple); }
-.card.accent-teal::before { background: #14B8A6; }
+.card.accent-teal::before { background: var(--teal-fg); }
 .c-icon { font-size: 20px; }
 .card label { display: block; color: var(--muted); font-size: 12px; margin: 6px 0 4px; }
 .card b { font-size: 16px; word-break: break-all; }
@@ -90,7 +102,7 @@ body {
 .card.accent-orange b { color: var(--warning); }
 .card.accent-green b { color: var(--success); }
 .card.accent-purple b { color: var(--purple); }
-.card.accent-teal b { color: #14B8A6; }
+.card.accent-teal b { color: var(--teal-fg); }
 .card b.clickable { cursor: pointer; text-decoration: underline dotted; }
 
 /* ---- 按钮 ---- */
@@ -129,9 +141,9 @@ body {
 .trend { display: flex; align-items: flex-end; gap: 3px; height: 34px; margin: 4px 0 8px; }
 .trend .bar { flex: 1; max-width: 16px; min-height: 6px; border-radius: 3px 3px 0 0; background: var(--primary); opacity: 0.85; transition: opacity .15s, transform .15s; }
 .trend .bar:hover { opacity: 1; transform: scaleY(1.08); }
-.trend .bar.ok { background: #22C55E; }
-.trend .bar.partial { background: #F59E0B; }
-.trend .bar.fail { background: #EF4444; }
+.trend .bar.ok { background: var(--success); }
+.trend .bar.partial { background: var(--warning); }
+.trend .bar.fail { background: var(--danger); }
 .trend .legend { font-size: 11px; color: var(--muted); margin-left: 8px; align-self: flex-end; white-space: nowrap; }
 /* 更新热力图 (GitHub 风格) */
 .hm-title { font-size: 13px; margin-top: 12px; color: var(--text); }
@@ -140,9 +152,9 @@ body {
 .hm-cell { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 .hm-pad { visibility: hidden; }
 .hm-0 { background: var(--panel2); border: 1px solid var(--border); }
-.hm-1 { background: #22C55E; opacity: .35; }
-.hm-2 { background: #22C55E; opacity: .65; }
-.hm-3 { background: #22C55E; opacity: 1; }
+.hm-1 { background: var(--success); opacity: .35; }
+.hm-2 { background: var(--success); opacity: .65; }
+.hm-3 { background: var(--success); opacity: 1; }
 .hm-cell:hover { outline: 1px solid var(--primary); }
 .hm-legend { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); margin-top: 2px; }
 .hm-legend span:first-child { margin-right: 2px; }
@@ -162,15 +174,44 @@ pre.terminal.tall { height: 380px; }
 #log-out .log-warn { color: var(--warning); }
 #log-out .log-ok { color: var(--success); }
 
-/* ---- 进度条 (加高加粗 + 辉光; 更新页为 .progress>.progress-bar, 仪表盘/日志页为 .progress-wrap 直接子级) ---- */
-.progress-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.progress { flex: 1; height: 14px; background: var(--panel2); border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.18); }
-.progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--primary2)); transition: width .3s; }
-.progress > .progress-bar { box-shadow: 0 0 8px rgba(59,130,246,.55); }
-.progress-wrap > .progress-bar { flex: 1; height: 14px; border-radius: 7px; background: var(--panel2); overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,.18); }
-.progress-wrap > .progress-bar::after { content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: var(--pct, 0%); background: linear-gradient(90deg, var(--primary), var(--primary2)); border-radius: 7px; transition: width .3s; box-shadow: 0 0 8px rgba(59,130,246,.55); }
-#progress-label { font-size: 14px; font-weight: 700; color: var(--primary); min-width: 5ch; text-align: right; flex-shrink: 0; }
-body.updating #progress-label { color: var(--primary2); }
+/* ---- 进度条 (轨道加深 + 描边 + 高饱和填充 + 辉光; 更新页为 .progress>.progress-bar, 仪表盘/日志页为 .progress-wrap 直接子级) ---- */
+/* 关键点: 默认的 var(--panel2) 轨道在浅色主题下几乎与页面底色同色, 加上 body.updating 的条纹会覆盖掉填充渐变,
+   结果是"只剩一层半透明白条纹"→ 整条不可见。这里轨道用独立加深色 + 描边, 填充在 updating 时也保留渐变。 */
+.progress-wrap { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
+.progress, .progress-wrap > .progress-bar {
+  flex: 1; height: 18px; border-radius: 10px; position: relative; overflow: hidden;
+  background: var(--track-bg);
+  border: 1px solid var(--track-border);
+  box-shadow: inset 0 2px 5px rgba(15,23,42,.22);
+}
+.progress-bar {
+  height: 100%; width: 0; border-radius: 9px; position: relative;
+  background-image: linear-gradient(90deg, var(--fill-a), var(--fill-b));
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,.14);
+  transition: width .3s;
+}
+/* 前进端高亮帽: 让"当前进度到哪了"一眼看得出来 */
+.progress > .progress-bar::after {
+  content: ""; position: absolute; top: 2px; bottom: 2px; right: 2px; width: 3px;
+  border-radius: 2px; background: rgba(255,255,255,.92);
+}
+/* 仪表盘/日志页: 元素本身是轨道, 用 ::after 画填充层 (宽度靠 --pct 变量) */
+.progress-wrap > .progress-bar::after {
+  content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: var(--pct, 0%);
+  border-radius: 9px;
+  background-image: linear-gradient(90deg, var(--fill-a), var(--fill-b));
+  box-shadow: 0 0 14px var(--fill-glow);
+  transition: width .3s;
+}
+/* 百分比做成实心药丸, 无论深浅主题都一眼可见 */
+#progress-label {
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+  color: #fff; background: var(--fill-a);
+  border-radius: 999px; padding: 5px 14px;
+  box-shadow: 0 2px 10px var(--fill-glow);
+  font-variant-numeric: tabular-nums;
+}
+body.updating #progress-label { background: var(--fill-b); }
 
 /* ---- 表单 ---- */
 .form-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px 14px; align-items: center; margin: 8px 0; }
@@ -187,8 +228,8 @@ body.updating #progress-label { color: var(--primary2); }
 .ins-env-item { background: var(--panel2); border-radius: 8px; padding: 6px 12px; border-left: 3px solid var(--border); }
 .ins-env-item.ok { border-left-color: var(--success, #10B981); }
 .ins-env-item.bad { border-left-color: var(--danger, #DC2626); }
-.ins-progress { height: 8px; background: var(--panel2); border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
-.ins-progress-bar { height: 100%; width: 2%; background: linear-gradient(90deg, var(--accent, #3B82F6), #06B6D4); border-radius: 5px; transition: width .6s ease; }
+.ins-progress { height: 14px; background: var(--track-bg); border: 1px solid var(--track-border); border-radius: 8px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 2px 5px rgba(15,23,42,.22); }
+.ins-progress-bar { height: 100%; width: 2%; background-image: linear-gradient(90deg, var(--fill-a), var(--fill-b)); border-radius: 8px; transition: width .6s ease; box-shadow: 0 0 12px var(--fill-glow); }
 .path-row .btn { flex-shrink: 0; padding: 7px 11px; }
 .path-status { grid-column: 1 / -1; font-size: 12px; padding: 6px 10px; border-radius: 8px; }
 .path-status.ok  { color: var(--success); background: rgba(34,197,94,.10); }
@@ -216,11 +257,12 @@ body.updating #progress-label { color: var(--primary2); }
 .known-row .meta { flex-shrink: 0; color: var(--muted); font-size: 11px; }
 .known-row .btn { flex-shrink: 0; padding: 3px 8px; font-size: 11px; }
 .known-empty { font-size: 12px; color: var(--muted); padding: 4px 0; }
-input, select {
+input, select, textarea {
   background: var(--bg2); border: 1px solid var(--border); color: var(--text);
   border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; width: 100%;
 }
-input:focus, select:focus { border-color: var(--primary); }
+input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+textarea { resize: vertical; font-family: Consolas, "Courier New", monospace; line-height: 1.5; }
 .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
 .check input { width: auto; }
@@ -247,7 +289,7 @@ input:focus, select:focus { border-color: var(--primary); }
   box-shadow: 0 6px 20px rgba(0,0,0,.4); animation: toast-in .22s ease;
   max-width: 380px; word-break: break-all;
 }
-.toast.ok { background: #16A34A; }
+.toast.ok { background: #15803D; }
 .toast.err { background: #DC2626; }
 .toast.info { background: var(--primary); }
 .toast.fade { opacity: 0; transform: translateY(6px); transition: all .3s; }
@@ -328,7 +370,7 @@ body.booting .card b {
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 /* ---- 顶栏不定式加载条 (检查中/更新中可见) ---- */
-#topload { height: 3px; background: var(--panel2); position: relative; overflow: hidden; opacity: 0; transition: opacity .25s; }
+#topload { height: 4px; background: var(--track-bg); position: relative; overflow: hidden; opacity: 0; transition: opacity .25s; }
 /* 自动更新倒计时横幅: 全局置顶, 橙色警示渐变 */
 .countdown-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -362,17 +404,23 @@ body.checking #topload, body.updating #topload { opacity: 1; }
 .page.active .panel { animation: card-in .3s ease backwards; }
 @keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
-/* ---- 更新进行中: 进度条流光 + 状态点闪烁 (适配两种进度条结构) ---- */
+/* ---- 更新进行中: 进度条流光 + 外发光 + 状态点闪烁 (适配两种进度条结构) ---- */
 body.updating #status-dot { animation: dot-blink .7s ease-in-out infinite; }
+body.updating .progress, body.updating .progress-wrap > .progress-bar {
+  border-color: var(--fill-a);
+  box-shadow: inset 0 2px 5px rgba(15,23,42,.22), 0 0 0 3px var(--fill-glow);
+}
+/* 流光条纹必须与渐变并列写, 否则 background-image 会被条纹整体覆盖 → 填充变透明 (历史 bug) */
 body.updating .progress > .progress-bar {
-  background-image: linear-gradient(45deg, rgba(255,255,255,.18) 25%, transparent 25%,
-    transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%);
-  background-size: 18px 18px; animation: stripe .8s linear infinite;
+  background-image: linear-gradient(45deg, rgba(255,255,255,.28) 25%, transparent 25%,
+    transparent 50%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.28) 75%, transparent 75%),
+    linear-gradient(90deg, var(--fill-a), var(--fill-b));
+  background-size: 18px 18px, 100% 100%; animation: stripe .8s linear infinite;
 }
 body.updating .progress-wrap > .progress-bar::after {
-  background-image: linear-gradient(45deg, rgba(255,255,255,.18) 25%, transparent 25%,
-    transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%),
-    linear-gradient(90deg, var(--primary), var(--primary2));
+  background-image: linear-gradient(45deg, rgba(255,255,255,.28) 25%, transparent 25%,
+    transparent 50%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.28) 75%, transparent 75%),
+    linear-gradient(90deg, var(--fill-a), var(--fill-b));
   background-size: 18px 18px, 100% 100%; animation: stripe .8s linear infinite;
 }
 @keyframes stripe { from { background-position: 0 0; } to { background-position: 18px 0; } }

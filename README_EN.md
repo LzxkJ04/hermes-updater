@@ -4,7 +4,7 @@
 
 A polished Windows desktop GUI (Electron) for updating, installing, and maintaining the **Hermes Agent** — with mirror acceleration for mainland-China networks, one-click network self-healing, update hooks, and a full dashboard. Install, update, and maintain Hermes Agent from a single app.
 
-> **Latest release: v2.28.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
+> **Latest release: v2.29.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 
@@ -32,6 +32,17 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - **Terminate all Hermes processes after a successful update**: when the update finishes (`rc=0`), all processes under the current Hermes install (incl. Gateway) are forcibly stopped, so no stale process remains and the new version takes effect immediately. On failure, the `cleanup_after` / `keep_gateway` settings still apply (Gateway kept by default)
 - Network probe & **one-click network self-heal**, per-attempt network stats and failure classification
 
+### 🚀 Unified CN Mirror Acceleration (8 sites × 28 toolchain groups)
+- Packaging downloads the electron binary plus nsis / winCodeSign toolkits from GitHub — direct connections from mainland China commonly fail with `TypeError: fetch failed`. Enable this to auto-inject CN mirrors, **probe the fastest source, and auto-switch on failure**
+- **8 built-in sites**: `mix` (recommended combo), `npmmirror`, `cdn` (npmmirror binary CDN), `huawei`, `ustc`, `tuna`, `official`, `custom`
+- **28 toolchain groups**: npm (npm/pnpm/yarn/bun/deno), Node binaries & headers (incl. nvm), Electron, electron-builder, Playwright, Puppeteer, Selenium, ChromeDriver, GeckoDriver, EdgeDriver, node-sass, sharp, sqlite3, bcrypt, canvas, esbuild, Turbo, Parcel, Rollup, Bun, Python (uv/pip/poetry/conda), Go, Cargo, Rustup, HuggingFace, Julia, Maven (incl. Gradle), Helm
+- **Auto probe & auto switch**: measure each site's latency with one click (Electron is probed via the real `SHASUMS256.txt` file, since directory listings are often disabled); "⚡ Probe & auto-select" writes the fastest usable source back into settings. Failed packaging retries with the next candidate
+- **Per-group auto-selection**: each toolchain probes its own best site instead of one global pick; the settings page shows a full site × group matrix where you can toggle each group or pin a site (blank follows the probe result)
+- **Toolchain auto-detection**: `where.exe` detects installed toolchains and marks them 🧭; optionally inject only the variables for toolchains you actually have
+- **Managed `~/.npmrc`**: write CN registries into `~/.npmrc` inside a `# >>> HermesUpdater managed` block — **your own config is untouched**; remove the block with one click or open the file location
+- **📋 Injection preview**: list every environment variable (48 by default) and its value that the update will inject; append extras as `KEY=VALUE` lines
+- The update page also has a "🔍 Mirror speed test" button; **25 mirror settings** (preset / 4 manual overrides / version dir / timeout / cache / retries / missing-repo policy / 12 toggles)
+
 ### Install & Uninstall
 - **Install Hermes page**: environment preflight (node/npm/git/disk), one-click install, fix-reinstall, install history
 - **Mirror speed test** with two-level probing (git smart protocol > HTTP), one-click apply, auto failover to candidate mirrors
@@ -52,8 +63,9 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - Tray submenu "💾 Backup & Restore": back up now (balloon) / open page / open folder / settings
 
 ### Settings
-- 95+ persisted settings across update / network / install / uninstall / backup / appearance / automation
+- 120+ persisted settings across update / network / mirrors / install / uninstall / backup / appearance / automation
 - Bilingual UI (简体中文 / English), dark mode + follow-system, UI zoom, single-instance lock
+- Light-theme palette reworked: progress track/fill, trend bars, heatmap, top loader, toasts and accent presets are all driven by semantic variables with a separate palette per theme
 
 ## 📘 Usage Guide
 
@@ -84,9 +96,17 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - **Update statistics** (success rate, monthly trend, top failures) + **heatmap**; **disk cleanup wizard** reclaims space with per-item confirmation.
 
 ### 5. Settings
-- 70+ options across **update / network / install / uninstall / appearance / automation**.
-- **Appearance**: language (中文/English), dark or follow-system, UI zoom.
+- 120+ options across **network / mirrors / update / install / uninstall / backup / appearance / automation**.
+- **Appearance**: language (中文/English), dark or follow-system, UI zoom, accent color (separate sets for dark & light).
 - **Automation**: scheduled updates, do-not-disturb window, single-instance lock.
+
+### 6. CN Mirror Acceleration
+1. Open **Settings** → **🚀 CN Mirror Acceleration (28 toolchains)** and tick **Enable**.
+2. Click **🔍 Probe all mirrors** to measure latency per site and sort by speed; click **⚡ Probe & auto-select** to write the fastest usable source into settings.
+3. For finer control, enable **per-group auto-selection**: a site × group matrix appears where you can toggle each group or pin a site (blank follows the probe). 🧭 marks toolchains detected on this machine.
+4. To make your command line (not just this app) use CN registries, click **📝 Write ~/.npmrc**. The block is wrapped in `# >>> HermesUpdater managed` and can be removed cleanly with **🧹 Remove ~/.npmrc config** — your own config is never touched.
+5. Click **📋 Preview injected variables** to see exactly what will be injected; add more via **Extra env vars** (`KEY=VALUE` per line).
+6. If GitHub is directly reachable from your network, tick **skip mirrors when GitHub is reachable**; if the last packaging run failed, tick **auto-switch on failure** to retry with the next candidate.
 
 ## 📦 Download
 

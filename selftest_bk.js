@@ -176,6 +176,8 @@ const ok = (c, m) => { if (c) { pass++; console.log("  PASS  " + m); } else { fa
   const after = M.bkList().length;
   M.S.bk_keep = 7;
   ok(after <= 2, `清理前 ${before} -> 清理后 ${after} (removed=${pr && pr.removed})`);
+  const metaLeft = fs.readdirSync(M.bkRoot()).filter((f) => f.endsWith(".meta.json")).length;
+  ok(metaLeft <= after, `清理后无 meta.json 残留: ${metaLeft} <= ${after}`);
 
   // 9) 删除
   console.log("\n[9] 删除备份");

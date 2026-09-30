@@ -66,6 +66,33 @@ const DEFAULTS = {
   show_line_time: true,         // 更新输出显示行时间戳
   inject_electron_mirror: true, // 更新时注入 Electron 二进制镜像 + npmmirror npm 源 (防打包阶段 fetch failed)
   auto_repair_env: true,        // 重试时自动叠加代理环境 (上次失败于打包/依赖下载)
+  // ---- 国内镜像统一加速 (em_*): 覆盖 npm / node / electron / 浏览器驱动 / python / go / rust ... ----
+  em_enabled: true,             // 总开关: 更新/打包/依赖阶段自动注入国内镜像
+  em_preset: "mix",             // 全局镜像站点 mix(推荐组合) | npmmirror | cdn | huawei | ustc | tuna | official | custom
+  em_per_group: true,           // 逐组自动选源: 每个工具链单独探测并选最快的站点
+  em_site_of: {},               // 逐组选定的站点 {npm:"cdn", electron:"huawei", ...} (探测结果, 自动维护)
+  em_ov: {},                    // 逐组手工覆盖地址 {npm:"https://...", electron:"https://..."} (优先级最高)
+  em_groups: {},                // 逐组开关 {pypi:false, ...} (未写=启用)
+  em_detect_tools: true,        // 自动识别本机装了哪些工具链 (where.exe)
+  em_only_installed: true,      // 只注入已安装工具链的镜像变量 (避免污染无关进程)
+  em_missing_policy: "official",// 选定站点没有该仓库时: official=回退官方源 | skip=跳过不注入
+  em_electron: "",              // 手工覆盖 ELECTRON_MIRROR
+  em_builder: "",               // 手工覆盖 ELECTRON_BUILDER_BINARIES_MIRROR
+  em_npm: "",                   // 手工覆盖 npm registry
+  em_node: "",                  // 手工覆盖 node 头文件镜像 (node-gyp disturl)
+  em_custom_dir: "",            // ELECTRON_CUSTOM_DIR (空=用默认 v{版本}; 可写 {{ version }} 表示不带 v 的纯版本号)
+  em_auto_probe: true,          // 注入前探测各镜像延迟, 自动选最快的可用源
+  em_before_update: true,       // 每次更新前强制重新探测 (忽略缓存)
+  em_probe_timeout: 6,          // 单条探测超时 (秒, 2-30)
+  em_cache_min: 30,             // 探测结果缓存时间 (分钟, 0=不缓存)
+  em_on_start: false,           // 启动后后台预热探测一次 (打开设置页更快)
+  em_skip_if_direct: false,     // 能直连 GitHub 时跳过镜像注入 (走官方源)
+  em_fallback_next: true,       // 当前镜像失败时自动换下一个候选镜像重试
+  em_retry: 2,                  // 镜像下载失败重试次数 (0-5)
+  em_verbose: true,             // 在更新输出中打印每个候选镜像的探测结果
+  em_npm_auto: true,            // 同时把 npm registry 指向国内源
+  em_pypi_pip_only: false,      // Python 只设 PIP_INDEX_URL (不覆盖 uv / poetry 的源)
+  em_extra: "",                 // 额外注入的环境变量, 每行一条 KEY=VALUE
   translate_auto: true,         // 输出行自动实时翻译 (面板开启时)
   translate_target: "zh-CN",    // 翻译目标语言 zh-CN | en
   translate_provider: "auto",   // 翻译引擎 auto | google | gcloud | deepl | lingva | mymemory | youdao | offline
@@ -224,6 +251,15 @@ const I18N = {
     "tag.mirror": "镜像失效",
     "fail.mirror": (rc, t) => `❌ 更新失败 (rc=${rc})[${t}]：镜像无法代理 git 仓库。建议: ① 设置页换一个镜像地址或改用「自动探测」; ② 确认代理可直连 GitHub 后重试。`,
     "u.repair.env": "[自动修复] 已注入 Electron 二进制镜像 + npmmirror npm 源 (桌面打包阶段不再直连 GitHub)",
+    "em.probe.line": (l, s, ms) => `[镜像探测] ${l} -> ${s}${s === "OK" ? ` (${ms}ms)` : ""}`,
+    "em.direct.ok": "GitHub 可直连 (已跳过镜像)",
+    "em.probe.fail": (l) => `所有国内镜像探测失败, 回退到默认源 ${l}`,
+    "em.injected": (l, n, total) => `[国内镜像] 已启用 ${l}：注入 ${n}/${total} 组环境变量`,
+    "em.g.line": (g, l, v) => `[国内镜像]   ${g} ← ${l}  ${v}`,
+    "em.switch": (a, b) => `[国内镜像] 上次打包失败, 自动从 ${a} 切换到 ${b} 重试`,
+    "em.skipped": "[国内镜像] 已跳过镜像注入 (设置中关闭或直连可用)",
+    "em.npmrc.on": (p) => `已写入 npm 镜像配置: ${p}`,
+    "em.npmrc.off": (p) => `已移除 npm 镜像配置: ${p}`,
     "u.repair.proxy": (p) => `[自动修复] 已叠加代理环境 ${p} (上次失败于打包/依赖下载阶段)`,
     "u.target.apply": (t2) => `[目标] 已切换更新目标: ${t2}`,
     "u.target.fail": (m) => `[目标] 切换失败: ${m}`,
@@ -327,6 +363,15 @@ const I18N = {
     "tag.mirror": "Mirror broken",
     "fail.mirror": (rc, t) => `❌ Update failed (rc=${rc})[${t}]: mirror cannot proxy the git repo. Try: 1) change mirror URL in Settings or use "Auto probe"; 2) verify proxy can reach GitHub directly, then retry.`,
     "u.repair.env": "[Auto repair] Injected Electron binary mirror + npmmirror npm registry (desktop packaging no longer hits GitHub directly)",
+    "em.probe.line": (l, s, ms) => `[Mirror probe] ${l} -> ${s}${s === "OK" ? ` (${ms}ms)` : ""}`,
+    "em.direct.ok": "GitHub reachable directly (mirror skipped)",
+    "em.probe.fail": (l) => `All CN mirrors unreachable, falling back to default ${l}`,
+    "em.injected": (l, n, total) => `[CN mirror] Enabled ${l}: injected ${n}/${total} env groups`,
+    "em.g.line": (g, l, v) => `[CN mirror]   ${g} <- ${l}  ${v}`,
+    "em.switch": (a, b) => `[CN mirror] Last packaging failed, auto-switched from ${a} to ${b} and retrying`,
+    "em.skipped": "[CN mirror] Mirror injection skipped (disabled or direct connection available)",
+    "em.npmrc.on": (p) => `Wrote npm mirror config: ${p}`,
+    "em.npmrc.off": (p) => `Removed npm mirror config: ${p}`,
     "u.repair.proxy": (p) => `[Auto repair] Overlaid proxy env ${p} (previous failure was at packaging/dependency download stage)`,
     "u.target.apply": (t2) => `[Target] Update target switched: ${t2}`,
     "u.target.fail": (m) => `[Target] Switch failed: ${m}`,
@@ -505,7 +550,8 @@ function testUrl2(url, proxy, timeout = 8000) {
   return new Promise((resolve) => {
     try {
       const u = new URL(url);
-      const opts = { hostname: u.hostname, port: u.port || 443, path: u.pathname, method: "GET", timeout };
+      // 带 UA: 部分镜像站/CDN 会对空 UA 直接断开 (默认 node 不发 User-Agent)
+      const opts = { hostname: u.hostname, port: u.port || 443, path: u.pathname, method: "GET", timeout, headers: { "User-Agent": "HermesUpdater/2.29 (probe)" } };
       if (proxy) {
         const p = new URL(proxy);
         // 通过 http 代理隧道: 简化处理 - 直连测试失败时由用户手动选代理
@@ -623,6 +669,323 @@ async function pickWorkingMirror(sendLine) {
     if (ok) return m;
   }
   return null;
+}
+
+// ---------------- 国内镜像统一加速 (npm / node / electron / python / go / rust / 浏览器驱动 ...) ----------------
+// 说明: 只收录实测可用的地址 —— 阿里云 / 腾讯云 / 中科大 等并不镜像 electron (对 /electron/ 一律 404),
+// 所以 electron 相关只在确实提供该仓库的站点里选; 各站点缺某个仓库时按 em_missing_policy 回退官方源或跳过。
+const EM_SITES = {
+  mix: {
+    label: "推荐组合 (各工具选最优镜像)",
+    npm: "https://registry.npmmirror.com", node: "https://npmmirror.com/mirrors/node/",
+    electron: "https://npmmirror.com/mirrors/electron/", builder: "https://npmmirror.com/mirrors/electron-builder-binaries/",
+    mirrors: "https://npmmirror.com/mirrors/",
+    pypi: "https://pypi.tuna.tsinghua.edu.cn/simple", goproxy: "https://goproxy.cn,direct",
+    cargo: "sparse+https://rsproxy.cn/index/", rustup: "https://mirrors.ustc.edu.cn/rust-static",
+    hf: "https://hf-mirror.com", julia: "https://mirrors.tuna.tsinghua.edu.cn/julia",
+    maven: "https://mirrors.tuna.tsinghua.edu.cn/maven", helm: "https://mirrors.tuna.tsinghua.edu.cn/helm-charts",
+  },
+  npmmirror: {
+    label: "npmmirror (淘宝)",
+    npm: "https://registry.npmmirror.com", node: "https://npmmirror.com/mirrors/node/",
+    electron: "https://npmmirror.com/mirrors/electron/", builder: "https://npmmirror.com/mirrors/electron-builder-binaries/",
+    mirrors: "https://npmmirror.com/mirrors/",
+  },
+  cdn: {
+    label: "npmmirror CDN (直连更快)",
+    npm: "https://registry.npmmirror.com", node: "https://cdn.npmmirror.com/binaries/node/",
+    electron: "https://cdn.npmmirror.com/binaries/electron/", builder: "https://cdn.npmmirror.com/binaries/electron-builder-binaries/",
+    mirrors: "https://cdn.npmmirror.com/binaries/",
+  },
+  huawei: {
+    label: "华为云",
+    npm: "https://mirrors.huaweicloud.com/repository/npm/", node: "https://mirrors.huaweicloud.com/nodejs/",
+    electron: "https://mirrors.huaweicloud.com/electron/", builder: "https://mirrors.huaweicloud.com/electron-builder-binaries/",
+    mirrors: "https://mirrors.huaweicloud.com/",
+    pypi: "https://mirrors.huaweicloud.com/repository/pypi/simple", maven: "https://mirrors.huaweicloud.com/repository/maven/",
+  },
+  ustc: {
+    label: "中科大",
+    mirrors: "https://mirrors.ustc.edu.cn/", node: "https://mirrors.ustc.edu.cn/node/",
+    pypi: "https://mirrors.ustc.edu.cn/pypi/simple", rustup: "https://mirrors.ustc.edu.cn/rust-static",
+  },
+  tuna: {
+    label: "清华大学 (TUNA)",
+    mirrors: "https://mirrors.tuna.tsinghua.edu.cn/",
+    pypi: "https://pypi.tuna.tsinghua.edu.cn/simple", julia: "https://mirrors.tuna.tsinghua.edu.cn/julia",
+    maven: "https://mirrors.tuna.tsinghua.edu.cn/maven", helm: "https://mirrors.tuna.tsinghua.edu.cn/helm-charts",
+  },
+  official: {
+    label: "官方源 (直连)",
+    npm: "https://registry.npmjs.org/", node: "https://nodejs.org/dist/",
+    electron: "https://github.com/electron/electron/releases/download/",
+    builder: "https://github.com/electron-userland/electron-builder-binaries/releases/download/",
+    mirrors: "https://github.com/", pypi: "https://pypi.org/simple",
+    goproxy: "https://proxy.golang.org,direct", cargo: "sparse+https://index.crates.io/",
+    rustup: "https://static.rust-lang.org", hf: "https://huggingface.co",
+    julia: "https://pkg.julialang.org", maven: "https://repo1.maven.org/maven2",
+    helm: "https://charts.helm.sh/stable",
+  },
+  custom: { label: "自定义 (只用下面手填的地址)", mirrors: "" },
+};
+// 分组: 一组 = 一系列同源环境变量; site 里取哪个字段 + 探测用哪个地址
+const EM_GROUPS = [
+  { key: "npm", label: "Node 包管理器源", site: "npm", vars: ["npm_config_registry", "NPM_CONFIG_REGISTRY", "PNPM_CONFIG_REGISTRY", "YARN_REGISTRY", "YARN_NPM_REGISTRY_SERVER", "BUN_REGISTRY", "DENO_REGISTRY"], probe: (u) => u.replace(/\/+$/, "") + "/", detect: ["npm", "pnpm", "yarn", "bun", "deno"] },
+  { key: "node", label: "Node 二进制 / 头文件", site: "node", vars: ["NODEJS_ORG_MIRROR", "NVM_NODE_MIRROR", "NVM_NPM_MIRROR", "npm_config_disturl"], probe: (u) => u.replace(/\/+$/, "") + "/index.json", detect: ["node", "nvm"] },
+  { key: "electron", label: "Electron 二进制", site: "electron", vars: ["ELECTRON_MIRROR", "npm_config_electron_mirror"], probe: "electronfile" },
+  { key: "builder", label: "electron-builder 工具包", site: "builder", vars: ["ELECTRON_BUILDER_BINARIES_MIRROR"], probe: (u) => u },
+  { key: "playwright", label: "Playwright 浏览器", site: "mirrors", sub: "playwright/", vars: ["PLAYWRIGHT_DOWNLOAD_HOST"], probe: (u) => u },
+  { key: "puppeteer", label: "Puppeteer 浏览器", site: "mirrors", sub: "", vars: ["PUPPETEER_DOWNLOAD_HOST", "PUPPETEER_CORE_DOWNLOAD_HOST"], probe: (u) => u },
+  { key: "selenium", label: "Selenium 驱动", site: "mirrors", sub: "selenium/", vars: ["SELENIUM_CDNURL"], probe: (u) => u },
+  { key: "chromedriver", label: "ChromeDriver", site: "mirrors", sub: "chromedriver/", vars: ["CHROMEDRIVER_CDNURL"], probe: (u) => u },
+  { key: "geckodriver", label: "GeckoDriver", site: "mirrors", sub: "geckodriver/", vars: ["GECKODRIVER_CDNURL"], probe: (u) => u },
+  { key: "edgedriver", label: "EdgeDriver", site: "mirrors", sub: "edgedriver/", vars: ["EDGEDRIVER_CDNURL"], probe: (u) => u },
+  { key: "sass", label: "node-sass 二进制", site: "mirrors", sub: "node-sass/", vars: ["SASS_BINARY_SITE"], probe: (u) => u },
+  { key: "sharp", label: "sharp 二进制", site: "mirrors", sub: "sharp/", vars: ["SHARP_BINARY_SITE", "SHARP_DIST_BASE_URL"], probe: (u) => u },
+  { key: "sqlite3", label: "sqlite3 二进制", site: "mirrors", sub: "sqlite3/", vars: ["SQLITE3_BINARY_SITE"], probe: (u) => u },
+  { key: "bcrypt", label: "bcrypt 二进制", site: "mirrors", sub: "bcrypt/", vars: ["BCRYPT_BINARY_SITE"], probe: (u) => u },
+  { key: "canvas", label: "canvas 二进制", site: "mirrors", sub: "canvas/", vars: ["CANVAS_BINARY_SITE"], probe: (u) => u },
+  { key: "esbuild", label: "esbuild 二进制", site: "mirrors", sub: "esbuild/", vars: ["ESBUILD_BINARY_HOST"], probe: (u) => u },
+  { key: "turbo", label: "Turbo 二进制", site: "mirrors", sub: "turbo/", vars: ["TURBO_BINARY_HOST"], probe: (u) => u },
+  { key: "parcel", label: "Parcel 二进制", site: "mirrors", sub: "parcel/", vars: ["PARCEL_BINARY_HOST"], probe: (u) => u },
+  { key: "rollup", label: "Rollup 二进制", site: "mirrors", sub: "rollup/", vars: ["ROLLUP_BINARY_HOST"], probe: (u) => u },
+  { key: "bun", label: "Bun 安装包", site: "mirrors", sub: "bun/", vars: ["BUN_INSTALL_BASE_URL"], probe: (u) => u, detect: ["bun"] },
+  { key: "pypi", label: "Python 包源", site: "pypi", vars: ["UV_DEFAULT_INDEX", "UV_INDEX_URL", "PIP_INDEX_URL", "PIP_TRUSTED_HOST_EXTRA", "POETRY_PYPI_MIRROR_URL"], probe: (u) => u, detect: ["python", "py", "pip", "uv", "poetry", "conda"] },
+  { key: "go", label: "Go 模块代理", site: "goproxy", vars: ["GOPROXY", "GOFLAGS_EXTRA"], probe: (u) => String(u).split(",")[0] + "/", detect: ["go"] },
+  { key: "cargo", label: "Cargo 源", site: "cargo", vars: ["CARGO_REGISTRY", "CARGO_GIT_CLI"], probe: (u) => String(u).replace(/^sparse\+/, ""), detect: ["cargo"] },
+  { key: "rustup", label: "Rustup 分发源", site: "rustup", vars: ["RUSTUP_DIST_SERVER", "RUSTUP_UPDATE_ROOT"], probe: (u) => u, detect: ["rustup", "cargo"] },
+  { key: "hf", label: "HuggingFace 模型", site: "hf", vars: ["HF_ENDPOINT"], probe: (u) => u },
+  { key: "julia", label: "Julia 包源", site: "julia", vars: ["JULIA_PKG_SERVER"], probe: (u) => u, detect: ["julia"] },
+  { key: "maven", label: "Maven 仓库", site: "maven", vars: ["MAVEN_REPO_URL", "GRADLE_REPO_URL"], probe: (u) => u, detect: ["mvn", "gradle", "java"] },
+  { key: "helm", label: "Helm Charts", site: "helm", vars: ["HELM_REPO_URL"], probe: (u) => u, detect: ["helm"] },
+];
+const EM_GROUP_MAP = Object.fromEntries(EM_GROUPS.map((g) => [g.key, g]));
+const EM_CANDIDATE_KEYS = ["mix", "npmmirror", "cdn", "huawei", "ustc", "tuna", "official"];
+function emSite(key) { return EM_SITES[key] || EM_SITES.mix; }
+function emPresetList() { return Object.keys(EM_SITES).map((k) => ({ key: k, ...EM_SITES[k] })); }
+function emPreset(key) { const s = emSite(key); return { label: s.label }; }
+// 某站点为某分组提供的地址 (含子路径); 缺该仓库时返回 ""
+function emSiteValue(siteKey, grp) {
+  const s = emSite(siteKey);
+  const base = grp.site === "mirrors" || grp.sub ? s.mirrors : s[grp.site];
+  if (!base) return "";
+  const join = (b, p) => `${String(b).replace(/\/+$/, "")}/${p}`;
+  if (grp.sub) return join(base, grp.sub);
+  return String(base);
+}
+function emDir(customDir) {
+  const ver = process.versions.electron || "";
+  const d = String(customDir || "").trim();
+  return d ? d.replace(/\{\{\s*version\s*\}\}/g, ver) : "v" + ver;
+}
+// 探测地址: electron 用真实文件 (镜像站目录列表常被禁, 只看目录会误判)
+function emProbeUrlFor(grp, val) {
+  if (!val) return "";
+  if (grp.probe === "electronfile") return `${String(val).replace(/\/+$/, "")}/${emDir(S.em_custom_dir)}/SHASUMS256.txt`;
+  try { return grp.probe(val); } catch { return ""; }
+}
+const EM_PROBE_FIELDS = ["npm", "node", "electron", "builder", "mirrors", "pypi", "goproxy", "cargo", "rustup", "hf", "julia", "maven", "helm"];
+function emProbeUrlForField(field, val) {
+  if (!val) return "";
+  const u = String(val);
+  if (field === "electron") return `${u.replace(/\/+$/, "")}/${emDir(S.em_custom_dir)}/SHASUMS256.txt`;
+  if (field === "node") return `${u.replace(/\/+$/, "")}/index.json`;
+  if (field === "npm") return `${u.replace(/\/+$/, "")}/`;
+  if (field === "mirrors") return u;
+  if (field === "goproxy") return String(u).split(",")[0] + "/";
+  if (field === "cargo") return String(u).replace(/^sparse\+/, "");
+  return u;
+}
+// 手填覆盖: 分组手填优先于站点; em_extra 是全局兜底
+function emGroupOverride(grp) { return String(S.em_ov && S.em_ov[grp.key] || "").trim(); }
+function emResolveSite(grp) {
+  const per = (S.em_site_of && S.em_site_of[grp.key]) || "";
+  return per || S.em_preset || "mix";
+}
+// 生成某分组的最终地址 (手填 > 分组选定站点 > 全局站点 > 缺则按策略回退官方源)
+function emGroupValue(grp) {
+  const own = emGroupOverride(grp);
+  if (own) return own;
+  const key = emResolveSite(grp);
+  const v = emSiteValue(key, grp);
+  if (v) return v;
+  // 选定站点没有这个仓库: skip=干脆不注入 / official=回退官方源
+  if (S.em_missing_policy === "skip" && key !== "official") return "";
+  return emSiteValue("official", grp);
+}
+// 分组是否启用 (em_groups 里显式 false 才关)
+function emGroupOn(grp) {
+  if (S.em_groups && S.em_groups[grp.key] === false) return false;
+  if (S.em_only_installed && grp.detect && grp.detect.length && !emDetectAny(grp.detect)) return false;
+  return true;
+}
+// 工具链探测: 只在 Windows 上用 where.exe, 结果缓存 (更新时不再重复探测)
+const EM_DETECT_CACHE = {};
+function emDetectAny(cmds) {
+  if (S.em_detect_tools === false) return true;
+  for (const c of cmds) {
+    if (EM_DETECT_CACHE[c] !== undefined) { if (EM_DETECT_CACHE[c]) return true; continue; }
+    let hit = false;
+    try { execFileSync("where.exe", [c], { windowsHide: true, stdio: "ignore" }); hit = true; } catch { hit = false; }
+    EM_DETECT_CACHE[c] = hit;
+    if (hit) return true;
+  }
+  return false;
+}
+// 一次更新要注入的全部环境变量
+function emEnvAll() {
+  const out = {};
+  const used = {};
+  for (const grp of EM_GROUPS) {
+    if (!emGroupOn(grp)) { used[grp.key] = { on: false }; continue; }
+    const v = emGroupValue(grp);
+    if (!v) { used[grp.key] = { on: false, missing: true }; continue; }
+    // Python: 开了「只设 pip」就只注入 PIP_INDEX_URL, 不动 uv / poetry / conda 的源
+    const vars = (grp.key === "pypi" && S.em_pypi_pip_only) ? ["PIP_INDEX_URL"] : grp.vars;
+    for (const name of vars) out[name] = v;
+    used[grp.key] = { on: true, value: v, site: emResolveSite(grp) };
+  }
+  // electron 版本目录 (留空交给 electron 自己算 v{版本})
+  const cd = String(S.em_custom_dir || "").trim();
+  if (cd) out.ELECTRON_CUSTOM_DIR = cd;
+  if (S.em_npm_auto === false) { delete out.npm_config_registry; delete out.npm_config_disturl; }
+  Object.assign(out, emExtraEnv());
+  return { env: out, used };
+}
+// 兼容旧调用: 只要 electron + builder 两个变量的老接口
+function emResolve(presetKey) {
+  const key = presetKey || S.em_preset || "mix";
+  const gE = EM_GROUP_MAP.electron, gB = EM_GROUP_MAP.builder;
+  return { key, electron: S.em_electron || emSiteValue(key, gE) || emSiteValue("official", gE),
+    builder: S.em_builder || emSiteValue(key, gB) || emSiteValue("official", gB),
+    npm: S.em_npm || emSiteValue(key, EM_GROUP_MAP.npm) || "", node: S.em_node || emSiteValue(key, EM_GROUP_MAP.node) || "",
+    customDir: String(S.em_custom_dir || "").trim() };
+}
+function emEnv(r) {
+  const e = { ELECTRON_MIRROR: r.electron, ELECTRON_BUILDER_BINARIES_MIRROR: r.builder,
+    npm_config_registry: r.npm, npm_config_electron_mirror: r.electron, npm_config_disturl: r.node };
+  for (const k of Object.keys(e)) if (!e[k]) delete e[k];
+  return e;
+}
+function emExtraEnv() {
+  const out = {};
+  for (const line of String(S.em_extra || "").split(/\r?\n/)) {
+    const s = line.trim();
+    if (!s || s.startsWith("#")) continue;
+    const i = s.indexOf("=");
+    if (i <= 0) continue;
+    out[s.slice(0, i).trim()] = s.slice(i + 1).trim();
+  }
+  return out;
+}
+// 每个站点/分组一条探测记录, 同 URL 只测一次
+let EM_CACHE = { at: 0, results: [], groups: {} };
+async function emProbeAll(sendLine, force) {
+  const ttl = Math.max(parseInt(S.em_cache_min) || 0, 0) * 60000;
+  if (!force && ttl && EM_CACHE.results.length && Date.now() - EM_CACHE.at < ttl) return EM_CACHE.results;
+  const timeout = Math.min(Math.max(parseInt(S.em_probe_timeout) || 6, 2), 30) * 1000;
+  // 只探测"站点 × 基础仓库"这一层 (不逐个分组子路径展开), 条数可控且足够判断可用性
+  const jobs = new Map(); // url -> job
+  for (const k of EM_CANDIDATE_KEYS) {
+    const s = EM_SITES[k];
+    for (const field of EM_PROBE_FIELDS) {
+      const v = s[field];
+      if (!v) continue;
+      const url = emProbeUrlForField(field, v);
+      if (!url || jobs.has(url)) continue;
+      jobs.set(url, { key: k, label: s.label, url, field });
+    }
+  }
+  const list = [...jobs.values()];
+  const results = await Promise.all(list.map(async (j) => {
+    const t0 = Date.now();
+    let ok = false;
+    try { ok = await testUrl2(j.url, null, timeout); } catch { ok = false; }
+    return { ...j, ok, ms: Date.now() - t0 };
+  }));
+  results.sort((a, b) => (a.ok === b.ok ? a.ms - b.ms : a.ok ? -1 : 1));
+  EM_CACHE = { at: Date.now(), results };
+  if (sendLine && S.em_verbose !== false) {
+    for (const r of results) sendLine(t("em.probe.line", `${r.label} · ${r.field}`, r.ok ? "OK" : "FAIL", r.ms));
+  }
+  log(`[镜像] 探测 ${results.length} 条: ${results.filter((r) => r.ok).length} 可用`);
+  return results;
+}
+// 分组 -> 需要的基础仓库字段 (子路径类分组统一看 mirrors 根)
+function emGroupField(grp) { return (grp.site === "mirrors" || grp.sub) ? "mirrors" : grp.site; }
+// 按分组选最快的站点 (em_per_group)
+async function emPickSitesByGroup(sendLine, forceProbe) {
+  const res = await emProbeAll(sendLine, forceProbe);
+  const bestByField = {};
+  for (const r of res) {
+    if (!r.ok) continue;
+    const cur = bestByField[r.field];
+    if (!cur || r.ms < cur.ms) bestByField[r.field] = { key: r.key, label: r.label, ms: r.ms };
+  }
+  const best = {};
+  for (const grp of EM_GROUPS) {
+    const b = bestByField[emGroupField(grp)];
+    if (b && emSiteValue(b.key, grp)) best[grp.key] = b;
+  }
+  return best;
+}
+async function emPick(sendLine, forceProbe) {
+  if (!S.em_auto_probe) return { key: S.em_preset, label: emSite(S.em_preset).label, probed: false };
+  if (S.em_skip_if_direct && await testUrl2("https://github.com", null, 4000)) return { key: "", label: t("em.direct.ok"), probed: true, direct: true };
+  if (S.em_per_group !== false) {
+    const best = await emPickSitesByGroup(sendLine, forceProbe);
+    S.em_site_of = Object.fromEntries(Object.entries(best).map(([g, v]) => [g, v.key]));
+    const pick = best.electron || best.npm || Object.values(best)[0];
+    return { key: pick ? pick.key : "", label: pick ? `${pick.label} (逐组自动)` : t("em.probe.fail", emSite(S.em_preset).label), probed: true, perGroup: best, failed: !pick };
+  }
+  const res = await emProbeAll(sendLine, forceProbe);
+  const cand = res.filter((r) => r.ok && EM_CANDIDATE_KEYS.includes(r.key));
+  const best = cand[0];
+  if (best) return { key: best.key, label: best.label, ms: best.ms, probed: true };
+  return { key: S.em_preset, label: t("em.probe.fail", emSite(S.em_preset).label), probed: true, failed: true };
+}
+async function emNextKey(cur) {
+  const res = EM_CACHE.results.length ? EM_CACHE.results : await emProbeAll(null, true);
+  const alt = res.find((r) => r.ok && r.key !== cur && EM_CANDIDATE_KEYS.includes(r.key));
+  return alt ? { key: alt.key, label: alt.label } : null;
+}
+// 生成"某站点可用分组"矩阵, 供设置页展示与逐组选择
+function emGroupMatrix() {
+  return EM_GROUPS.map((g) => ({
+    key: g.key, label: g.label, vars: g.vars,
+    detected: g.detect ? emDetectAny(g.detect) : true,
+    detect: g.detect || [],
+    enabled: emGroupOn(g),
+    site: emResolveSite(g),
+    value: emGroupValue(g),
+    options: EM_CANDIDATE_KEYS.filter((k) => emSiteValue(k, g)).map((k) => ({ key: k, label: EM_SITES[k].label, value: emSiteValue(k, g) })),
+  }));
+}
+// 写入/移除 ~/.npmrc 的托管行 (显式点击才会改动, 不静默修改用户全局配置)
+const NPMRC_PATH = path.join(os.homedir(), ".npmrc");
+const NPMRC_TAG = "# >>> HermesUpdater managed (mirror) >>>";
+const NPMRC_END = "# <<< HermesUpdater managed <<<";
+function emNpmrcWrite(enable) {
+  try {
+    const r = emResolve();
+    let body = "";
+    try { body = fs.readFileSync(NPMRC_PATH, "utf8"); } catch { body = ""; }
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    body = body.replace(new RegExp(`${esc(NPMRC_TAG)}[\\s\\S]*?${esc(NPMRC_END)}\\r?\\n?`, "g"), "");
+    if (enable) {
+      const trimSlash = (u) => String(u || "").replace(/\/+$/, "");
+      const lines = [];
+      if (S.em_npm_auto !== false && r.npm) lines.push(`registry=${r.npm}`);
+      if (r.electron) lines.push(`electron_mirror=${trimSlash(r.electron)}/`);
+      if (r.builder) lines.push(`electron_builder_binaries_mirror=${trimSlash(r.builder)}/`);
+      if (S.em_npm_auto !== false && r.node) lines.push(`disturl=${r.node}`);
+      const sp = emGroupValue(EM_GROUP_MAP.sass); if (sp) lines.push(`sass_binary_site=${sp}`);
+      body = body.replace(/\s*$/, "") + `\n${NPMRC_TAG}\n${lines.join("\n")}\n${NPMRC_END}\n`;
+    }
+    fs.writeFileSync(NPMRC_PATH, body.replace(/^\n+/, ""), "utf8");
+    log(`[镜像] ~/.npmrc ${enable ? "已写入" : "已移除"}托管配置`);
+    return { ok: true, path: NPMRC_PATH, enabled: !!enable, msg: t(enable ? "em.npmrc.on" : "em.npmrc.off", NPMRC_PATH) };
+  } catch (e) { return { ok: false, msg: String(e) }; }
 }
 
 // ---------------- Hermes 操作 ----------------
@@ -950,19 +1313,35 @@ async function startUpdate(win) {
     }
     // 自动重试: 失败(rc!=0 或 git fetch 失败但 rc=0)时重新探测网络方式再试
     const maxAttempts = (S.auto_retry === false ? 0 : Math.min(Math.max(parseInt(S.max_retries) || 2, 0), 5)) + 1;
-    let rc = -1, attempt = 0, prevPackFail = false;
+    let rc = -1, attempt = 0, prevPackFail = false, emUsedKey = "";
     while (true) {
       attempt++;
       ({ env, label } = await pickMethod());
-      // 内置自动修复: 注入 Electron 二进制镜像 + npmmirror npm 源, 桌面打包阶段不再直连 GitHub (尽量一次成功)
-      if (S.inject_electron_mirror !== false) {
-        env = {
-          ...env,
-          ELECTRON_MIRROR: "https://npmmirror.com/mirrors/electron/",
-          ELECTRON_BUILDER_BINARIES_MIRROR: "https://npmmirror.com/mirrors/electron-builder-binaries/",
-          npm_config_registry: "https://registry.npmmirror.com",
-        };
-        sendLine(t("u.repair.env"));
+      // 国内 Electron 镜像: 自动探测最快可用源后注入 (桌面打包阶段不再直连 GitHub, 防 fetch failed)
+      // 上一次失败于打包/下载阶段时, 换下一个候选镜像再试一次 (em_fallback_next)
+      if (S.em_enabled !== false && S.inject_electron_mirror !== false) {
+        const forceProbe = attempt === 1 ? S.em_before_update !== false : false;
+        const picked = await emPick(sendLine, forceProbe);
+        // 上次失败于打包/下载阶段: 逐组把电子/工具包换到下一个可用站点再试
+        if (attempt > 1 && prevPackFail && S.em_fallback_next !== false && picked.key) {
+          const cur = (S.em_site_of && S.em_site_of.electron) || picked.key;
+          const nk = await emNextKey(cur);
+          if (nk) { sendLine(t("em.switch", emSite(cur).label, nk.label)); S.em_site_of = { ...(S.em_site_of || {}), electron: nk.key, builder: nk.key }; }
+        }
+        emUsedKey = picked.key || "";
+        const { env: emEnvObj, used } = emEnvAll();
+        const onCount = Object.values(used).filter((u) => u.on).length;
+        if (onCount) {
+          env = { ...env, ...emEnvObj };
+          if (S.em_verbose !== false) {
+            sendLine(t("em.injected", `${emSite(emUsedKey || S.em_preset).label}${S.em_per_group !== false ? " (逐组自动选源)" : ""}`, onCount, EM_GROUPS.length));
+            for (const [k, u] of Object.entries(used)) {
+              if (u.on && u.value && EM_GROUP_MAP[k]) sendLine(t("em.g.line", EM_GROUP_MAP[k].label, emSite(u.site).label, u.value));
+            }
+          }
+        } else {
+          sendLine(t("em.skipped"));
+        }
       }
       // 内置自动修复: 上次失败于打包/依赖下载阶段时, 重试叠加系统/手动代理环境
       if (attempt > 1 && prevPackFail && S.auto_repair_env !== false) {
@@ -1569,8 +1948,11 @@ function bkPruneSync() {
     const root = bkRoot();
     if (!fs.existsSync(root)) return 0;
     const keep = Math.min(Math.max(parseInt(S.bk_keep) || 7, 1), 60);
-    const entries = fs.readdirSync(root).filter((f) => /^HermesAgent-\d{14}/.test(f) && !f.endsWith(".meta.json"));
-    const stamps = [...new Set(entries.map((f) => (f.match(/^HermesAgent-(\d{14})/) || [])[1]).filter(Boolean))].sort().reverse();
+    const stampOf = (f) => (f.match(/^HermesAgent-(\d{14})/) || [])[1] || "";
+    // 「保留份数」按备份份数计, 不按时间戳计: 同一秒内创建的多个备份各自算一份, 否则 keep=2 可能留下 3+ 份
+    const entries = fs.readdirSync(root)
+      .filter((f) => /^HermesAgent-\d{14}/.test(f) && !f.endsWith(".meta.json"))
+      .sort((a, b) => stampOf(b).localeCompare(stampOf(a)) || b.localeCompare(a));
     // 按天数保留 (bk_retention_days > 0): 超过 N 天的直接清理, 与「保留份数」是并集
     const days = parseInt(S.bk_retention_days) || 0;
     const tooOld = (st) => {
@@ -1579,13 +1961,12 @@ function bkPruneSync() {
       return (Date.now() - ts) / 864e5 > days;
     };
     let removed = 0;
-    for (const st of stamps) {
-      if (!tooOld(st) && stamps.indexOf(st) < keep) continue; // 既没超期, 又在保留份数内 -> 留着
-      for (const f of entries.filter((e) => e.startsWith("HermesAgent-" + st))) {
-        try { fs.rmSync(path.join(root, f), { recursive: true, force: true }); removed++; } catch {}
-      }
-      try { fs.rmSync(bkMetaPath(root, `HermesAgent-${st}`), { force: true }); } catch {}
-    }
+    entries.forEach((f, i) => {
+      if (!tooOld(stampOf(f)) && i < keep) return; // 既没超期, 又在保留份数内 -> 留着
+      try { fs.rmSync(path.join(root, f), { recursive: true, force: true }); removed++; } catch {}
+      // meta 名跟备份本体一致(带备注), 不能只用时间戳前缀, 否则清理后 meta.json 会残留
+      try { fs.rmSync(bkMetaPath(root, f), { force: true }); } catch {}
+    });
     if (removed) log(`[备份] ${t("bk.pruned", removed)}`);
     return removed;
   } catch { return 0; }
@@ -2156,9 +2537,11 @@ ipcMain.handle("kill-processes", async () => {
   return { killed: kc, detail: kd };
 });
 ipcMain.handle("open-path", async (e, which) => {
-  const p = which === "install" ? install() : which === "logdir" ? APP_DIR : which === "backupdir" ? backupDir() : LOG_PATH;
+  const p = which === "install" ? install() : which === "logdir" ? APP_DIR : which === "backupdir" ? backupDir()
+    : which === "npmrc" ? NPMRC_PATH : which === "mirrorout" ? bkRoot() : LOG_PATH;
   try {
     if (which === "backupdir" && !fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); // 目录不存在先建, 避免打开失败
+    if (which === "npmrc" && fs.existsSync(p)) { shell.showItemInFolder(p); return { ok: true }; } // 直接在资源管理器里选中
     await shell.openPath(p); return { ok: true };
   }
   catch (err) { return { ok: false, msg: String(err) }; }
@@ -2215,6 +2598,32 @@ ipcMain.handle("bk-restore", (e, name) => bkRestore(name));
 ipcMain.handle("bk-delete", (e, name) => bkDelete(name));
 ipcMain.handle("bk-export", (e, payload) => bkExport(payload && payload.name, payload && payload.dest));
 ipcMain.handle("bk-verify", (e, name) => bkVerify(name));
+// ---- 国内 Electron 镜像 (em) ----
+ipcMain.handle("em-presets", () => emPresetList());
+ipcMain.handle("em-groups", () => emGroupMatrix());
+ipcMain.handle("em-detect", () => {  // 重探本机工具链 (清缓存)
+  for (const k of Object.keys(EM_DETECT_CACHE)) delete EM_DETECT_CACHE[k];
+  return emGroupMatrix();
+});
+ipcMain.handle("em-set-site", (e, payload) => {  // 逐组手工指定站点
+  const { group, site } = payload || {};
+  if (!EM_GROUP_MAP[group]) return { ok: false, msg: "bad group" };
+  S.em_site_of = { ...(S.em_site_of || {}) };
+  if (site) S.em_site_of[group] = site; else delete S.em_site_of[group];
+  saveSettings();
+  return { ok: true, groups: emGroupMatrix() };
+});
+ipcMain.handle("em-resolved", () => emResolve());
+ipcMain.handle("em-env-preview", () => { const { env, used } = emEnvAll(); return { env, used, groups: emGroupMatrix() }; });
+ipcMain.handle("em-probe", () => emProbeAll(null, true));
+ipcMain.handle("em-apply-probe", async (e) => {  // 探测并把最快可用源写回设置
+  const res = await emProbeAll(null, true);
+  const best = res.find((r) => r.ok);
+  if (best) { S.em_preset = best.key; saveSettings(); return { ok: true, ...best, results: res }; }
+  return { ok: false, results: res, msg: t("em.probe.fail", emPreset(S.em_preset).label) };
+});
+ipcMain.handle("em-npmrc", (e, enable) => emNpmrcWrite(!!enable));
+ipcMain.handle("em-npmrc-path", () => NPMRC_PATH);
 ipcMain.handle("bk-open-dir", () => bkOpenDir());
 ipcMain.handle("bk-prune", () => bkPrune());
 
@@ -3473,5 +3882,11 @@ ipcMain.handle("repair-deps", (e) => {
 // 离线自测导出: 仅当 HU_SELFTEST=1 时暴露内部函数, 供 node 直接跑备份/恢复功能验证;
 // Electron 正常启动时该分支不执行, 对运行零影响。
 if (process.env.HU_SELFTEST === "1") {
-  module.exports = { S, install, agentDir, backupDir, bkRoot, bkMap, BK_SCOPE_KEYS, bkNameOk, bkResolve, bkBackupNow, bkList, bkRestore, bkDelete, bkExport, bkVerify, bkPrune, bkPruneSync };
+  module.exports = {
+    S, install, agentDir, backupDir,
+    bkRoot, bkMap, BK_SCOPE_KEYS, bkNameOk, bkResolve, bkBackupNow, bkList, bkRestore, bkDelete, bkExport, bkVerify, bkPrune, bkPruneSync,
+    EM_SITES, EM_GROUPS, EM_GROUP_MAP, EM_CANDIDATE_KEYS, NPMRC_PATH,
+    emPresetList, emResolve, emEnv, emEnvAll, emExtraEnv, emNpmrcWrite, emProbeAll,
+    emSiteValue, emGroupValue, emGroupOn, emGroupMatrix, emDetectAny, emDir, emProbeUrlForField, emPickSitesByGroup,
+  };
 }

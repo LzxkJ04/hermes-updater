@@ -97,6 +97,18 @@ contextBridge.exposeInMainWorld("api", {
   bkOpenDir: () => ipcRenderer.invoke("bk-open-dir"),
   bkPrune: () => ipcRenderer.invoke("bk-prune"),
   bkVerify: (name) => ipcRenderer.invoke("bk-verify", name),
+
+  // 国内 Electron 镜像 (em)
+  emPresets: () => ipcRenderer.invoke("em-presets"),
+  emGroups: () => ipcRenderer.invoke("em-groups"),
+  emDetect: () => ipcRenderer.invoke("em-detect"),
+  emSetSite: (payload) => ipcRenderer.invoke("em-set-site", payload),
+  emEnvPreview: () => ipcRenderer.invoke("em-env-preview"),
+  emResolved: () => ipcRenderer.invoke("em-resolved"),
+  emProbe: () => ipcRenderer.invoke("em-probe"),
+  emApplyProbe: () => ipcRenderer.invoke("em-apply-probe"),
+  emNpmrc: (enable) => ipcRenderer.invoke("em-npmrc", enable),
+  emNpmrcPath: () => ipcRenderer.invoke("em-npmrc-path"),
   cleanupScan: () => ipcRenderer.invoke("cleanup-scan"),
   cleanupRun: (keys) => ipcRenderer.invoke("cleanup-run", keys),
   whatsNew: () => ipcRenderer.invoke("whats-new"),
