@@ -188,6 +188,8 @@ const I18N = {
     "bk.done": (n) => `💾 备份完成: ${n}`, "bk.fail": (e) => `💾 备份失败: ${e}`,
     "bk.restored": (n) => `♻️ 已从备份恢复: ${n}`, "bk.restore.fail": (e) => `♻️ 恢复失败: ${e}`,
     "bk.del": (n) => `🗑️ 已删除备份: ${n}`, "bk.pruned": (n) => `已清理 ${n} 份超额备份`, "bk.exported": (f) => `已导出: ${f}`,
+    "bk.nohash": "该备份没有 sha256 清单 (创建时未开启「生成校验清单」)",
+    "bk.verify.ok": (n) => `✅ 校验通过: ${n} 个文件一致`, "bk.verify.bad": (n) => `❌ 校验失败: ${n} 个文件不一致或缺失`,
     "bk.scope.config": "配置", "bk.scope.env": "环境变量", "bk.scope.auth": "认证", "bk.scope.sessions": "会话", "bk.scope.skills": "技能/软件", "bk.scope.plugins": "插件", "bk.scope.zhpatches": "中文补丁",
     "bk.scope.memories": "记忆库", "bk.scope.vault": "凭据库", "bk.scope.hooks": "钩子脚本", "bk.scope.cron": "定时任务", "bk.scope.kanban": "看板", "bk.scope.projects": "项目库", "bk.scope.state": "状态库",
     "bk.scope.shared": "共享数据", "bk.scope.pets": "宠物", "bk.scope.platforms": "平台配置", "bk.scope.pairing": "配对/消息", "bk.scope.sandbox": "沙箱", "bk.scope.data": "数据包", "bk.scope.logs": "运行日志",
@@ -289,6 +291,8 @@ const I18N = {
     "bk.done": (n) => `💾 Backup finished: ${n}`, "bk.fail": (e) => `💾 Backup failed: ${e}`,
     "bk.restored": (n) => `♻️ Restored from backup: ${n}`, "bk.restore.fail": (e) => `♻️ Restore failed: ${e}`,
     "bk.del": (n) => `🗑️ Backup deleted: ${n}`, "bk.pruned": (n) => `Pruned ${n} excess backup(s)`, "bk.exported": (f) => `Exported: ${f}`,
+    "bk.nohash": "This backup has no sha256 manifest (hash manifest was off when it was created)",
+    "bk.verify.ok": (n) => `✅ Verify passed: ${n} file(s) match`, "bk.verify.bad": (n) => `❌ Verify failed: ${n} file(s) differ or missing`,
     "bk.scope.config": "Config", "bk.scope.env": "Env vars", "bk.scope.auth": "Auth", "bk.scope.sessions": "Sessions", "bk.scope.skills": "Skills/software", "bk.scope.plugins": "Plugins", "bk.scope.zhpatches": "zh-patches",
     "bk.scope.memories": "Memories", "bk.scope.vault": "Vault", "bk.scope.hooks": "Hooks", "bk.scope.cron": "Cron jobs", "bk.scope.kanban": "Kanban", "bk.scope.projects": "Projects", "bk.scope.state": "State DB",
     "bk.scope.shared": "Shared data", "bk.scope.pets": "Pets", "bk.scope.platforms": "Platforms", "bk.scope.pairing": "Pairing", "bk.scope.sandbox": "Sandboxes", "bk.scope.data": "Data", "bk.scope.logs": "Logs",
@@ -1531,6 +1535,16 @@ function bkWriteHash(root, dir, items) {
 }
 const BK_NAME_RE = /^HermesAgent-\d{14}(-[\w\u4e00-\u9fa5-]+)?(\.zip)?$/;
 function bkNameOk(n) { return BK_NAME_RE.test(String(n || "")); }
+// 名字容错: 产物可能是 zip 也可能是目录, 调用方给的名字可能带/不带 .zip
+// (例如 bkBackupNow 返回的名字历史上不带扩展名), 统一解析成磁盘上真实存在的那个
+function bkResolve(name) {
+  const root = bkRoot();
+  const raw = String(name || "");
+  if (!bkNameOk(raw)) return null;
+  const tries = /\.(zip)$/i.test(raw) ? [raw, raw.replace(/\.zip$/i, "")] : [raw, raw + ".zip"];
+  for (const t2 of tries) { if (fs.existsSync(path.join(root, t2))) return t2; }
+  return null;
+}
 function bkSanitizeNote(s) { return String(s || "").replace(/[^\w\u4e00-\u9fa5-]/g, "").slice(0, 20); }
 function bkPs(cmd) { // PowerShell 压缩/解压 (Windows 内置, 无需额外依赖)
   execFileSync("powershell", ["-NoProfile", "-Command", cmd], { windowsHide: true, timeout: 600000, maxBuffer: 32e6 });
@@ -1538,6 +1552,15 @@ function bkPs(cmd) { // PowerShell 压缩/解压 (Windows 内置, 无需额外�
 function bkExpandZip(zip, dst) {
   fs.mkdirSync(dst, { recursive: true });
   bkPs(`Expand-Archive -Path '${zip.replace(/'/g, "''")}' -DestinationPath '${dst.replace(/'/g, "''")}' -Force`);
+  // Compress-Archive 打包目录时会把该目录本身写进 zip, 解压结果是 dst/<备份名>/...
+  // 必须下潜到真正的内容根, 否则恢复时会把整个文件夹原样塞进安装目录而不是覆盖回原位
+  try {
+    const ents = fs.readdirSync(dst);
+    if (ents.length === 1) {
+      const only = path.join(dst, ents[0]);
+      if (fs.statSync(only).isDirectory() && (BK_NAME_RE.test(ents[0]) || fs.existsSync(path.join(only, "manifest.json")))) return only;
+    }
+  } catch {}
   return dst;
 }
 function bkMetaPath(root, name) { return path.join(root, name.replace(/\.zip$/, "") + ".meta.json"); }
@@ -1617,16 +1640,17 @@ async function bkBackupNow(note, scopeOverride) {
       } catch (e) { log(`[备份] 压缩失败, 保留目录形式: ${e}`); }
     }
     try { sizeMB = Math.max(0, Math.round(fs.statSync(finalPath).size / 10485.76) / 100); } catch {}
+    const finalName = path.basename(finalPath); // 真实产物名 (压缩成功时带 .zip), 保证与 bkList 返回的名字一致
     if (S.bk_verify && !items.length) return { ok: false, msg: `${t("bk.fail", "无可备份内容 (scope 内未找到文件)")}` };
     if (S.bk_verify && !fs.existsSync(finalPath)) return { ok: false, msg: t("bk.fail", "产物缺失") };
     let pruned = 0;
     if (S.bk_prune_after !== false) pruned = bkPruneSync();
-    log(`[备份] ${t("bk.done", name)} (${items.length} 项, ${sizeMB} MB, ${scope.map((k) => t(BK_SCOPE_I18N[k] || "bk.scope.config")).join("/")})`);
+    log(`[备份] ${t("bk.done", finalName)} (${items.length} 项, ${sizeMB} MB, ${scope.map((k) => t(BK_SCOPE_I18N[k] || "bk.scope.config")).join("/")})`);
     if (S.bk_notify !== false && S.bk_notify_fail_only !== true) {
-      try { new Notification({ title: t("tray.bk.done"), body: `${name} · ${items.length} 项 · ${sizeMB} MB` }).show(); } catch {}
+      try { new Notification({ title: t("tray.bk.done"), body: `${finalName} · ${items.length} 项 · ${sizeMB} MB` }).show(); } catch {}
     }
     if (S.bk_open_after && finalPath) { try { shell.openPath(finalPath.endsWith(".zip") ? root : finalPath); } catch {} }
-    return { ok: true, name, path: finalPath, sizeMB, items, pruned, hashes, excluded: skippedByExclude, msg: t("bk.done", name) };
+    return { ok: true, name: finalName, path: finalPath, sizeMB, items, pruned, hashes, excluded: skippedByExclude, msg: t("bk.done", finalName) };
   } catch (e) {
     bkNotifyFail(e);
     return { ok: false, msg: t("bk.fail", e) };
@@ -1663,12 +1687,12 @@ async function bkRestore(name) {
     if (S.bk_enabled === false) return { ok: false, msg: t("bk.disabled") };
     const inst = install();
     if (!fs.existsSync(inst)) return { ok: false, msg: t("bk.none") };
-    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
     const root = bkRoot();
-    const full = path.join(root, name);
-    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    const real = bkResolve(name); // 兼容带/不带 .zip 的名字
+    if (!real) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, real);
     let dir = full;
-    if (name.endsWith(".zip")) { tmpdir = path.join(os.tmpdir(), `hermes-bk-r-${Date.now()}`); dir = bkExpandZip(full, tmpdir); }
+    if (real.endsWith(".zip")) { tmpdir = path.join(os.tmpdir(), `hermes-bk-r-${Date.now()}`); dir = bkExpandZip(full, tmpdir); }
     let manifest = {};
     try { manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")); } catch {}
     let items = (manifest.items && manifest.items.length) ? manifest.items : fs.readdirSync(dir).filter((x) => x !== "manifest.json");
@@ -1706,7 +1730,7 @@ async function bkRestore(name) {
         copied++;
       } catch (e) { log(`[恢复] 跳过 ${rel}: ${e}`); }
     }
-    log(`[备份] ${t("bk.restored", name)} (${copied} 项)`);
+    log(`[备份] ${t("bk.restored", real)} (${copied} 项)`);
     // 恢复后校验 (bk_verify_restore): 逐个确认落盘, 报告缺失数
     let verified = 0, missing = 0;
     if (S.bk_verify_restore) {
@@ -1716,9 +1740,9 @@ async function bkRestore(name) {
       log(`[备份] ${t("bk.verify", verified, missing)}`);
     }
     if (S.bk_notify !== false) {
-      try { new Notification({ title: t("bk.restored", name), body: `${copied} 项${preBackup ? " · " + t("bk.pre.done", preBackup) : ""}` }).show(); } catch {}
+      try { new Notification({ title: t("bk.restored", real), body: `${copied} 项${preBackup ? " · " + t("bk.pre.done", preBackup) : ""}` }).show(); } catch {}
     }
-    return { ok: true, name, copied, preBackup, skipped: skippedScope.length, msg: t("bk.restored", name) };
+    return { ok: true, name: real, copied, preBackup, skipped: skippedScope.length, msg: t("bk.restored", real) };
   } catch (e) {
     return { ok: false, msg: t("bk.restore.fail", e) };
   } finally {
@@ -1728,27 +1752,27 @@ async function bkRestore(name) {
 async function bkDelete(name) {
   try {
     const root = bkRoot();
-    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
-    const full = path.join(root, name);
-    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    const real = bkResolve(name); // 兼容带/不带 .zip 的名字
+    if (!real) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, real);
     fs.rmSync(full, { recursive: true, force: true });
-    try { fs.rmSync(bkMetaPath(root, name), { force: true }); } catch {}
-    log(`[备份] ${t("bk.del", name)}`);
-    return { ok: true, name, msg: t("bk.del", name) };
+    try { fs.rmSync(bkMetaPath(root, real), { force: true }); } catch {}
+    log(`[备份] ${t("bk.del", real)}`);
+    return { ok: true, name: real, msg: t("bk.del", real) };
   } catch (e) { return { ok: false, msg: String(e) }; }
 }
 async function bkExport(name, dest) {
   try {
     const root = bkRoot();
-    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
-    const full = path.join(root, name);
-    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    const real = bkResolve(name); // 兼容带/不带 .zip 的名字
+    if (!real) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, real);
     let out = (dest || "").trim();
     if (!out) { // 未给目标路径 -> 弹保存对话框 (zip 用 .zip, 目录形式用文件夹名)
       const isZip = full.endsWith(".zip");
       const r = await dialog.showSaveDialog(win, {
         title: t("bk.export.title"),
-        defaultPath: path.join(app.getPath("documents"), name.replace(/\.zip$/, "") + (isZip ? ".zip" : "")),
+        defaultPath: path.join(app.getPath("documents"), real.replace(/\.zip$/, "") + (isZip ? ".zip" : "")),
         filters: isZip ? [{ name: "ZIP", extensions: ["zip"] }] : [],
       });
       if (r.canceled || !r.filePath) return { ok: false, msg: "" };
@@ -1759,6 +1783,35 @@ async function bkExport(name, dest) {
     log(`[备份] ${t("bk.exported", out)}`);
     return { ok: true, dest: out, msg: t("bk.exported", out) };
   } catch (e) { return { ok: false, msg: String(e) }; }
+}
+// 完整性校验: 按 manifest.sha256 逐文件重算 sha256 对比, 用来判断备份是否完好/被改动
+async function bkVerify(name) {
+  let tmpdir = null;
+  try {
+    const root = bkRoot();
+    const real = bkResolve(name);
+    if (!real) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, real);
+    let dir = full;
+    if (real.endsWith(".zip")) { tmpdir = path.join(os.tmpdir(), `hermes-bk-v-${Date.now()}`); dir = bkExpandZip(full, tmpdir); }
+    const hp = path.join(dir, "manifest.sha256");
+    if (!fs.existsSync(hp)) return { ok: false, msg: t("bk.nohash") };
+    let checked = 0; const bad = [];
+    for (const line of fs.readFileSync(hp, "utf8").split(/\r?\n/).filter(Boolean)) {
+      const m = /^([0-9a-f]{64})\s{2}(.+)$/.exec(line);
+      if (!m) continue;
+      const f = path.join(dir, m[2]);
+      if (!fs.existsSync(f)) { bad.push(m[2]); continue; }
+      let h = "";
+      try { h = crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex"); } catch {}
+      checked++;
+      if (h !== m[1]) bad.push(m[2]);
+    }
+    if (bad.length) { log(`[备份] ${t("bk.verify.bad", bad.length)}: ${real}`); return { ok: false, checked, bad, msg: t("bk.verify.bad", bad.length) }; }
+    log(`[备份] ${t("bk.verify.ok", checked)}: ${real}`);
+    return { ok: true, checked, bad: [], msg: t("bk.verify.ok", checked) };
+  } catch (e) { return { ok: false, msg: String(e) }; }
+  finally { if (tmpdir) { try { fs.rmSync(tmpdir, { recursive: true, force: true }); } catch {} } }
 }
 async function bkOpenDir() {
   try { fs.mkdirSync(bkRoot(), { recursive: true }); shell.openPath(bkRoot()); return { ok: true }; }
@@ -2161,6 +2214,7 @@ ipcMain.handle("bk-backup-now", (e, payload) => bkBackupNow(payload && payload.n
 ipcMain.handle("bk-restore", (e, name) => bkRestore(name));
 ipcMain.handle("bk-delete", (e, name) => bkDelete(name));
 ipcMain.handle("bk-export", (e, payload) => bkExport(payload && payload.name, payload && payload.dest));
+ipcMain.handle("bk-verify", (e, name) => bkVerify(name));
 ipcMain.handle("bk-open-dir", () => bkOpenDir());
 ipcMain.handle("bk-prune", () => bkPrune());
 
@@ -3415,3 +3469,9 @@ ipcMain.handle("repair-deps", (e) => {
   })();
   return { ok: true };
 });
+
+// 离线自测导出: 仅当 HU_SELFTEST=1 时暴露内部函数, 供 node 直接跑备份/恢复功能验证;
+// Electron 正常启动时该分支不执行, 对运行零影响。
+if (process.env.HU_SELFTEST === "1") {
+  module.exports = { S, install, agentDir, backupDir, bkRoot, bkMap, BK_SCOPE_KEYS, bkNameOk, bkResolve, bkBackupNow, bkList, bkRestore, bkDelete, bkExport, bkVerify, bkPrune, bkPruneSync };
+}

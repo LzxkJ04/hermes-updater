@@ -4,7 +4,7 @@
 
 A polished Windows desktop GUI (Electron) for updating, installing, and maintaining the **Hermes Agent** — with mirror acceleration for mainland-China networks, one-click network self-healing, update hooks, and a full dashboard. Install, update, and maintain Hermes Agent from a single app.
 
-> **Latest release: v2.27.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
+> **Latest release: v2.28.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 
@@ -48,6 +48,7 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - **21 selectable scopes**: sessions, skills/software, plugins (+ desktop plugins), config, env vars, auth, zh-patches, memories, vault, hooks, cron, kanban, projects, state DB, shared data, pets, platforms, pairing, sandboxes, data, logs
 - **25 backup settings**: scheduled backups (daily/weekly + exact time + weekdays), keep-by-count, keep-by-age, restore-only-these-scopes, compression level, stop processes first, integrity check, `manifest.sha256`, auto-backup before restore, auto-backup before update, desktop notifications, exclude rules, and more
 - Safety net: optionally snapshot the current state before restoring, then verify what landed on disk
+- 🔍 **Integrity verify**: backups with a sha256 manifest get a "🔍 Verify" button that recomputes every hash and reports "N files match / differ"
 - Tray submenu "💾 Backup & Restore": back up now (balloon) / open page / open folder / settings
 
 ### Settings

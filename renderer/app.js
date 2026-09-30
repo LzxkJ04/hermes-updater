@@ -347,7 +347,9 @@ const STR = {
     "bk.empty": "还没有任何备份，点「📦 立即备份」创建第一份", "bk.count": (n) => `共 ${n} 份备份`, "bk.nitem": (n) => `${n} 项`,
     "bk.doing": "正在备份（会先停止 Hermes 进程），请稍候...", "bk.noscope": "请至少勾选一项备份范围",
     "bk.ok": (n, c, s) => `✅ 备份完成: ${n}（${c} 项, ${s} MB）`, "bk.err": (m) => `❌ 备份失败: ${m}`,
-    "bk.row.restore": "♻️ 恢复", "bk.row.export": "📤 导出", "bk.row.del": "🗑️ 删除",
+    "bk.row.restore": "♻️ 恢复", "bk.row.export": "📤 导出", "bk.row.del": "🗑️ 删除", "bk.row.verify": "🔍 校验",
+    "bk.verify.doing": "正在校验备份完整性…", "bk.verify.ok": (n) => `✅ 校验通过: ${n} 个文件一致`,
+    "bk.verify.bad": (n) => `❌ 校验失败: ${n} 个文件不一致或缺失`,
     "bk.restore.confirm": (n) => `确定从备份「${n}」恢复吗？\n\n恢复会覆盖当前安装目录中的同名文件，建议先备份当前状态。`,
     "bk.restore.doing": "正在恢复，请稍候...", "bk.restore.ok": (n, c) => `✅ 已从「${n}」恢复 ${c} 项`, "bk.restore.err": (m) => `❌ 恢复失败: ${m}`,
     "bk.del.confirm": (n) => `确定删除备份「${n}」吗？此操作不可撤销。`, "bk.del.ok": (n) => `🗑️ 已删除备份: ${n}`,
@@ -699,7 +701,9 @@ const STR = {
     "bk.empty": "No backups yet — click \"📦 Back up now\" to create the first one", "bk.count": (n) => `${n} backup(s)`, "bk.nitem": (n) => `${n} item(s)`,
     "bk.doing": "Backing up (Hermes processes will be stopped first), please wait...", "bk.noscope": "Select at least one backup scope",
     "bk.ok": (n, c, s) => `✅ Backup finished: ${n} (${c} item(s), ${s} MB)`, "bk.err": (m) => `❌ Backup failed: ${m}`,
-    "bk.row.restore": "♻️ Restore", "bk.row.export": "📤 Export", "bk.row.del": "🗑️ Delete",
+    "bk.row.restore": "♻️ Restore", "bk.row.export": "📤 Export", "bk.row.del": "🗑️ Delete", "bk.row.verify": "🔍 Verify",
+    "bk.verify.doing": "Verifying backup integrity…", "bk.verify.ok": (n) => `✅ Verify passed: ${n} file(s) match`,
+    "bk.verify.bad": (n) => `❌ Verify failed: ${n} file(s) differ or missing`,
     "bk.restore.confirm": (n) => `Restore from backup "${n}"?\n\nThis overwrites same-named files in the current install folder. Back up the current state first.`,
     "bk.restore.doing": "Restoring, please wait...", "bk.restore.ok": (n, c) => `✅ Restored ${c} item(s) from "${n}"`, "bk.restore.err": (m) => `❌ Restore failed: ${m}`,
     "bk.del.confirm": (n) => `Delete backup "${n}"? This cannot be undone.`, "bk.del.ok": (n) => `🗑️ Backup deleted: ${n}`,
@@ -2755,6 +2759,12 @@ async function refreshBackupList() {
         const r = await rpc.bkExport({ name: b.name }); // dest 留空 -> 主进程弹保存对话框
         if (r && r.ok) toast(t("bk.export.ok", r.dest), "ok", 5000);
         else if (r && r.msg) toast(t("bk.export.err", r.msg), "err", 5000);
+      });
+      if (b.hasHash) mk(t("bk.row.verify"), "", async () => {
+        bkStatus(t("bk.verify.doing"));
+        const r = await rpc.bkVerify(b.name);
+        if (r && r.ok) { const m = t("bk.verify.ok", r.checked || 0); toast(m, "ok", 5000); bkStatus(m, "ok"); }
+        else { const m = (r && r.msg) || t("bk.verify.bad", ((r && r.bad) || []).length); toast(m, "err", 6000); bkStatus(m, "err"); }
       });
       mk(t("bk.row.del"), "warn", async () => {
         if (!confirm(t("bk.del.confirm", b.name))) return;

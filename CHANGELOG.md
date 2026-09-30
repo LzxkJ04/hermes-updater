@@ -3,6 +3,16 @@
 All notable changes to HermesUpdater are documented here.
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.28.0] - 2026-09-30
+
+### Fixed
+- 🐞 **修复：从 .zip 备份恢复会把整个文件夹塞进安装目录**（关键 bug）。PowerShell `Compress-Archive` 打包目录时会把该目录本身写进 zip，解压后是 `<临时目录>/<备份名>/...`；旧代码把临时目录当成内容根，导致 manifest.json 读不到、文件被原样拷成一个子文件夹而不是覆盖回 `sessions/`、`config.yaml` 等原位。现在解压后自动下潜到真正的内容根，实测恢复 13 项内容全部正确落盘
+- 🐞 **修复：备份名带/不带 `.zip` 不一致**。`bkBackupNow` 返回的名字不带扩展名，而列表里是带 `.zip` 的真实文件名，按返回名去恢复/删除/导出会报「未检测到有效 Hermes 安装」。现在统一返回磁盘真实文件名，并新增 `bkResolve()` 对两种写法都做容错解析
+
+### Added
+- 🔍 **备份完整性校验**：备份列表对带 sha256 清单的备份多一个「🔍 校验」按钮，逐文件重算 sha256 与 `manifest.sha256` 比对，报告「N 个文件一致 / N 个文件不一致或缺失」；未开清单的备份会给出明确提示
+- 🧪 **离线自测脚本 `selftest_bk.js`**：用 mock 顶掉 electron 后直接跑备份引擎，覆盖 21 类范围命中、小/大份备份、排除规则、zip 恢复到临时安装目录（含嵌套目录）、恢复范围过滤、sha256 校验、路径穿越防护、超额清理、删除，共 35 项断言
+
 ## [2.27.0] - 2026-09-30
 
 ### Added

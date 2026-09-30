@@ -96,6 +96,7 @@ contextBridge.exposeInMainWorld("api", {
   bkExport: (payload) => ipcRenderer.invoke("bk-export", payload),
   bkOpenDir: () => ipcRenderer.invoke("bk-open-dir"),
   bkPrune: () => ipcRenderer.invoke("bk-prune"),
+  bkVerify: (name) => ipcRenderer.invoke("bk-verify", name),
   cleanupScan: () => ipcRenderer.invoke("cleanup-scan"),
   cleanupRun: (keys) => ipcRenderer.invoke("cleanup-run", keys),
   whatsNew: () => ipcRenderer.invoke("whats-new"),
