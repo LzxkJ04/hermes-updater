@@ -316,6 +316,154 @@ const STR = {
     "em.groups.tip": "⬇️ 下面是全部工具链分组：可逐组开关、逐组指定镜像站点（未指定则跟随探测结果）。带 🧭 表示本机检测到该工具链。",
     "em.grp.toggle": "启用/停用该组镜像注入", "em.grp.auto": "跟随探测/全局站点",
     "em.grp.none": "(站点无此仓库)", "em.grp.saved": "已保存该分组的镜像站点 ✔",
+    "em.probe.sumui": (ok, na, fail) => `✅ 可用 ${ok} · ➖ 该站无此仓库 ${na} · ❌ 不可达 ${fail}（➖ 不是故障，是这站没收录该仓库，已自动跳过）`,
+    "em.na": "该站无此仓库", "em.learncleared": "🧽 已清除镜像学习记录",
+    "em.sites.groups": (n, g) => `共 ${n} 个站点，覆盖 ${g} 档工具链广度`,
+    "chk.em.crossfallback": "选定站点没有该仓库时，自动换到确实有这个仓库的其他站点",
+    "chk.em.learn": "自动学习：记住上次确认可用的站点，下次免重新探测",
+    "chk.em.verbosena": "更新输出里也打印「该站无此仓库」的行（默认只打印可用/不通）",
+    "label.em.scope": "探测粒度",
+    "opt.em.scope.group": "逐工具链分组（准确，推荐）",
+    "opt.em.scope.field": "只探基础仓库（快）",
+    "label.em.conc": "探测并发数（1-24）",
+    "label.em.proberetry": "探测失败重试次数（0-3）",
+    "label.em.skipsites": "站点黑名单（逗号分隔，永不参与选源）",
+    "ph.em.skipsites": "例：tuna,bfsu",
+    "opt.em.missing.official": "回退到官方源",
+    "opt.em.missing.omit": "不注入该变量（推荐，避免注入下不动的地址）",
+    "em.btn.sites": "🌐 站点清单",
+    "em.btn.learnclear": "🧽 清除学习结果",
+    // ---- 安装包镜像源检测 ----
+    "set.pm": "📦 安装包镜像源检测",
+    "set.pm.tip": "💡 和「镜像加速」分工不同：那里管依赖安装注入的环境变量，这里管本来要去官网下的安装包本体（Node.js / Python / Git / 7-Zip / .NET / CMake / FFmpeg / nginx / Maven / Gradle…）。一键探测 11 个国内镜像站谁收录了这些包、谁最快，并解析出最新版真实文件名生成镜像直链 —— 可直接下载安装，也能用来给 winget / Chocolatey 换源。（只读探测，不点「下载」就不会产生下载流量）",
+    "chk.pm.enabled": "启用安装包镜像源检测",
+    "chk.pm.onstart": "启动后后台预热探测一次",
+    "chk.pm.autoswitch": "选中的站点失效时自动换下一个可用站",
+    "chk.pm.verbose": "在更新输出里打印探测进度",
+    "chk.pm.copyonly": "只复制下载命令，不真的下载",
+    "chk.pm.visible": "下载在新控制台窗口可见执行（可 Ctrl+C 中断）",
+    "chk.pm.openafter": "下载完成后自动打开下载目录",
+    "chk.pm.mgrsource": "同时给出包管理器换源建议（Chocolatey / winget / Scoop / npm / pip）",
+    "label.pm.scope": "探测范围",
+    "opt.pm.scope.core": "仅更新关键包（Node/Python/Git/7-Zip，最快）",
+    "opt.pm.scope.rec": "关键 + 推荐（+.NET/CMake）",
+    "opt.pm.scope.all": "全部 17 个包（最全，最慢）",
+    "label.pm.conc": "探测并发数（1-24）",
+    "label.pm.timeout": "单目录超时(秒, 3-60)",
+    "label.pm.retry": "探测失败重试次数（0-3）",
+    "label.pm.depth": "目录下探层数（0-3，镜像按版本分子目录）",
+    "label.pm.skipsites": "站点黑名单（逗号分隔）",
+    "ph.pm.skipsites": "例：netease,zju",
+    "label.pm.dldir": "下载目录（空 = 系统下载目录）",
+    "ph.pm.dldir": "D:\\Installers",
+    "label.pm.dltool": "下载器",
+    "label.pm.proxy": "探测代理（空=自动识别环境变量/系统代理，off=直连）",
+    "ph.pm.proxy": "http://127.0.0.1:7890",
+    "opt.pm.tool.curl": "curl（Win10+ 自带，支持断点续传）",
+    "opt.pm.tool.powershell": "PowerShell Invoke-WebRequest",
+    "opt.pm.tool.aria2": "aria2c（多线程，需自行安装）",
+    "pm.btn.probe": "📡 探测全部镜像",
+    "pm.btn.dlall": "⬇️ 下载全部更新关键包",
+    "pm.btn.report": "📋 复制镜像报告",
+    "pm.btn.foldir": "📂 打开下载目录",
+    "pm.btn.mgr": "🔀 包管理器换源",
+    "pm.btn.clear": "♻️ 清除探测结果",
+    "pm.ui.probing": "正在探测各镜像站的安装包目录…（具体耗时取决于范围与并发）",
+    "pm.ui.noresult": "（点「探测全部镜像」查看本机能用的安装包镜像）",
+    "pm.ui.done": (n) => `✅ 可用 ${(n && n.ok) || 0} · 有目录无文件 ${(n && n.dir) || 0} · 未收录 ${(n && n.na) || 0} · 不可达 ${(n && n.fail) || 0}`,
+    "pm.ui.donetoast": (ok, na, fail) => `探测完成：可用 ${ok} 组 · 未收录 ${na} 组 · 不可达 ${fail} 组`,
+    "pm.ui.summary": (withUrl, na, unt, all, sites) => `共 ${all} 个安装包 · ${sites} 个镜像站 · 已找到镜像直链 ${withUrl} 个 · 全站无收录 ${na} 个 · 未探测 ${unt} 个`,
+    "pm.ui.level.core": "关键", "pm.ui.level.rec": "推荐", "pm.ui.level.opt": "可选",
+    "pm.ui.best": (site, ms) => `${site} · ${ms}ms`,
+    "pm.ui.na": "所有镜像站都没有收录 → 用官网",
+    "pm.ui.untested": "尚未探测",
+    "pm.ui.auto": "自动选最快",
+    "pm.ui.pinned": (pkg, site) => `已将 ${pkg} 的首选站点设为 ${site}`,
+    "pm.ui.dl": "下载", "pm.ui.cmd": "复制命令", "pm.ui.dir": "镜像目录", "pm.ui.official": "官网",
+    "pm.ui.dlstart": (name, dir) => `⏳ 已开始下载 ${name} → ${dir}`,
+    "pm.ui.dlall": (n) => `⏳ 已依次启动 ${n} 个更新关键包的下载`,
+    "pm.ui.copied": "📋 命令已复制到剪贴板",
+    "pm.ui.nocmd": "没有可用的镜像直链（先探测，或直接点「官网」）",
+    "pm.ui.reportcopied": "📋 镜像报告已复制",
+    "pm.ui.foldir": (dir) => `📂 已打开 ${dir}`,
+    "pm.ui.cleared": "♻️ 已清除安装包探测结果",
+    "pm.ui.probeFirst": "先点「探测全部镜像」，拿到直链后才能下载",
+    "pm.ui.mgr.head": (inst) => `已检测到的包管理器：${inst} —— 下面是对应的换源命令（只读展示，点按钮才执行）`,
+    "pm.ui.mgr.none": "无",
+    // ---- 构建工具链自检 ----
+    "set.bc": "🛠️ 构建工具链自检",
+    "set.bc.tip": "💡 依赖阶段会用 node-gyp 编译原生模块（如 get-windows），这需要 Visual Studio 生成工具 + 「使用 C++ 的桌面开发」工作负载。缺了它报的是一长串 gyp ERR! find VS，很容易被误判成网络/镜像问题 —— 这里可以直接体检并一键安装。",
+    "chk.bc.enabled": "更新前自动体检构建环境",
+    "chk.bc.warnonly": "只警告不阻止更新（关闭则环境不达标时中止）",
+    "chk.bc.diag": "更新失败时自动定位真正卡住的步骤并给出修复步骤",
+    "chk.bc.python": "同时检查 Python（node-gyp 需要 Python 3）",
+    "label.bc.vspath": "手动指定 VS 安装路径（GYP_MSVS_OVERRIDE_PATH）",
+    "label.bc.msvs": "手动指定 msvs_version",
+    "bc.btn.check": "🔬 立即体检",
+    "bc.btn.download": "⬇️ 打开生成工具下载页",
+    "bc.btn.winget": "⚡ 用 winget 一键安装",
+    "bc.btn.copy": "📋 复制安装命令",
+    "bc.checking": "正在体检构建环境…",
+    "bc.ready": "✅ 构建环境就绪",
+    "bc.notready": "⚠️ 构建环境不完整",
+    "bc.noresult": "（点「立即体检」查看本机构建环境）",
+    "bc.copied": "📋 winget 安装命令已复制",
+    "bc.dl.opened": "⬇️ 已在浏览器打开生成工具下载页",
+    "bc.wingetopened": "⚡ 已在新窗口打开 winget 安装命令，确认后回车执行",
+    "bc.msvs.show": (m) => `node-gyp 将使用 msvs_version=${m}`,
+    // ---- 系统环境检测与安装 ----
+    "set.se": "🖥️ 系统环境检测与安装",
+    "set.se.tip": "💡 一键体检「更新/打包到底缺什么」：操作系统、管理员权限、开发者模式、长路径、磁盘、Node/npm/Git、Visual Studio + C++ 生成工具、MSBuild、Windows SDK、Python、PowerShell、winget/Chocolatey/Scoop… 缺什么直接一键装，需要管理员权限的修复项自动提权。（纯只读检测，不点安装就不会装任何东西）",
+    "chk.se.enabled": "启用系统环境检测（体检 + 一键安装）",
+    "chk.se.onstart": "启动时自动体检一次",
+    "chk.se.block": "必需项缺失时中止更新（关闭 = 只警告）",
+    "chk.se.autoinstall": "更新前自动安装必需项里缺的东西（⚠️ 会真的装软件）",
+    "chk.se.confirm": "执行安装前先弹确认框",
+    "chk.se.visible": "在新控制台窗口可见执行安装（可随时 Ctrl+C 中断）",
+    "chk.se.copyonly": "只复制安装命令，不真的执行",
+    "chk.se.elevate": "需要管理员权限的修复项自动提权（会弹 UAC）",
+    "chk.se.proxy": "同时检测系统代理 / 环境变量代理",
+    "chk.se.devmode": "开发者模式未开启时给出一键开启入口",
+    "chk.se.failhint": "更新失败后自动跑一次体检并打出结论",
+    "chk.se.verbose": "在更新输出里打印体检结论",
+    "label.se.level": "体检严格度",
+    "label.se.mgr": "首选安装器",
+    "label.se.startdelay": "启动体检延迟(毫秒)",
+    "label.se.minfree": "磁盘剩余告警阈值(GB)",
+    "label.se.skip": "忽略的检测项（逗号分隔 key）",
+    "opt.se.lv.block": "只把「必需项」算失败",
+    "opt.se.lv.warn": "必需 + 推荐（默认）",
+    "opt.se.lv.all": "必需 + 推荐 + 可选",
+    "opt.se.mgr.auto": "自动（winget → choco → scoop）",
+    "opt.se.mgr.winget": "winget",
+    "opt.se.mgr.choco": "Chocolatey",
+    "opt.se.mgr.scoop": "Scoop",
+    "opt.se.mgr.none": "不用包管理器（只给官网下载页）",
+    "se.btn.check": "🔬 全面体检",
+    "se.btn.install": "⚡ 一键安装缺失项",
+    "se.btn.report": "📋 复制体检报告",
+    "se.btn.devmode": "🧪 开启开发者模式",
+    "se.btn.longpath": "📏 开启长路径支持",
+    "se.btn.cache": "♻️ 清检测缓存",
+    "se.ui.checking": "正在扫描系统环境…（约 2-10 秒）",
+    "se.ui.ready": "✅ 系统环境就绪",
+    "se.ui.notready": "⚠️ 系统环境不完整",
+    "se.ui.noresult": "（点「全面体检」查看本机环境）",
+    "se.ui.summary": (n) => `必需 ${n.block - n.blockBad}/${n.block} · 推荐 ${n.warn - n.warnBad}/${n.warn} · 可选 ${n.opt - n.optBad}/${n.opt}`,
+    "se.ui.level.block": "必需", "se.ui.level.warn": "推荐", "se.ui.level.opt": "可选", "se.ui.level.info": "信息",
+    "se.ui.mgr": (m) => `安装器 ${m}`,
+    "se.ui.install": "安装", "se.ui.open": "官网", "se.ui.fix": "一键修复", "se.ui.skip": "忽略",
+    "se.ui.installing": (n) => `⏳ 已启动安装：${n}（完成后回来点「全面体检」）`,
+    "se.ui.copied": "📋 已复制到剪贴板",
+    "se.ui.copyfail": "复制失败",
+    "se.ui.nomgr": "未检测到包管理器（winget/Chocolatey/Scoop）—— 安装命令已复制，请手动运行，或点「官网」下载",
+    "se.ui.unsupported": (n) => `当前安装器不支持：${n}（可换「首选安装器」或走官网）`,
+    "se.ui.fixstart": (n) => `🛠 已发起修复：${n}（可能会弹 UAC 提权，完成后重新体检）`,
+    "se.ui.fixcopied": "📋 修复命令已复制，请以管理员身份手动运行",
+    "se.ui.fixfail": (n) => `修复失败：${n}`,
+    "se.ui.nolink": "该项没有可打开的官网地址",
+    "se.ui.nothing": "没有可安装的缺失项（或已全部就绪）",
+    "se.ui.cachecleared": "♻️ 检测缓存已清除",
     "em.detected": (n, all) => `🧭 检测到 ${n}/${all} 个工具链`, "em.preview.count": (n) => `共 ${n} 个环境变量`,
     "em.preview.empty": "（当前没有要注入的变量：可能总开关关闭、或所有分组都被停用）",
     "unins.title": "🗑️ 卸载 Hermes", "unins.mode": "卸载方式",
@@ -711,6 +859,154 @@ const STR = {
     "em.groups.tip": "⬇️ All toolchain groups below: toggle each one, or pin a mirror site per group (unset = follow probe result). 🧭 means the toolchain was detected locally.",
     "em.grp.toggle": "Enable/disable this group", "em.grp.auto": "Follow probe/global site",
     "em.grp.none": "(site has no such repo)", "em.grp.saved": "Mirror site saved for this group ✔",
+    "em.probe.sumui": (ok, na, fail) => `✅ reachable ${ok} · ➖ site lacks repo ${na} · ❌ unreachable ${fail} (➖ is not a failure — that site simply does not host the repo, it was skipped)`,
+    "em.na": "site lacks this repo", "em.learncleared": "🧽 Learned mirror sites cleared",
+    "em.sites.groups": (n, g) => `${n} sites across ${g} coverage tiers`,
+    "chk.em.crossfallback": "When the chosen site lacks a repo, fall back to a site that has it",
+    "chk.em.learn": "Auto-learn: remember the last confirmed-good site so no re-probe is needed",
+    "chk.em.verbosena": "Also print \"site lacks this repo\" lines in the update output (default: OK/unreachable only)",
+    "label.em.scope": "Probe granularity",
+    "opt.em.scope.group": "Per toolchain group (accurate, recommended)",
+    "opt.em.scope.field": "Base repos only (fast)",
+    "label.em.conc": "Probe concurrency (1-24)",
+    "label.em.proberetry": "Probe retries (0-3)",
+    "label.em.skipsites": "Site blacklist (comma-separated, never used)",
+    "ph.em.skipsites": "e.g. tuna,bfsu",
+    "opt.em.missing.official": "Fall back to the official source",
+    "opt.em.missing.omit": "Do not inject that variable (recommended — avoids a dead URL)",
+    "em.btn.sites": "🌐 Site list",
+    "em.btn.learnclear": "🧽 Clear learned sites",
+    // ---- installer package mirrors ----
+    "set.pm": "📦 Installer package mirrors",
+    "set.pm.tip": "💡 Different job from \"Mirror acceleration\" above: that one injects env vars for dependency installs, this one handles the installer binaries you would otherwise download from the vendor site (Node.js / Python / Git / 7-Zip / .NET / CMake / FFmpeg / nginx / Maven / Gradle…). Probe 11 CN mirrors to see which host these packages and which is fastest, then parse the directory to get the real latest filename and a direct mirror link — download directly or use it to re-source winget / Chocolatey. (Read-only probing; no download traffic unless you click Download.)",
+    "chk.pm.enabled": "Enable installer package mirror detection",
+    "chk.pm.onstart": "Warm up the probe once in the background on startup",
+    "chk.pm.autoswitch": "Auto-switch to the next working site when the chosen one fails",
+    "chk.pm.verbose": "Print probe progress in the update output",
+    "chk.pm.copyonly": "Only copy the download command, do not download",
+    "chk.pm.visible": "Run downloads in a visible console window (Ctrl+C to abort)",
+    "chk.pm.openafter": "Open the download folder when finished",
+    "chk.pm.mgrsource": "Also show package-manager re-source commands (Chocolatey / winget / Scoop / npm / pip)",
+    "label.pm.scope": "Probe scope",
+    "opt.pm.scope.core": "Core packages only (Node/Python/Git/7-Zip, fastest)",
+    "opt.pm.scope.rec": "Core + recommended (+.NET/CMake)",
+    "opt.pm.scope.all": "All 17 packages (most complete, slowest)",
+    "label.pm.conc": "Probe concurrency (1-24)",
+    "label.pm.timeout": "Per-directory timeout (s, 3-60)",
+    "label.pm.retry": "Probe retries (0-3)",
+    "label.pm.depth": "Directory descent depth (0-3; mirrors nest by version)",
+    "label.pm.skipsites": "Site blacklist (comma-separated)",
+    "ph.pm.skipsites": "e.g. netease,zju",
+    "label.pm.dldir": "Download folder (empty = system Downloads)",
+    "ph.pm.dldir": "D:\\Installers",
+    "label.pm.dltool": "Downloader",
+    "label.pm.proxy": "Probe proxy (empty = auto from env/system, off = direct)",
+    "ph.pm.proxy": "http://127.0.0.1:7890",
+    "opt.pm.tool.curl": "curl (built into Win10+, supports resume)",
+    "opt.pm.tool.powershell": "PowerShell Invoke-WebRequest",
+    "opt.pm.tool.aria2": "aria2c (multi-threaded, install separately)",
+    "pm.btn.probe": "📡 Probe all mirrors",
+    "pm.btn.dlall": "⬇️ Download all core packages",
+    "pm.btn.report": "📋 Copy mirror report",
+    "pm.btn.foldir": "📂 Open download folder",
+    "pm.btn.mgr": "🔀 Package manager sources",
+    "pm.btn.clear": "♻️ Clear probe results",
+    "pm.ui.probing": "Probing installer directories on each mirror… (time depends on scope and concurrency)",
+    "pm.ui.noresult": "(Click \"Probe all mirrors\" to see usable installer mirrors)",
+    "pm.ui.done": (n) => `✅ usable ${(n && n.ok) || 0} · dir-only ${(n && n.dir) || 0} · not hosted ${(n && n.na) || 0} · unreachable ${(n && n.fail) || 0}`,
+    "pm.ui.donetoast": (ok, na, fail) => `Probe done: ${ok} usable · ${na} not hosted · ${fail} unreachable`,
+    "pm.ui.summary": (withUrl, na, unt, all, sites) => `${all} packages · ${sites} mirrors · ${withUrl} with a direct mirror link · ${na} not hosted anywhere · ${unt} not probed`,
+    "pm.ui.level.core": "core", "pm.ui.level.rec": "rec", "pm.ui.level.opt": "opt",
+    "pm.ui.best": (site, ms) => `${site} · ${ms}ms`,
+    "pm.ui.na": "not hosted on any mirror → use the vendor site",
+    "pm.ui.untested": "not probed yet",
+    "pm.ui.auto": "auto (fastest)",
+    "pm.ui.pinned": (pkg, site) => `Preferred site for ${pkg} set to ${site}`,
+    "pm.ui.dl": "Download", "pm.ui.cmd": "Copy cmd", "pm.ui.dir": "Mirror dir", "pm.ui.official": "Vendor",
+    "pm.ui.dlstart": (name, dir) => `⏳ Downloading ${name} → ${dir}`,
+    "pm.ui.dlall": (n) => `⏳ Started downloads for ${n} core packages`,
+    "pm.ui.copied": "📋 Command copied to clipboard",
+    "pm.ui.nocmd": "No mirror direct link available (probe first, or use the Vendor link)",
+    "pm.ui.reportcopied": "📋 Mirror report copied",
+    "pm.ui.foldir": (dir) => `📂 Opened ${dir}`,
+    "pm.ui.cleared": "♻️ Installer probe results cleared",
+    "pm.ui.probeFirst": "Click \"Probe all mirrors\" first to obtain direct links",
+    "pm.ui.mgr.head": (inst) => `Detected package managers: ${inst} — re-source commands below (read-only; only runs when you click)`,
+    "pm.ui.mgr.none": "none",
+    // ---- build toolchain check ----
+    "set.bc": "🛠️ Build toolchain check",
+    "set.bc.tip": "💡 The dependency step compiles native modules (e.g. get-windows) with node-gyp, which needs the Visual Studio Build Tools + the \"Desktop development with C++\" workload. Without it you get a wall of gyp ERR! find VS that looks like a network problem — check and install it right here.",
+    "chk.bc.enabled": "Check the build environment before every update",
+    "chk.bc.warnonly": "Warn only, never block the update (off = abort when incomplete)",
+    "chk.bc.diag": "On failure, locate the real blocking step and print the fix",
+    "chk.bc.python": "Also check Python (node-gyp needs Python 3)",
+    "label.bc.vspath": "Manually set VS install path (GYP_MSVS_OVERRIDE_PATH)",
+    "label.bc.msvs": "Manually set msvs_version",
+    "bc.btn.check": "🔬 Run check now",
+    "bc.btn.download": "⬇️ Open Build Tools download page",
+    "bc.btn.winget": "⚡ Install via winget",
+    "bc.btn.copy": "📋 Copy install command",
+    "bc.checking": "Checking the build environment…",
+    "bc.ready": "✅ Build environment ready",
+    "bc.notready": "⚠️ Build environment incomplete",
+    "bc.noresult": "(Click \"Run check now\" to inspect this machine)",
+    "bc.copied": "📋 winget install command copied",
+    "bc.dl.opened": "⬇️ Build Tools download page opened in your browser",
+    "bc.wingetopened": "⚡ Install command opened in a new window — press Enter to run",
+    "bc.msvs.show": (m) => `node-gyp will use msvs_version=${m}`,
+    // ---- system environment check & install ----
+    "set.se": "🖥️ System environment check & install",
+    "set.se.tip": "💡 One check for everything update/packaging needs: OS, admin rights, Developer Mode, long paths, disk, Node/npm/Git, Visual Studio + C++ build tools, MSBuild, Windows SDK, Python, PowerShell, winget/Chocolatey/Scoop… Install anything missing in one click; fixes needing admin auto-elevate. (Read-only check — nothing is installed unless you click install.)",
+    "chk.se.enabled": "Enable system environment check (check + one-click install)",
+    "chk.se.onstart": "Run a check automatically on startup",
+    "chk.se.block": "Abort the update when required items are missing (off = warn only)",
+    "chk.se.autoinstall": "Auto-install missing required items before updating (⚠️ really installs software)",
+    "chk.se.confirm": "Ask for confirmation before installing",
+    "chk.se.visible": "Run installs in a visible console window (Ctrl+C to abort anytime)",
+    "chk.se.copyonly": "Only copy the install command, do not execute it",
+    "chk.se.elevate": "Auto-elevate fixes that need admin rights (triggers UAC)",
+    "chk.se.proxy": "Also detect system proxy / env-var proxy",
+    "chk.se.devmode": "Offer a one-click enable when Developer Mode is off",
+    "chk.se.failhint": "Run a check automatically after a failed update and print the verdict",
+    "chk.se.verbose": "Print the check verdict in the update output",
+    "label.se.level": "Check strictness",
+    "label.se.mgr": "Preferred installer",
+    "label.se.startdelay": "Startup check delay (ms)",
+    "label.se.minfree": "Disk free-space warning (GB)",
+    "label.se.skip": "Ignored check items (comma-separated keys)",
+    "opt.se.lv.block": "Only count \"required\" items as failures",
+    "opt.se.lv.warn": "Required + recommended (default)",
+    "opt.se.lv.all": "Required + recommended + optional",
+    "opt.se.mgr.auto": "Auto (winget → choco → scoop)",
+    "opt.se.mgr.winget": "winget",
+    "opt.se.mgr.choco": "Chocolatey",
+    "opt.se.mgr.scoop": "Scoop",
+    "opt.se.mgr.none": "No package manager (download pages only)",
+    "se.btn.check": "🔬 Run full check",
+    "se.btn.install": "⚡ Install all missing",
+    "se.btn.report": "📋 Copy check report",
+    "se.btn.devmode": "🧪 Enable Developer Mode",
+    "se.btn.longpath": "📏 Enable long paths",
+    "se.btn.cache": "♻️ Clear check cache",
+    "se.ui.checking": "Scanning the system environment… (about 2-10 s)",
+    "se.ui.ready": "✅ System environment is ready",
+    "se.ui.notready": "⚠️ System environment is incomplete",
+    "se.ui.noresult": "(Click \"Run full check\" to inspect this machine)",
+    "se.ui.summary": (n) => `required ${n.block - n.blockBad}/${n.block} · recommended ${n.warn - n.warnBad}/${n.warn} · optional ${n.opt - n.optBad}/${n.opt}`,
+    "se.ui.level.block": "required", "se.ui.level.warn": "recommended", "se.ui.level.opt": "optional", "se.ui.level.info": "info",
+    "se.ui.mgr": (m) => `installer ${m}`,
+    "se.ui.install": "Install", "se.ui.open": "Homepage", "se.ui.fix": "Auto-fix", "se.ui.skip": "Skip",
+    "se.ui.installing": (n) => `⏳ Install started: ${n} (click \"Run full check\" again when it finishes)`,
+    "se.ui.copied": "📋 Copied to clipboard",
+    "se.ui.copyfail": "Copy failed",
+    "se.ui.nomgr": "No package manager found (winget/Chocolatey/Scoop) — the install command was copied; run it manually or use the Homepage link",
+    "se.ui.unsupported": (n) => `Not supported by the current installer: ${n} (switch \"Preferred installer\" or use the Homepage)`,
+    "se.ui.fixstart": (n) => `🛠 Fix launched: ${n} (a UAC prompt may appear; re-run the check afterwards)`,
+    "se.ui.fixcopied": "📋 Fix command copied — run it from an elevated prompt",
+    "se.ui.fixfail": (n) => `Fix failed: ${n}`,
+    "se.ui.nolink": "No homepage available for this item",
+    "se.ui.nothing": "Nothing to install (or everything is already present)",
+    "se.ui.cachecleared": "♻️ Check cache cleared",
     "em.detected": (n, all) => `🧭 Detected ${n}/${all} toolchains`, "em.preview.count": (n) => `${n} env vars`,
     "em.preview.empty": "(No vars to inject: master switch off, or every group disabled)",
     "unins.title": "🗑️ Uninstall Hermes", "unins.mode": "Uninstall mode",
@@ -1258,17 +1554,68 @@ async function loadSettingsUI() {
   $("#s-em-detect").checked = s.em_detect_tools !== false;
   $("#s-em-onlyinstalled").checked = s.em_only_installed !== false;
   $("#s-em-pypipiponly").checked = !!s.em_pypi_pip_only;
-  $("#s-em-missing").value = s.em_missing_policy === "skip" ? "skip" : "official";
+  $("#s-em-missing").value = ["official", "omit"].includes(s.em_missing_policy) ? s.em_missing_policy : "omit";
+  $("#s-em-crossfallback").checked = s.em_cross_fallback !== false;
+  $("#s-em-learn").checked = s.em_learn !== false;
+  $("#s-em-verbosena").checked = !!s.em_verbose_na;
+  $("#s-em-scope").value = s.em_probe_scope === "field" ? "field" : "group";
+  $("#s-em-conc").value = Math.min(Math.max(parseInt(s.em_probe_conc) || 8, 1), 24);
+  $("#s-em-proberetry").value = Math.min(Math.max(parseInt(s.em_probe_retry) || 0, 0), 3);
+  $("#s-em-skipsites").value = s.em_skip_sites || "";
   await refreshEmGroups();
   $("#s-em-electron").value = s.em_electron || "";
   $("#s-em-builder").value = s.em_builder || "";
   $("#s-em-npm").value = s.em_npm || "";
   $("#s-em-node").value = s.em_node || "";
-  $("#s-em-custom-dir").value = s.em_custom_dir || "v";
+  $("#s-em-custom-dir").value = s.em_custom_dir || "";
   $("#s-em-timeout").value = parseInt(s.em_probe_timeout) || 6;
   $("#s-em-cache").value = (parseInt(s.em_cache_min) || 0) === 0 ? 0 : (parseInt(s.em_cache_min) || 30);
   $("#s-em-retry").value = parseInt(s.em_retry) || 0;
   $("#s-em-extra").value = s.em_extra || "";
+  // ---- 构建工具链自检 (bc) ----
+  $("#s-bc-enabled").checked = s.bc_enabled !== false;
+  $("#s-bc-warn-only").checked = s.bc_warn_only !== false;
+  $("#s-bc-diag").checked = s.bc_diag_on_fail !== false;
+  $("#s-bc-python").checked = s.bc_check_python !== false;
+  $("#s-bc-vspath").value = s.bc_vs_path || "";
+  $("#s-bc-msvs").value = s.bc_msvs_version || "";
+  // ---- 系统环境检测与安装 (se) ----
+  $("#s-se-enabled").checked = s.se_enabled !== false;
+  $("#s-se-onstart").checked = s.se_on_start !== false;
+  $("#s-se-block").checked = !!s.se_block;
+  $("#s-se-autoinstall").checked = !!s.se_auto_install;
+  $("#s-se-confirm").checked = s.se_confirm_install !== false;
+  $("#s-se-visible").checked = s.se_visible !== false;
+  $("#s-se-copyonly").checked = !!s.se_copy_only;
+  $("#s-se-elevate").checked = s.se_elevate !== false;
+  $("#s-se-proxy").checked = s.se_check_proxy !== false;
+  $("#s-se-devmode").checked = s.se_fix_devmode !== false;
+  $("#s-se-failhint").checked = s.se_hint_after_fail !== false;
+  $("#s-se-verbose").checked = s.se_verbose !== false;
+  $("#s-se-level").value = ["block", "warn", "all"].includes(s.se_level) ? s.se_level : "warn";
+  $("#s-se-mgr").value = ["auto", "winget", "choco", "scoop", "none"].includes(s.se_pkg_mgr) ? s.se_pkg_mgr : "auto";
+  $("#s-se-startdelay").value = Math.min(Math.max(parseInt(s.se_start_delay) || 4000, 0), 60000);
+  $("#s-se-minfree").value = Math.min(Math.max(parseInt(s.se_min_free_gb) || 5, 0), 500);
+  $("#s-se-skip").value = s.se_skip || "";
+  // ---- 安装包镜像源检测 (pm) ----
+  $("#s-pm-enabled").checked = s.pm_enabled !== false;
+  $("#s-pm-onstart").checked = !!s.pm_check_on_start;
+  $("#s-pm-autoswitch").checked = s.pm_auto_switch !== false;
+  $("#s-pm-verbose").checked = s.pm_verbose !== false;
+  $("#s-pm-copyonly").checked = !!s.pm_copy_only;
+  $("#s-pm-visible").checked = s.pm_visible !== false;
+  $("#s-pm-openafter").checked = !!s.pm_open_after;
+  $("#s-pm-mgrsource").checked = s.pm_mgr_source !== false;
+  $("#s-pm-scope").value = ["core", "rec", "all"].includes(s.pm_scope) ? s.pm_scope : "core";
+  $("#s-pm-conc").value = Math.min(Math.max(parseInt(s.pm_conc) || 8, 1), 24);
+  $("#s-pm-timeout").value = Math.min(Math.max(parseInt(s.pm_timeout) || 12, 3), 60);
+  $("#s-pm-retry").value = Math.min(Math.max(parseInt(s.pm_retry) || 1, 0), 3);
+  $("#s-pm-depth").value = Math.min(Math.max(parseInt(s.pm_depth) === undefined ? 2 : (parseInt(s.pm_depth) || 0), 0), 3);
+  $("#s-pm-skipsites").value = s.pm_skip_sites || "";
+  $("#s-pm-dldir").value = s.pm_dl_dir || "";
+  $("#s-pm-dltool").value = ["curl", "powershell", "aria2"].includes(s.pm_dl_tool) ? s.pm_dl_tool : "curl";
+  $("#s-pm-proxy").value = s.pm_proxy || "";
+  refreshPmTable();
   await initEmPresets(s.em_preset || "npmmirror");
   $("#s-unins-backup").checked = s.unins_backup !== false;
   $("#s-unins-stop").checked = s.unins_stop_procs !== false;
@@ -1431,17 +1778,67 @@ function collectSettings() {
     em_only_installed: $("#s-em-onlyinstalled").checked,
     em_pypi_pip_only: $("#s-em-pypipiponly").checked,
     em_missing_policy: $("#s-em-missing").value,
+    em_cross_fallback: $("#s-em-crossfallback").checked,
+    em_learn: $("#s-em-learn").checked,
+    em_verbose_na: $("#s-em-verbosena").checked,
+    em_probe_scope: $("#s-em-scope").value === "field" ? "field" : "group",
+    em_probe_conc: Math.min(Math.max(parseInt($("#s-em-conc").value) || 8, 1), 24),
+    em_probe_retry: Math.min(Math.max(parseInt($("#s-em-proberetry").value) || 0, 0), 3),
+    em_skip_sites: $("#s-em-skipsites").value.trim(),
     // 只在分组矩阵真的渲染出来了才回写, 否则会把用户的逐组开关清空
     ...(Object.keys(emGroupsFromUI()).length ? { em_groups: emGroupsFromUI() } : {}),
     em_electron: $("#s-em-electron").value.trim(),
     em_builder: $("#s-em-builder").value.trim(),
     em_npm: $("#s-em-npm").value.trim(),
     em_node: $("#s-em-node").value.trim(),
-    em_custom_dir: $("#s-em-custom-dir").value.trim() || "v",
+    em_custom_dir: $("#s-em-custom-dir").value.trim(),
     em_probe_timeout: Math.min(Math.max(parseInt($("#s-em-timeout").value) || 6, 2), 30),
     em_cache_min: Math.min(Math.max(parseInt($("#s-em-cache").value) || 0, 0), 1440),
     em_retry: Math.min(Math.max(parseInt($("#s-em-retry").value) || 0, 0), 5),
     em_extra: $("#s-em-extra").value,
+    // 构建工具链自检 (bc)
+    bc_enabled: $("#s-bc-enabled").checked,
+    bc_warn_only: $("#s-bc-warn-only").checked,
+    bc_diag_on_fail: $("#s-bc-diag").checked,
+    bc_check_python: $("#s-bc-python").checked,
+    bc_vs_path: $("#s-bc-vspath").value.trim(),
+    bc_msvs_version: $("#s-bc-msvs").value.trim(),
+    // 系统环境检测与安装 (se)
+    se_enabled: $("#s-se-enabled").checked,
+    se_on_start: $("#s-se-onstart").checked,
+    se_block: $("#s-se-block").checked,
+    se_auto_install: $("#s-se-autoinstall").checked,
+    se_confirm_install: $("#s-se-confirm").checked,
+    se_visible: $("#s-se-visible").checked,
+    se_copy_only: $("#s-se-copyonly").checked,
+    se_elevate: $("#s-se-elevate").checked,
+    se_check_proxy: $("#s-se-proxy").checked,
+    se_fix_devmode: $("#s-se-devmode").checked,
+    se_hint_after_fail: $("#s-se-failhint").checked,
+    se_verbose: $("#s-se-verbose").checked,
+    se_level: $("#s-se-level").value,
+    se_pkg_mgr: $("#s-se-mgr").value,
+    se_start_delay: Math.min(Math.max(parseInt($("#s-se-startdelay").value) || 4000, 0), 60000),
+    se_min_free_gb: Math.min(Math.max(parseInt($("#s-se-minfree").value) || 5, 0), 500),
+    se_skip: $("#s-se-skip").value.trim(),
+    // 安装包镜像源检测 (pm)
+    pm_enabled: $("#s-pm-enabled").checked,
+    pm_check_on_start: $("#s-pm-onstart").checked,
+    pm_auto_switch: $("#s-pm-autoswitch").checked,
+    pm_verbose: $("#s-pm-verbose").checked,
+    pm_copy_only: $("#s-pm-copyonly").checked,
+    pm_visible: $("#s-pm-visible").checked,
+    pm_open_after: $("#s-pm-openafter").checked,
+    pm_mgr_source: $("#s-pm-mgrsource").checked,
+    pm_scope: $("#s-pm-scope").value,
+    pm_conc: Math.min(Math.max(parseInt($("#s-pm-conc").value) || 8, 1), 24),
+    pm_timeout: Math.min(Math.max(parseInt($("#s-pm-timeout").value) || 12, 3), 60),
+    pm_retry: Math.min(Math.max(parseInt($("#s-pm-retry").value) || 0, 0), 3),
+    pm_depth: Math.min(Math.max(parseInt($("#s-pm-depth").value) || 0, 0), 3),
+    pm_skip_sites: $("#s-pm-skipsites").value.trim(),
+    pm_dl_dir: $("#s-pm-dldir").value.trim(),
+    pm_dl_tool: $("#s-pm-dltool").value,
+    pm_proxy: $("#s-pm-proxy").value.trim(),
     unins_backup: $("#s-unins-backup").checked,
     unins_stop_procs: $("#s-unins-stop").checked,
     unins_unregister: $("#s-unins-unreg").checked,
@@ -2993,17 +3390,28 @@ async function refreshEmCur() {
     el.textContent = t("em.cur", `${label} · ${r.electron}`);
   } catch {}
 }
+// 三态渲染: ✅ 可用 / ➖ 该站无此仓库 (不是故障!) / ❌ 网络不可达
+// 之前用 bool 把「站点没有该仓库」和「网络不通」混在一起, 用户看到的是一屏 FAIL 的假象
 function renderEmProbe(res) {
   const box = $("#em-probe-out");
   if (!box) return;
   box.hidden = false;
   const list = res || [];
-  box.innerHTML = list.length ? list.map((r) => {
-    const good = !!r.ok;
-    return `<div class="path-cand ${good ? "valid" : ""}"><span class="badge">${good ? "✅" : "❌"}</span>`
+  if (!list.length) { box.innerHTML = `<div class="path-cand-tip">${escHtml(t("em.noresult"))}</div>`; return; }
+  const st = (r) => r.state || (r.ok ? "ok" : "fail");
+  const nOk = list.filter((r) => st(r) === "ok").length;
+  const nNa = list.filter((r) => st(r) === "na").length;
+  const nFail = list.length - nOk - nNa;
+  const head = `<div class="path-cand-tip">${escHtml(t("em.probe.sumui", nOk, nNa, nFail))}</div>`;
+  const rows = list.map((r) => {
+    const k = st(r);
+    const icon = k === "ok" ? "✅" : (k === "na" ? "➖" : "❌");
+    const meta = k === "ok" ? t("em.ms", r.ms) : (k === "na" ? t("em.na") : t("em.fail"));
+    return `<div class="path-cand${k === "ok" ? " valid" : ""}"><span class="badge">${icon}</span>`
       + `<span class="p">${escHtml(r.label || r.key)}</span>`
-      + `<span class="meta">${escHtml(good ? t("em.ms", r.ms) : t("em.fail"))}</span></div>`;
-  }).join("") : `<div class="path-cand-tip">${escHtml(t("em.noresult"))}</div>`;
+      + `<span class="meta">${escHtml(meta)}</span></div>`;
+  }).join("");
+  box.innerHTML = head + rows;
 }
 async function runEmProbe(btn, silent) {
   if (!rpc) { toast(t("em.probe.fail"), "err"); return null; }
@@ -3130,6 +3538,347 @@ setTimeout(() => {
     rpc.emProbe().catch(() => {});
   }
 }, 6000);
+
+// ---------------- 镜像站点清单 / 学习记录 (v2.30.0) ----------------
+async function showEmSites() {
+  const box = $("#em-probe-out");
+  if (!box || !rpc) return;
+  try {
+    const r = await rpc.emSites();
+    const list = (r && r.list) || [];
+    box.hidden = false;
+    if (!list.length) { box.innerHTML = `<div class="path-cand-tip">${escHtml(t("em.noresult"))}</div>`; return; }
+    const groups = new Set(list.map((x) => x.groups || 0));
+    const head = `<div class="path-cand-tip">${escHtml(t("em.sites.groups", (r && r.total) || list.length, groups.size))}</div>`;
+    box.innerHTML = head + list.map((x) => {
+      const n = (x.fields || []).filter((f) => f !== "label").length;
+      return `<div class="path-cand${x.key === "mix" ? " valid" : ""}"><span class="badge">${x.key === "mix" ? "⭐" : "•"}</span>`
+        + `<span class="p"><b>${escHtml(x.label || x.key)}</b> <span class="muted" style="font-size:11px">${escHtml(x.key)} · ${n} 类源 · ${x.groups || 0} 组</span></span></div>`;
+    }).join("");
+  } catch (e) { toast(t("em.probe.fail") + ": " + e, "err", 4000); }
+}
+$("#btn-em-sites").addEventListener("click", showEmSites);
+$("#btn-em-learnclear").addEventListener("click", async () => {
+  if (!rpc) return;
+  try {
+    const r = await rpc.emLearnClear();
+    toast(t("em.learncleared"), r && r.ok ? "ok" : "err", 3000);
+    await refreshEmGroups();
+  } catch (e) { toast(String(e), "err", 4000); }
+});
+
+// ---------------- 构建工具链自检 (v2.30.0) ----------------
+function renderBc(be) {
+  const box = $("#bc-items"), v = $("#bc-verdict");
+  if (!box) return;
+  if (!be) { if (v) v.textContent = t("bc.noresult"); return; }
+  if (v) v.textContent = be.ready ? t("bc.ready") : t("bc.notready");
+  box.hidden = false;
+  let html = (be.items || []).map((it) =>
+    `<div class="path-cand${it.ok ? " valid" : ""}"><span class="badge">${it.ok ? "✅" : "❌"}</span>`
+    + `<span class="p"><b>${escHtml(it.label)}</b></span>`
+    + `<span class="meta" style="max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(it.detail)}">${escHtml(it.detail)}</span></div>`
+  ).join("");
+  if (be.hint) html += `<div class="path-cand-tip">${escHtml(be.hint)}</div>`;
+  if (be.msvs) html += `<div class="path-cand-tip">${escHtml(t("bc.msvs.show", be.msvs))}</div>`;
+  box.innerHTML = html;
+}
+async function runBcCheck(btn) {
+  if (!rpc) return null;
+  const v = $("#bc-verdict");
+  if (v) v.textContent = t("bc.checking");
+  if (btn) busy(btn, true);
+  try { const be = await rpc.buildEnvCheck(); renderBc(be); return be; }
+  catch (e) { if (v) v.textContent = t("bc.noresult"); return null; }
+  finally { if (btn) busy(btn, false); }
+}
+$("#btn-bc-check").addEventListener("click", () => runBcCheck($("#btn-bc-check")));
+$("#btn-bc-download").addEventListener("click", async () => {
+  if (!rpc) return;
+  const r = await rpc.bcOpenDownload();
+  toast(r && r.ok ? t("bc.dl.opened") : String((r && r.msg) || ""), r && r.ok ? "ok" : "err", 4000);
+});
+$("#btn-bc-winget").addEventListener("click", async () => {
+  if (!rpc) return;
+  const r = await rpc.bcOpenWinget();
+  toast(r && r.ok ? t("bc.wingetopened") : String((r && r.msg) || ""), r && r.ok ? "ok" : "err", 6000);
+});
+$("#btn-bc-copy").addEventListener("click", async () => {
+  if (!rpc) return;
+  const c = await rpc.bcWingetCmd();
+  const r = await rpc.copyText(c);
+  toast(r && r.ok ? t("bc.copied") : t("bc.noresult"), r && r.ok ? "ok" : "err", 3000);
+});
+
+// ---------------- 系统环境检测与安装 (v2.30.0) ----------------
+let SE_LAST = null;
+const SE_LEVEL_KEY = { block: "se.ui.level.block", warn: "se.ui.level.warn", opt: "se.ui.level.opt", info: "se.ui.level.info" };
+function seIcon(it) {
+  if (it.neutral) return "ℹ️";
+  if (it.ok) return "✅";
+  return it.level === "block" ? "⛔" : (it.level === "warn" ? "⚠️" : "❌");
+}
+function seMiniBtn(label, fn) {
+  const b = document.createElement("button");
+  b.className = "btn ghost";
+  b.style.cssText = "padding:2px 8px;font-size:11px;margin-left:6px;flex:0 0 auto";
+  b.textContent = label;
+  b.addEventListener("click", (e) => { e.stopPropagation(); fn(b); });
+  return b;
+}
+async function seInstallOne(pkg, btn) {
+  if (!rpc) return;
+  if (btn) busy(btn, true);
+  try {
+    const r = await rpc.sysEnvInstall([pkg], null);
+    if (r && r.ok) toast(r.copied ? t("se.ui.copied") : t("se.ui.installing", pkg), "ok", 7000);
+    else if (r && r.msg === "no-mgr") toast(t("se.ui.nomgr"), "err", 9000);
+    else toast(t("se.ui.unsupported", (r && (r.unsupported || []).join(", ")) || pkg), "err", 7000);
+  } catch (e) { toast(String(e), "err", 4000); }
+  finally { if (btn) busy(btn, false); }
+}
+async function seFix(key, btn) {
+  if (!rpc) return;
+  if (btn) busy(btn, true);
+  try {
+    const r = await rpc.sysEnvFix(key);
+    if (r && r.ok) toast(r.copied ? t("se.ui.fixcopied") : t("se.ui.fixstart", key), "ok", 8000);
+    else toast(t("se.ui.fixfail", (r && r.msg) || key), "err", 6000);
+  } catch (e) { toast(String(e), "err", 4000); }
+  finally { if (btn) busy(btn, false); }
+}
+function renderSe(r) {
+  const box = $("#se-items"), sum = $("#se-summary"), v = $("#se-verdict");
+  SE_LAST = r || null;
+  if (!box) return;
+  if (!r) { if (v) v.textContent = t("se.ui.noresult"); return; }
+  if (v) v.textContent = r.ready ? t("se.ui.ready") : t("se.ui.notready");
+  if (sum) sum.innerHTML = `<div class="path-cand-tip">${escHtml(t("se.ui.summary", r.counts))}<br>${escHtml(r.env)}${r.mgr ? " · " + escHtml(t("se.ui.mgr", r.mgr)) : ""}</div>`;
+  const order = r.order || [];
+  const items = [...(r.items || [])].sort((a, b2) => {
+    const ia = order.indexOf(a.key), ib = order.indexOf(b2.key);
+    return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+  });
+  box.innerHTML = "";
+  box.hidden = false;
+  for (const it of items) {
+    const row = document.createElement("div");
+    row.className = "path-cand" + (it.ok ? " valid" : "");
+    row.dataset.key = it.key;
+    const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = seIcon(it);
+    const name = document.createElement("span"); name.className = "p";
+    name.innerHTML = `<b>${escHtml(it.label)}</b> <span class="muted" style="font-size:11px">[${escHtml(t(SE_LEVEL_KEY[it.level] || "se.ui.level.info"))}]</span>`;
+    const meta = document.createElement("span"); meta.className = "meta";
+    meta.style.cssText = "max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+    meta.textContent = it.detail; meta.title = it.detail;
+    row.append(badge, name, meta);
+    if (!it.ok && !it.neutral) {
+      if (it.pkg) row.appendChild(seMiniBtn(t("se.ui.install"), (b) => seInstallOne(it.pkg, b)));
+      if (it.fix) row.appendChild(seMiniBtn(t("se.ui.fix"), (b) => seFix(it.fix, b)));
+      const openKey = it.open || it.pkg;
+      if (openKey) row.appendChild(seMiniBtn(t("se.ui.open"), async () => { const r2 = await rpc.sysEnvOpen(openKey); if (r2 && !r2.ok) toast(t("se.ui.nolink"), "err", 3000); }));
+      row.appendChild(seMiniBtn(t("se.ui.skip"), () => {
+        const cur = ($("#s-se-skip").value || "").split(",").map((x) => x.trim()).filter(Boolean);
+        if (!cur.includes(it.key)) cur.push(it.key);
+        $("#s-se-skip").value = cur.join(",");
+        try { onSettingsEdited(); } catch {}
+        renderSe(SE_LAST);
+      }));
+    }
+    box.appendChild(row);
+  }
+  if (!items.length) box.innerHTML = `<div class="path-cand-tip">${escHtml(t("se.ui.noresult"))}</div>`;
+}
+async function runSeCheck(btn, force) {
+  if (!rpc) return null;
+  const v = $("#se-verdict");
+  if (v) v.textContent = t("se.ui.checking");
+  if (btn) busy(btn, true);
+  try { const r = await rpc.sysEnvCheck(!!force); renderSe(r); return r; }
+  catch (e) { if (v) v.textContent = t("se.ui.noresult"); toast(String(e), "err", 4000); return null; }
+  finally { if (btn) busy(btn, false); }
+}
+$("#btn-se-check").addEventListener("click", () => runSeCheck($("#btn-se-check"), true));
+$("#btn-se-install").addEventListener("click", async () => {
+  if (!rpc) return;
+  const btn = $("#btn-se-install");
+  busy(btn, true);
+  try {
+    const r = await rpc.sysEnvCheck(false);
+    renderSe(r);
+    const need = [...new Set((r.items || [])
+      .filter((i) => !i.ok && i.pkg && (i.level === "block" || i.level === "warn"))
+      .map((i) => i.pkg))];
+    if (!need.length) { toast(t("se.ui.nothing"), "ok", 5000); return; }
+    const res = await rpc.sysEnvInstall(need, null);
+    if (res && res.ok) toast(res.copied ? t("se.ui.copied") : t("se.ui.installing", need.join(", ")), "ok", 9000);
+    else toast(t("se.ui.nomgr"), "err", 9000);
+  } catch (e) { toast(String(e), "err", 4000); }
+  finally { busy(btn, false); }
+});
+$("#btn-se-report").addEventListener("click", async () => {
+  if (!rpc) return;
+  try {
+    const txt = await rpc.sysEnvReport();
+    const r = await rpc.sysEnvCopy(txt);
+    toast(r && r.ok ? t("se.ui.reportcopied") : t("se.ui.copyfail"), r && r.ok ? "ok" : "err", 6000);
+  } catch (e) { toast(String(e), "err", 4000); }
+});
+$("#btn-se-devmode").addEventListener("click", (e) => seFix("devmode", e.currentTarget));
+$("#btn-se-longpath").addEventListener("click", (e) => seFix("longpath", e.currentTarget));
+$("#btn-se-cache").addEventListener("click", async () => {
+  if (!rpc) return;
+  await rpc.sysEnvClearCache();
+  toast(t("se.ui.cachecleared"), "ok", 2500);
+  runSeCheck(null, true);
+});
+// 启动自动巡检: 延迟可配, 避免和首屏渲染抢时间
+setTimeout(() => {
+  if (!rpc) return;
+  const s = BOOT_SETTINGS || {};
+  if (s.se_enabled !== false && s.se_on_start !== false) runSeCheck(null, false);
+  if (s.bc_enabled !== false) runBcCheck(null);
+}, Math.min(Math.max(parseInt((BOOT_SETTINGS || {}).se_start_delay) || 4000, 0), 60000));
+
+// ---------------- 安装包镜像源检测 (pm, v2.30.0) ----------------
+let PM_PKGS_CACHE = [], PM_SITES_CACHE = [];
+const PM_LEVEL_KEY = { core: "pm.ui.level.core", rec: "pm.ui.level.rec", opt: "pm.ui.level.opt" };
+function pmMiniBtn(label, fn, title) {
+  const b = document.createElement("button");
+  b.className = "btn ghost";
+  b.style.cssText = "padding:2px 8px;font-size:11px;margin-left:6px;flex:0 0 auto";
+  b.textContent = label;
+  if (title) b.title = title;
+  b.addEventListener("click", (e) => { e.stopPropagation(); fn(b); });
+  return b;
+}
+async function refreshPmTable(pkgs) {
+  const box = $("#pm-table");
+  if (!box || !rpc) return;
+  if (!pkgs) {
+    try { pkgs = await rpc.pmPkgs(); } catch { pkgs = []; }
+  }
+  PM_PKGS_CACHE = pkgs || [];
+  if (!PM_SITES_CACHE.length) { try { PM_SITES_CACHE = (await rpc.pmSites()) || []; } catch { PM_SITES_CACHE = []; } }
+  const sum = $("#pm-summary");
+  if (!PM_PKGS_CACHE.length) { box.innerHTML = `<div class="path-cand-tip">${escHtml(t("pm.ui.noresult"))}</div>`; return; }
+  const withUrl = PM_PKGS_CACHE.filter((p) => p.site).length;
+  const na = PM_PKGS_CACHE.filter((p) => p.na).length;
+  const unt = PM_PKGS_CACHE.filter((p) => p.untested).length;
+  if (sum) sum.innerHTML = `<div class="path-cand-tip">${escHtml(t("pm.ui.summary", withUrl, na, unt, PM_PKGS_CACHE.length, PM_SITES_CACHE.length))}</div>`;
+  box.innerHTML = "";
+  for (const p of PM_PKGS_CACHE) {
+    const row = document.createElement("div");
+    row.className = "path-cand" + (p.site ? " valid" : "");
+    row.dataset.pkg = p.key;
+    const badge = document.createElement("span"); badge.className = "badge";
+    badge.textContent = p.site ? "✅" : (p.na ? "➖" : "❔");
+    badge.title = p.site ? t("pm.ui.best", p.siteLabel, p.ms) : (p.na ? t("pm.ui.na") : t("pm.ui.untested"));
+    const name = document.createElement("span"); name.className = "p";
+    name.innerHTML = `<b>${escHtml(p.label)}</b> <span class="muted" style="font-size:11px">[${escHtml(t(PM_LEVEL_KEY[p.level] || "pm.ui.level.opt"))}]`
+      + (p.file ? ` ${escHtml(p.file)}` : "") + (p.site ? ` <span class="muted">· ${escHtml(p.siteLabel)} ${p.ms}ms</span>` : "") + `</span>`;
+    const meta = document.createElement("span"); meta.className = "meta";
+    meta.style.cssText = "max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+    const shown = p.url || p.official || "";
+    meta.textContent = shown; meta.title = shown;
+    row.append(badge, name, meta);
+    // 选站 (pin): 可选自动 + 全部站点
+    const sel = document.createElement("select");
+    sel.style.cssText = "margin-left:6px;padding:2px 6px;font-size:11px;width:auto;min-width:92px";
+    sel.innerHTML = `<option value="">${escHtml(t("pm.ui.auto"))}</option>`
+      + PM_SITES_CACHE.map((x) => `<option value="${escHtml(x.key)}">${escHtml(x.label)}</option>`).join("");
+    sel.value = p.site || "";
+    sel.addEventListener("change", async () => {
+      const r = await rpc.pmPin(p.key, sel.value);
+      if (r && r.ok) { toast(t("pm.ui.pinned", p.label, sel.value ? ((PM_SITES_CACHE.find((x) => x.key === sel.value) || {}).label || sel.value) : t("pm.ui.auto")), "ok", 2600); await refreshPmTable(); }
+    });
+    row.appendChild(sel);
+    if (p.url && !p.na) {
+      row.appendChild(pmMiniBtn(t("pm.ui.dl"), (b) => pmDoDownload(p, b)));
+      row.appendChild(pmMiniBtn(t("pm.ui.cmd"), async (b) => {
+        const r = await rpc.pmCmd(p.key, p.site);
+        if (r && r.cmd) { await rpc.sysEnvCopy(r.cmd); toast(t("pm.ui.copied"), "ok", 2600); }
+        else toast(t("pm.ui.nocmd"), "err", 3000);
+      }));
+      if (p.site) row.appendChild(pmMiniBtn(t("pm.ui.dir"), async () => { const r = await rpc.pmOpenSiteDir(p.key); if (r && !r.ok) toast(t("pm.ui.nocmd"), "err", 3000); }));
+    }
+    row.appendChild(pmMiniBtn(t("pm.ui.official"), async () => { const r = await rpc.pmOpenOfficial(p.key); if (r && !r.ok) toast(t("pm.ui.nocmd"), "err", 3000); }));
+    box.appendChild(row);
+  }
+}
+async function pmDoDownload(p, btn) {
+  if (!p.url) { toast(t("pm.ui.nocmd"), "err", 3000); return; }
+  if (btn) busy(btn, true);
+  try {
+    const r = await rpc.pmDownload(p.key, p.site);
+    if (r && r.ok) toast(r.copied ? t("pm.ui.copied") : t("pm.ui.dlstart", p.label, r.dir || ""), "ok", 7000);
+    else toast(t("pm.ui.nocmd"), "err", 4000);
+  } catch (e) { toast(String(e), "err", 4000); }
+  finally { if (btn) busy(btn, false); }
+}
+async function runPmProbe(btn) {
+  if (!rpc) return null;
+  const v = $("#pm-verdict"), sum = $("#pm-summary");
+  if (v) v.textContent = t("pm.ui.probing");
+  if (sum) sum.innerHTML = `<div class="path-cand-tip">${escHtml(t("pm.ui.probing"))}</div>`;
+  if (btn) busy(btn, true);
+  try {
+    const r = await rpc.pmProbe({ scope: $("#s-pm-scope").value });
+    if (v) v.textContent = t("pm.ui.done", (r && r.summary) || {});
+    await refreshPmTable((r && r.pkgs) || null);
+    const s2 = (r && r.summary) || {};
+    toast(t("pm.ui.donetoast", s2.ok || 0, s2.na || 0, s2.fail || 0), s2.ok ? "ok" : "err", 6000);
+    return r;
+  } catch (e) { if (v) v.textContent = t("pm.ui.noresult"); toast(String(e), "err", 4000); return null; }
+  finally { if (btn) busy(btn, false); }
+}
+async function showPmMgr() {
+  const box = $("#pm-mgr");
+  if (!box || !rpc) return;
+  try {
+    const r = await rpc.pmMgrSources();
+    const list = (r && r.list) || [];
+    if (!list.length) { box.hidden = true; return; }
+    box.hidden = false;
+    const inst = (r && r.installed) || {};
+    const inst2 = Object.keys(inst).filter((k) => inst[k]);
+    box.innerHTML = `<div class="path-cand-tip">${escHtml(t("pm.ui.mgr.head", inst2.length ? inst2.join(", ") : t("pm.ui.mgr.none")))}</div>`
+      + list.map((x) => `<div class="path-cand"><span class="badge">${escHtml(x.mgr)}</span>`
+        + `<span class="p">${escHtml(x.label)}</span>`
+        + `<span class="meta" style="max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(x.cmd)}">${escHtml(x.cmd)}</span></div>`).join("");
+  } catch (e) { toast(String(e), "err", 4000); }
+}
+$("#btn-pm-probe").addEventListener("click", () => runPmProbe($("#btn-pm-probe")));
+$("#btn-pm-dl-all").addEventListener("click", async () => {
+  if (!rpc) return;
+  const need = PM_PKGS_CACHE.filter((p) => p.level === "core" && p.url && !p.na);
+  if (!need.length) { toast(t("pm.ui.probeFirst"), "err", 4000); return; }
+  for (const p of need) await rpc.pmDownload(p.key, p.site);
+  toast(t("pm.ui.dlall", need.length), "ok", 7000);
+});
+$("#btn-pm-report").addEventListener("click", async () => {
+  if (!rpc) return;
+  const txt = await rpc.pmReport();
+  const r = await rpc.sysEnvCopy(txt);
+  toast(r && r.ok ? t("pm.ui.reportcopied") : t("se.ui.copyfail"), r && r.ok ? "ok" : "err", 6000);
+});
+$("#btn-pm-foldir").addEventListener("click", async () => {
+  if (!rpc) return;
+  const r = await rpc.pmOpenDir();
+  toast(r && r.ok ? t("pm.ui.foldir", r.dir) : String((r && r.msg) || ""), r && r.ok ? "ok" : "err", 4000);
+});
+$("#btn-pm-mgr").addEventListener("click", showPmMgr);
+$("#btn-pm-clear").addEventListener("click", async () => {
+  if (!rpc) return;
+  await rpc.pmClear();
+  toast(t("pm.ui.cleared"), "ok", 2600);
+  await refreshPmTable();
+});
+setTimeout(() => {
+  if (!rpc) return;
+  const s2 = BOOT_SETTINGS || {};
+  if (s2.pm_enabled !== false && s2.pm_check_on_start) rpc.pmProbe({ scope: s2.pm_scope || "core" }).then(() => refreshPmTable()).catch(() => {});
+}, 7000);
 
 // ---------------- 仪表盘快捷中心: 安装 · 卸载 · 维护 (v2.22.0) ----------------
 const DT_MODE_KEY = { trash: "unins.m.trash", modules: "unins.m.modules", permanent: "unins.m.perm", unregister: "unins.m.unreg" };

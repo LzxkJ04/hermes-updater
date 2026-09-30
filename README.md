@@ -4,7 +4,7 @@
 
 一款为 **Hermes Agent** 打造的 Windows 桌面更新工具（Electron），针对中国大陆网络做了镜像加速、自动换源、一键网络自愈等深度优化。内置完整仪表盘、安装/卸载套件、更新钩子与 Webhook 推送，让 Hermes Agent 的安装、更新、维护全部在一个界面内完成。
 
-> **最新版本：v2.29.0** — 便携版与安装版见 [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
+> **最新版本：v2.30.0** — 便携版与安装版见 [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 
@@ -32,16 +32,37 @@
 - **更新成功后强制结束全部 Hermes 进程**：更新流程结束（`rc=0`）时自动终止当前 Hermes 安装下的所有进程（含 Gateway），避免旧进程残留、确保新版本立即生效；更新失败时仍按 `cleanup_after` / `keep_gateway` 设置处理（默认保留 Gateway）
 - 网络探测与**一键网络自愈**，逐次尝试的网络统计与失败分类
 
-### 🚀 国内镜像统一加速（8 站点 × 28 类工具链）
+### 🚀 国内镜像统一加速（21 站点 × 29 类工具链）
 - 打包阶段 Electron 要从 GitHub 下载 electron 二进制与 nsis / winCodeSign 工具包，国内直连常见 `TypeError: fetch failed`。开启后自动注入国内镜像并**在多个源之间探测最快、失败自动切换**
-- **8 个内置站点**：`mix`（推荐组合）、`npmmirror`、`cdn`（npmmirror 二进制 CDN）、`huawei`（华为云）、`ustc`（中科大）、`tuna`（清华）、`official`（官方源）、`custom`（完全自定义）
-- **28 类工具链分组**：npm（npm/pnpm/yarn/bun/deno）、Node 二进制与头文件（含 nvm）、Electron、electron-builder、Playwright、Puppeteer、Selenium、ChromeDriver、GeckoDriver、EdgeDriver、node-sass、sharp、sqlite3、bcrypt、canvas、esbuild、Turbo、Parcel、Rollup、Bun、Python（uv/pip/poetry/conda）、Go、Cargo、Rustup、HuggingFace、Julia、Maven（含 Gradle）、Helm
-- **自动探测与自动切换**：一键实测各站点延迟（Electron 用真实文件 `SHASUMS256.txt` 探测，避免目录列表被禁导致误判），「⚡ 探测并自动选择」直接把最快可用源写回设置；打包失败时自动换下一个候选镜像重试
+- **21 个内置站点（全部 curl 实测校验）**：`mix`（推荐组合，走 `registry.npmmirror.com`，比旧域更稳）、`npmmirror`（registry 域 `/-/binary/`）、`tbmirror`（旧 `mirrors/` 路径）、`cdn`（npmmirror 二进制 CDN）、`huawei`（华为云）、`aliyun`（阿里云）、`tencent`（腾讯云）、`tuna`（清华）、`ustc`（中科大）、`nju`（南大）、`bfsu`（北外）、`sjtug`（上交）、`zju`（浙大）、`goproxycn`、`rsproxy`、`hfm`（HuggingFace 镜像）、`ghfast` / `ghproxy` / `ghnet`（GitHub 加速）、`official`（官方源）、`custom`（完全自定义）
+- **29 类工具链分组**：npm（npm/pnpm/yarn/bun/deno）、Node 二进制与头文件（含 nvm）、Electron、electron-builder、Playwright、Puppeteer、Selenium、ChromeDriver、GeckoDriver、EdgeDriver、node-sass、sharp、sqlite3、bcrypt、canvas、esbuild、Turbo、Parcel、Rollup、Bun、Python（uv/pip/poetry）、**Conda 频道**、Go、Cargo、Rustup、HuggingFace、Julia、Maven（含 Gradle）、Helm
+- **真实文件三态探测**：一键实测各站点延迟。「❌ FAIL」的根因是旧版拿**目录地址**探测，而镜像站普遍禁止目录列表（403/404），于是把「本站没收录该仓库」误报成失败。现在改为探测**真实存在的文件**（`SHASUMS256.txt` / `winCodeSign-2.6.0.7z` / `index.json` / `config.json` …），结果分三态显示：`✅ 可用` / `➖ 本站未收录` / `❌ 真故障（超时 / 连接失败 / 5xx）`
+- **跨站自动回退与缺仓策略**：某站缺某仓库时按站点快慢自动换下一站；全部不可用时按策略处理（`omit` 不注入 / `official` 用官方源占位）。子路径走**默认拒绝白名单**，任何 404 地址都不会被写进环境变量
+- **学习缓存与站点黑名单**：探测结果按「站点 × 分组」落盘复用（可一键清除），避免每次开机重测 100+ 组合；`em_skip_sites` 可永久跳过指定站点，既不探测也不回退
 - **逐组自动选源**：每个工具链单独探测各自最优站点，而不是全局一刀切；设置页下方是完整的「站点 × 分组」矩阵，可逐组开关、逐组手动指定站点
 - **工具链自动识别**：`where.exe` 检测本机装了哪些工具链并在矩阵里打 🧭 标记；可选「只注入已安装工具链的变量」避免污染无关进程
 - **~/.npmrc 托管写入**：一键写入国内源，用 `# >>> HermesUpdater managed` 标记块包裹，**不动你自己写的配置**；可一键移除，也可直接打开该文件位置
 - **📋 注入预览**：列出本次更新实际会注入的全部环境变量（默认 48 个）与取值；额外变量支持每行 `KEY=VALUE` 自定义追加
-- 更新页也有「🔍 镜像测速」按钮，**25 项镜像设置**（预设 / 4 个手动覆盖地址 / 版本目录 / 超时 / 缓存 / 重试 / 缺仓策略 / 12 个开关）
+- 更新页也有「🔍 镜像测速」按钮；镜像面板共 **34 项设置**（预设 / 4 个手动覆盖地址 / 版本目录 / 超时 / 缓存 / 重试 / 缺仓策略 / 探测范围 / 并发数 / 站点黑名单 / 开关），全程序持久化设置共 **216 项**
+
+### 🛠️ 构建工具链自检
+- 打包原生模块（node-gyp）失败最常见的真凶不是网络，而是缺 **Visual Studio「使用 C++ 的桌面开发」工作负载**，或 node-gyp 的 PowerShell 探测步骤失败（典型报错 `gyp ERR! find VS ... could not use PowerShell to find Visual Studio 2017 or newer`）
+- 面板用 `vswhere.exe` 精确定位 VS 路径与版本，检查 `VS / VC++ 工具集 / MSBuild / PowerShell / Python / Node` 六项并给出结论
+- **一键 winget 安装 VS 2022 BuildTools + VCTools 工作负载**（命令可复制、可只复制不执行）；自动把 `npm_config_msvs_version` 按 VS 版本反推年份注入（17→2022 / 16→2019 / 15→2017），必要时用 `GYP_MSVS_OVERRIDE_PATH` 强制指定
+- 更新前自动体检一次，不合格时可按策略「只警告不阻止」或「直接中止更新」；**更新失败时自动定位原因**（VS / node-gyp / 文件占用 / 网络 四类），直接打印「原因 + 处理步骤 + 当前环境实况 + 修复命令」
+
+### 🧰 系统环境检测与一键安装
+- 检测 `Node / npm / Git / Python / PowerShell 7 / .NET SDK / Visual Studio / CMake / Ninja / 7-Zip / MSYS2 / MinGW / FFmpeg / Redis / Nginx / MySQL / rclone / cloudflared / aria2` 等 **19 项**工具链，显示已装版本与缺失项
+- **13 个可安装包**支持 winget / Chocolatey / Scoop 三种包管理器自动安装，可开「只复制不执行」与「在新控制台窗口可见执行」（方便看进度、随时 Ctrl+C）
+- 额外检测 `管理员权限 / 长路径支持 / 开发者模式 / 磁盘剩余空间 / 系统代理`，并给出一键修复建议（提权项只复制命令，不弹 UAC）
+
+### 📦 安装包镜像源检测
+- 内置 **17 类软件 × 14 个镜像站** 的目录探测引擎，支持三种真实目录页格式（nginx autoindex / Apache autoindex / JSON children，如华为云 `?json`）
+- 支持**递归下探版本子目录**（深度 0-3）自动定位最新版直链，例如 `node/ → v22.12.0/ → node-v22.12.0-x64.msi`
+- 一键「探测全部」按延迟排序自动选最快站；逐包可固定站点；结果落盘复用
+- 给出 `curl -L --retry 3 -C -`（支持断点续传）/ PowerShell `Invoke-WebRequest` / `aria2c` 三种下载命令，可一键复制
+- 顺带输出 **Chocolatey（阿里云镜像）/ winget / Scoop / npm / pip 换源命令 8 条**，可一键写成 `.cmd` 在可见控制台执行
+- 支持**探测代理**（空 = 自动读环境变量 / 系统代理，`off` = 强制直连，或填 `http://127.0.0.1:7890`）
 
 ### 安装与卸载
 - **安装页**：环境预检（Node / npm / Git / 磁盘空间）、一键安装、修复重装、安装历史
@@ -132,13 +153,13 @@
 
 ### 五、设置
 
-- 设置页按 **网络 / 镜像加速 / 更新 / 安装 / 卸载 / 备份 / 外观 / 自动化** 分区，共 **120+ 项**持久化选项。
+- 设置页按 **网络 / 镜像加速 / 构建工具链 / 系统环境 / 安装包镜像 / 更新 / 安装 / 卸载 / 备份 / 外观 / 自动化** 分区，共 **216 项**持久化选项。
 - **外观**：切换中文 / 英文，深色模式或跟随系统，调整 UI 缩放、强调色（深浅主题各一套）。
 - **自动化**：配置定时更新计划、免打扰时段、单实例锁等行为。
 
 ### 六、国内镜像加速
 
-1. 打开「设置」页，找到 **🚀 国内镜像统一加速（28 类工具链）** 面板，勾选 **启用国内镜像统一加速**。
+1. 打开「设置」页，找到 **🚀 国内镜像统一加速（21 站点 × 29 类工具链）** 面板，勾选 **启用国内镜像统一加速**。
 2. 点 **🔍 立即探测所有镜像**，程序会实测每个站点的延迟并按快慢排序；点 **⚡ 探测并自动选择** 即可把最快可用源写回设置。
 3. 需要更细粒度控制时：打开 **逐组自动选源**，下方会出现「站点 × 分组」矩阵，可逐组开关、逐组指定站点（留空跟随探测结果）；带 🧭 的是本机已检测到的工具链。
 4. 想让命令行（而不只是本程序）也走国内源，点 **📝 写入 ~/.npmrc**；写入内容用 `# >>> HermesUpdater managed` 标记块包裹，可随时用 **🧹 移除 ~/.npmrc 配置** 干净回滚，不会动你自己写的配置。

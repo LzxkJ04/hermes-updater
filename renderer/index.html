@@ -357,7 +357,7 @@
       </div>
       <div class="panel">
         <div class="panel-head">
-          <h3 data-i18n="set.em">🚀 国内镜像统一加速（28 类工具链）</h3>
+          <h3 data-i18n="set.em">🚀 国内镜像统一加速（20 站点 · 全工具链）</h3>
           <span class="muted" id="em-cur" style="font-size:11px"></span>
         </div>
         <p class="hint" data-i18n="set.em.tip">💡 打包阶段 Electron 会从 GitHub 下载 electron 二进制与 nsis / winCodeSign 工具包，国内直连常见 <b>TypeError: fetch failed</b>。开启后自动注入国内镜像，并在多个源之间探测最快、失败自动切换。</p>
@@ -374,6 +374,9 @@
           <label class="check"><input type="checkbox" id="s-em-detect"><span data-i18n="chk.em.detect">自动识别本机已安装的工具链（where.exe）</span></label>
           <label class="check"><input type="checkbox" id="s-em-onlyinstalled"><span data-i18n="chk.em.onlyinstalled">只注入已安装工具链的镜像变量（避免污染无关进程）</span></label>
           <label class="check"><input type="checkbox" id="s-em-pypipiponly"><span data-i18n="chk.em.pypipiponly">Python 只设 PIP_INDEX_URL（不覆盖 uv / poetry 的源）</span></label>
+          <label class="check"><input type="checkbox" id="s-em-crossfallback"><span data-i18n="chk.em.crossfallback">选定站点没有该仓库时，自动换到确实有这个仓库的其他站点</span></label>
+          <label class="check"><input type="checkbox" id="s-em-learn"><span data-i18n="chk.em.learn">自动学习：记住上次确认可用的站点，下次免重新探测</span></label>
+          <label class="check"><input type="checkbox" id="s-em-verbosena"><span data-i18n="chk.em.verbosena">更新输出里也打印「该站无此仓库」的行（默认只打印可用/不通）</span></label>
         </div>
         <div class="form-grid">
           <label data-i18n="label.em.preset">镜像源预设</label>
@@ -389,11 +392,19 @@
           <label data-i18n="label.em.timeout">单源探测超时(秒, 2-30)</label><input id="s-em-timeout" type="number" min="2" max="30">
           <label data-i18n="label.em.cache">探测结果缓存(分钟, 0=不缓存)</label><input id="s-em-cache" type="number" min="0" max="1440">
           <label data-i18n="label.em.retry">镜像失败重试次数(0-5)</label><input id="s-em-retry" type="number" min="0" max="5">
-          <label data-i18n="label.em.missing">站点缺该仓库时</label>
+          <label data-i18n="label.em.missing">所有站点都没有该仓库时</label>
           <select id="s-em-missing">
-            <option value="official" data-i18n="opt.em.missing.official">回退到官方源（推荐）</option>
-            <option value="skip" data-i18n="opt.em.missing.skip">跳过，不注入该变量</option>
+            <option value="official" data-i18n="opt.em.missing.official">回退到官方源</option>
+            <option value="omit" data-i18n="opt.em.missing.omit">不注入该变量（推荐，避免注入下不动的地址）</option>
           </select>
+          <label data-i18n="label.em.scope">探测粒度</label>
+          <select id="s-em-scope">
+            <option value="group" data-i18n="opt.em.scope.group">逐工具链分组（准确，推荐）</option>
+            <option value="field" data-i18n="opt.em.scope.field">只探基础仓库（快）</option>
+          </select>
+          <label data-i18n="label.em.conc">探测并发数（1-24）</label><input id="s-em-conc" type="number" min="1" max="24">
+          <label data-i18n="label.em.proberetry">探测失败重试次数（0-3）</label><input id="s-em-proberetry" type="number" min="0" max="3">
+          <label data-i18n="label.em.skipsites">站点黑名单（逗号分隔，永不参与选源）</label><input id="s-em-skipsites" data-i18n-ph="ph.em.skipsites" placeholder="例：tuna,bfsu">
           <label data-i18n="label.em.extra">额外环境变量（每行 KEY=VALUE）</label><textarea id="s-em-extra" rows="3" data-i18n-ph="ph.em.extra" placeholder="例：SASS_BINARY_SITE=https://npmmirror.com/mirrors/node-sass/"></textarea>
         </div>
         <div class="btn-row">
@@ -403,11 +414,136 @@
           <button class="btn" id="btn-em-npmrc-on" data-i18n="em.btn.npmrc.on">📝 写入 ~/.npmrc</button>
           <button class="btn warn" id="btn-em-npmrc-off" data-i18n="em.btn.npmrc.off">🧹 移除 ~/.npmrc 配置</button>
           <button class="btn" id="btn-em-npmrc-open" data-i18n="em.btn.npmrc.open">📂 打开 .npmrc 位置</button>
+          <button class="btn" id="btn-em-sites" data-i18n="em.btn.sites">🌐 站点清单</button>
+          <button class="btn ghost" id="btn-em-learnclear" data-i18n="em.btn.learnclear">🧽 清除学习结果</button>
         </div>
         <p class="hint" data-i18n="em.groups.tip">⬇️ 下面是全部工具链分组：可逐组开关、逐组指定镜像站点（未指定则跟随探测结果）。带 🧭 表示本机检测到该工具链。</p>
         <div id="em-group-list" class="path-cands"></div>
         <div id="em-probe-out" class="path-cands" hidden></div>
         <pre id="em-preview-out" class="terminal short" hidden></pre>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="set.bc">🛠️ 构建工具链自检</h3>
+          <span class="muted" id="bc-verdict" style="font-size:11px"></span>
+        </div>
+        <p class="hint" data-i18n="set.bc.tip">💡 依赖阶段会用 node-gyp 编译原生模块（如 get-windows），这需要 <b>Visual Studio 生成工具 + 使用 C++ 的桌面开发</b> 工作负载。缺了它报的是一长串 gyp ERR! find VS，很容易被误判成网络/镜像问题 —— 这里可以直接体检并一键安装。</p>
+        <div id="bc-items" class="path-cands"></div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-bc-enabled"><span data-i18n="chk.bc.enabled">更新前自动体检构建环境</span></label>
+          <label class="check"><input type="checkbox" id="s-bc-warn-only"><span data-i18n="chk.bc.warnonly">只警告不阻止更新（关闭则环境不达标时中止）</span></label>
+          <label class="check"><input type="checkbox" id="s-bc-diag"><span data-i18n="chk.bc.diag">更新失败时自动定位真正卡住的步骤并给出修复步骤</span></label>
+          <label class="check"><input type="checkbox" id="s-bc-python"><span data-i18n="chk.bc.python">同时检查 Python（node-gyp 需要 Python 3）</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.bc.vspath">手动指定 VS 安装路径（GYP_MSVS_OVERRIDE_PATH）</label><input id="s-bc-vspath" placeholder="C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools">
+          <label data-i18n="label.bc.msvs">手动指定 msvs_version</label><input id="s-bc-msvs" placeholder="2022">
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-bc-check" data-i18n="bc.btn.check">🔬 立即体检</button>
+          <button class="btn" id="btn-bc-download" data-i18n="bc.btn.download">⬇️ 打开生成工具下载页</button>
+          <button class="btn" id="btn-bc-winget" data-i18n="bc.btn.winget">⚡ 用 winget 一键安装</button>
+          <button class="btn ghost" id="btn-bc-copy" data-i18n="bc.btn.copy">📋 复制安装命令</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="set.se">🖥️ 系统环境检测与安装</h3>
+          <span class="muted" id="se-verdict" style="font-size:11px"></span>
+        </div>
+        <p class="hint" data-i18n="set.se.tip">💡 一键体检「更新/打包到底缺什么」：操作系统、管理员权限、开发者模式、长路径、磁盘、Node/npm/Git、Visual Studio + C++ 生成工具、MSBuild、Windows SDK、Python、PowerShell、winget/Chocolatey/Scoop …… 缺什么直接一键装（winget / choco / scoop 自动选），需要管理员权限的修复项会自动提权。（只读检测，不装任何东西除非你点安装）</p>
+        <div id="se-summary" class="path-cands"></div>
+        <div id="se-items" class="path-cands"></div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-se-enabled"><span data-i18n="chk.se.enabled">启用系统环境检测（体检 + 一键安装）</span></label>
+          <label class="check"><input type="checkbox" id="s-se-onstart"><span data-i18n="chk.se.onstart">启动时自动体检一次</span></label>
+          <label class="check"><input type="checkbox" id="s-se-block"><span data-i18n="chk.se.block">必需项缺失时中止更新（关闭 = 只警告）</span></label>
+          <label class="check"><input type="checkbox" id="s-se-autoinstall"><span data-i18n="chk.se.autoinstall">更新前自动安装必需项里缺的东西（⚠️ 会真的装软件）</span></label>
+          <label class="check"><input type="checkbox" id="s-se-confirm"><span data-i18n="chk.se.confirm">执行安装前先弹确认框</span></label>
+          <label class="check"><input type="checkbox" id="s-se-visible"><span data-i18n="chk.se.visible">在新控制台窗口可见执行安装（可随时 Ctrl+C 中断）</span></label>
+          <label class="check"><input type="checkbox" id="s-se-copyonly"><span data-i18n="chk.se.copyonly">只复制安装命令，不真的执行</span></label>
+          <label class="check"><input type="checkbox" id="s-se-elevate"><span data-i18n="chk.se.elevate">需要管理员权限的修复项自动提权（会弹 UAC）</span></label>
+          <label class="check"><input type="checkbox" id="s-se-proxy"><span data-i18n="chk.se.proxy">同时检测系统代理 / 环境变量代理</span></label>
+          <label class="check"><input type="checkbox" id="s-se-devmode"><span data-i18n="chk.se.devmode">开发者模式未开启时给出一键开启入口</span></label>
+          <label class="check"><input type="checkbox" id="s-se-failhint"><span data-i18n="chk.se.failhint">更新失败后自动跑一次体检并打出结论</span></label>
+          <label class="check"><input type="checkbox" id="s-se-verbose"><span data-i18n="chk.se.verbose">在更新输出里打印体检结论</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.se.level">体检严格度</label>
+          <select id="s-se-level">
+            <option value="block" data-i18n="opt.se.lv.block">只把「必需项」算失败</option>
+            <option value="warn" data-i18n="opt.se.lv.warn">必需 + 推荐（默认）</option>
+            <option value="all" data-i18n="opt.se.lv.all">必需 + 推荐 + 可选</option>
+          </select>
+          <label data-i18n="label.se.mgr">首选安装器</label>
+          <select id="s-se-mgr">
+            <option value="auto" data-i18n="opt.se.mgr.auto">自动（winget → choco → scoop）</option>
+            <option value="winget" data-i18n="opt.se.mgr.winget">winget</option>
+            <option value="choco" data-i18n="opt.se.mgr.choco">Chocolatey</option>
+            <option value="scoop" data-i18n="opt.se.mgr.scoop">Scoop</option>
+            <option value="none" data-i18n="opt.se.mgr.none">不用包管理器（只给官网下载页）</option>
+          </select>
+          <label data-i18n="label.se.startdelay">启动体检延迟(毫秒)</label><input id="s-se-startdelay" type="number" min="0" max="60000">
+          <label data-i18n="label.se.minfree">磁盘剩余告警阈值(GB)</label><input id="s-se-minfree" type="number" min="0" max="500">
+          <label data-i18n="label.se.skip">忽略的检测项（逗号分隔 key）</label><input id="s-se-skip" placeholder="tar,sevenzip,proxy">
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-se-check" data-i18n="se.btn.check">🔬 全面体检</button>
+          <button class="btn" id="btn-se-install" data-i18n="se.btn.install">⚡ 一键安装缺失项</button>
+          <button class="btn" id="btn-se-report" data-i18n="se.btn.report">📋 复制体检报告</button>
+          <button class="btn" id="btn-se-devmode" data-i18n="se.btn.devmode">🧪 开启开发者模式</button>
+          <button class="btn" id="btn-se-longpath" data-i18n="se.btn.longpath">📏 开启长路径支持</button>
+          <button class="btn ghost" id="btn-se-cache" data-i18n="se.btn.cache">♻️ 清检测缓存</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="set.pm">📦 安装包镜像源检测</h3>
+          <span class="muted" id="pm-verdict" style="font-size:11px"></span>
+        </div>
+        <p class="hint" data-i18n="set.pm.tip">💡 和上面的「镜像加速」分工不同：上面管依赖安装时注入的环境变量，这里管<b>本来要去官网下的安装包本体</b>（Node.js / Python / Git / 7-Zip / .NET / CMake / FFmpeg / nginx / Maven / Gradle …）。一键探测 11 个国内镜像站谁收录了这些包、谁最快，并解析出<b>最新版真实文件名</b>生成镜像直链 —— 可直接下载安装，也可用来给 winget / Chocolatey 换源。（只读探测，不点「下载」就不会产生下载流量）</p>
+        <div id="pm-summary" class="path-cands"></div>
+        <div id="pm-table" class="path-cands"></div>
+        <div id="pm-mgr" class="path-cands" hidden></div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-pm-enabled"><span data-i18n="chk.pm.enabled">启用安装包镜像源检测</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-onstart"><span data-i18n="chk.pm.onstart">启动后后台预热探测一次</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-autoswitch"><span data-i18n="chk.pm.autoswitch">选中的站点失效时自动换下一个可用站</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-verbose"><span data-i18n="chk.pm.verbose">在更新输出里打印探测进度</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-copyonly"><span data-i18n="chk.pm.copyonly">只复制下载命令，不真的下载</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-visible"><span data-i18n="chk.pm.visible">下载在新控制台窗口可见执行（可 Ctrl+C 中断）</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-openafter"><span data-i18n="chk.pm.openafter">下载完成后自动打开下载目录</span></label>
+          <label class="check"><input type="checkbox" id="s-pm-mgrsource"><span data-i18n="chk.pm.mgrsource">同时给出包管理器换源建议（Chocolatey / winget / Scoop / npm / pip）</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.pm.scope">探测范围</label>
+          <select id="s-pm-scope">
+            <option value="core" data-i18n="opt.pm.scope.core">仅更新关键包（Node/Python/Git/7-Zip，最快）</option>
+            <option value="rec" data-i18n="opt.pm.scope.rec">关键 + 推荐（+.NET/CMake）</option>
+            <option value="all" data-i18n="opt.pm.scope.all">全部 17 个包（最全，最慢）</option>
+          </select>
+          <label data-i18n="label.pm.conc">探测并发数（1-24）</label><input id="s-pm-conc" type="number" min="1" max="24">
+          <label data-i18n="label.pm.timeout">单目录超时(秒, 3-60)</label><input id="s-pm-timeout" type="number" min="3" max="60">
+          <label data-i18n="label.pm.retry">探测失败重试次数（0-3）</label><input id="s-pm-retry" type="number" min="0" max="3">
+          <label data-i18n="label.pm.depth">目录下探层数（0-3，镜像按版本分子目录）</label><input id="s-pm-depth" type="number" min="0" max="3">
+          <label data-i18n="label.pm.skipsites">站点黑名单（逗号分隔）</label><input id="s-pm-skipsites" data-i18n-ph="ph.pm.skipsites" placeholder="例：netease,zju">
+          <label data-i18n="label.pm.dldir">下载目录（空 = 系统下载目录）</label><input id="s-pm-dldir" data-i18n-ph="ph.pm.dldir" placeholder="D:\\Installers">
+          <label data-i18n="label.pm.dltool">下载器</label>
+          <select id="s-pm-dltool">
+            <option value="curl" data-i18n="opt.pm.tool.curl">curl（Win10+ 自带，支持断点续传）</option>
+            <option value="powershell" data-i18n="opt.pm.tool.powershell">PowerShell Invoke-WebRequest</option>
+            <option value="aria2" data-i18n="opt.pm.tool.aria2">aria2c（多线程，需自行安装）</option>
+          </select>
+          <label data-i18n="label.pm.proxy">探测代理（空=自动识别环境变量/系统代理，off=直连）</label><input id="s-pm-proxy" data-i18n-ph="ph.pm.proxy" placeholder="http://127.0.0.1:7890">
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-pm-probe" data-i18n="pm.btn.probe">📡 探测全部镜像</button>
+          <button class="btn" id="btn-pm-dl-all" data-i18n="pm.btn.dlall">⬇️ 下载全部更新关键包</button>
+          <button class="btn" id="btn-pm-report" data-i18n="pm.btn.report">📋 复制镜像报告</button>
+          <button class="btn" id="btn-pm-foldir" data-i18n="pm.btn.foldir">📂 打开下载目录</button>
+          <button class="btn" id="btn-pm-mgr" data-i18n="pm.btn.mgr">🔀 包管理器换源</button>
+          <button class="btn ghost" id="btn-pm-clear" data-i18n="pm.btn.clear">♻️ 清除探测结果</button>
+        </div>
       </div>
       <div class="panel">
         <h3 data-i18n="set.behavior">🔄 更新行为</h3>

@@ -3,6 +3,42 @@
 All notable changes to HermesUpdater are documented here.
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.30.0] - 2026-09-30
+
+> 版本概述：把「镜像源」这一块从「能配」升级为「测得准、换得动、看得懂」。站点从 8 个扩充到 **21 个**（全部 curl 实测校验过），探测方式改成**真实文件三态探测**，彻底解决「一屏 FAIL 但其实网络没问题」的误判；同时新增 **构建工具链自检**、**系统环境检测与一键安装**、**安装包镜像源检测** 三大块，并补齐 96 项新设置。
+
+### Added
+- 🛠️ **构建工具链自检（node-gyp 失败的真凶）**：新增独立面板检测 `VS / VC++ 工具集 / MSBuild / PowerShell / Python / Node`，用 `vswhere.exe` 精确定位 Visual Studio 安装路径与版本；**一键 winget 安装 VS 2022 BuildTools + 「使用 C++ 的桌面开发」工作负载**（命令可复制，只复制不执行可选）；自动把 `npm_config_msvs_version` 按 VS 版本反推年份（17→2022 / 16→2019 / 15→2017）注入，必要时可用 `GYP_MSVS_OVERRIDE_PATH` 强制指定。更新前自动体检一次，不合格时按「只警告不阻止 / 直接中止」策略处理
+- 🔍 **失败自动定位（5 类）**：更新失败时自动扫描日志尾部，识别 `vs`（含「could not use PowerShell to find Visual Studio」这个 node-gyp 的 PowerShell 探测失败分支）/ `gyp` / `locked`（文件被占用）/ `net`（网络）五类原因，直接给出「原因 + 处理步骤 + 当前环境实况 + 修复命令」，不用再猜
+- 🧰 **系统环境检测与一键安装**：检测 `Node / npm / Git / Python / PowerShell 7 / .NET SDK / Visual Studio / CMake / Ninja / 7-Zip / MSYS2 / MinGW / FFmpeg / Redis / Nginx / MySQL / rclone / cloudflared / aria2` 等 **19 项**工具链与 **13 个可安装包**，输出「已装版本 / 缺失项 / 推荐安装命令」；支持 winget / Chocolatey / Scoop 三种包管理器自动安装，可开「只复制不执行」和「在新控制台窗口可见执行」；另加 `管理员权限 / 长路径支持 / 开发者模式 / 磁盘空间 / 系统代理` 等环境项检测与一键修复建议
+- 📦 **安装包镜像源检测（第三方安装包直链爬取）**：内置 **17 类软件 × 14 个镜像站** 的目录探测引擎，支持三种真实目录页格式（nginx autoindex / Apache autoindex / JSON children），可递归下探版本子目录（深度 0-3）自动定位**最新版直链**；一键「探测全部」按延迟排序自动选最快站，给出 `curl -L --retry 3 -C -` / PowerShell / aria2c 三种下载命令；支持逐包固定站点、结果落盘复用
+- 🔀 **包管理器换源建议**：顺带输出 Chocolatey（阿里云镜像）/ winget / Scoop / npm / pip 的换源命令 8 条，可一键复制或写成 `.cmd` 在可见控制台执行
+- 🌐 **探测代理支持**：安装包探测与镜像探测均可单独设置代理（空 = 自动读取环境变量 / 系统代理，`off` = 强制直连，或填 `http://127.0.0.1:7890`），解决「必须走代理才能访问外网」的机器上探测全 FAIL 的问题
+
+### Changed
+- 🚀 **镜像站点 8 → 21 个（全部实测校验）**：`mix`（推荐组合，基于 `registry.npmmirror.com`，比 `npmmirror.com` 域更稳）、`npmmirror`（registry 域 `/-/binary/`）、`tbmirror`（旧 `mirrors/` 路径）、`cdn`（npmmirror CDN）、`huawei`（华为云）、`aliyun`（阿里云）、`tencent`（腾讯云）、`tuna`（清华）、`ustc`（中科大）、`nju`（南大）、`bfsu`（北外）、`sjtug`（上交）、`zju`（浙大）、`goproxycn`、`rsproxy`、`hfm`（HuggingFace 镜像）、`ghfast` / `ghproxy` / `ghnet`（GitHub 加速）、`official`、`custom`。每个站点的每条 URL 都经 curl 实测，404 的一律剔除
+- 🧩 **工具链分组 28 → 29 类**：新增 **Conda 频道**（`CONDA_CHANNEL_ALIAS`），Puppeteer 补充 `chrome-for-testing/` 子路径（`PUPPETEER_DOWNLOAD_HOST`）
+- 🎯 **探测方式改为「真实文件三态探测」**：旧版拿目录根地址去探测，而镜像站**普遍禁止目录列表**（403/404），于是把「这站没收录该仓库」误报成 FAIL，用户看到的是一屏失败但其实网络完全正常。现在改为探测**真实存在的文件**（`SHASUMS256.txt` / `winCodeSign-2.6.0.7z` / `index.json` / `config.json` / `pkgs/main/` …），并把结果分为三态：`✅ 可用` / `➖ 本站未收录` / `❌ 真故障（超时/连接失败/5xx）`，界面同步用三色显示 + 汇总行
+- 🛡️ **子路径默认拒绝白名单**：新增 `EM_SITE_SUBS` 站点×分组子路径白名单，只有明确验证过该站收录该仓库的组合才会注入，**任何 404 地址都不可能被写进环境变量**
+- 🔁 **跨站自动回退 + 缺仓策略**：某站缺某仓库时，按「站点快慢顺序」自动换下一个候选站；全部不可用时按策略处理（`omit` 不注入 / `official` 用官方源占位），不再写死一个可能 404 的地址
+- 🧠 **探测结果学习缓存**：探测结果按站点×分组落盘（`em_learned`），下次启动直接复用，避免每次开机重测 100+ 组合；设置页可一键「清除学习缓存」
+- 🚫 **站点黑名单**：可填 `em_skip_sites` 永久跳过指定站点（逗号分隔），被跳过的站点不参与探测也不参与回退
+- ⚙️ **新增 96 项设置**（`em_*` 34 项 / `bc_*` 7 项 / `se_*` 19 项 / `pm_*` 21 项 / 其他 15 项），持久化设置总数由 120+ 提升到 **216 项**
+
+### Fixed
+- 🐞 **「镜像源都用不了」的根因修复**：一次真实更新日志里出现满屏 `[镜像探测] … FAIL`，随后失败在 `gyp ERR! find VS … could not use PowerShell to find Visual Studio 2017 or newer`。排查确认是**两个独立问题叠加**：① 探测地址用的是目录 URL，被镜像站拒绝（403/404）→ 假 FAIL；② 更新真正的失败点是 **node-gyp 的 PowerShell 探测步骤**，本机其实已装 VS 2022 BuildTools 17.14 + VC.Tools.x86.x64。前者已用真实文件三态探测修掉，后者已用 `npm_config_msvs_version` 自动注入 + 构建工具链自检覆盖
+- 🐞 **一批失效镜像地址**：实测发现 `tuna/maven`、`tuna/electron`、`tencent/npm`、`ustc/electron`、`aliyun/electron`、`cdn/…/electron-builder-binaries`、`npmmirror` 下的 `esbuild / parcel / rollup / turbo / bcrypt`、`huawei/cargo` 全部 404，已逐条替换或从白名单中移除
+- 🐞 **`ELECTRON_CUSTOM_DIR` 被保存成 `"v"`**：设置界面把空值默认填成 `"v"`，导致注入 `ELECTRON_CUSTOM_DIR=v`（正确应为空，让 electron 自己用 `v{version}`）。已在界面与主进程两侧同时加防护，并新增 `emNormDir()` 规范化（`"1.2.3"` → `"v1.2.3"`、`"v"` → 空、`{{ version }}` 直通）
+- 🐞 **`em-sites` 站点总览只显示第一屏**：改为返回 `{ total, list }` 结构，界面显示「共 N 站 · M 组」并完整列出每个站点覆盖的分组
+- 🐞 **`t()` 无法渲染函数型词条**：主进程文案表里带参数的长句（如体检提示）需要函数取值，已让 `t()` 同时支持字符串与函数两种词条
+- 🐞 **安装包探测把 403/404 当成故障**：与镜像探测同样的误判问题，已统一改为 `ok` / `na` / `fail` 三态，且「有目录但无匹配文件」单独计为 `ok/-` 而不是失败
+
+### Tests
+- 🧪 **新增离线自测 `selftest_se.js`（54 项）**：系统环境检测、包管理器识别、提权项、修复命令、文案中英对齐
+- 🧪 **新增离线自测 `selftest_pm.js`（48 项）**：目录页三格式解析、版本号自然序、三层目录形态（版本子目录 / 扁平 / JSON）、404/403 与超时分流、自动选最快站、下载命令生成、包管理器换源、结果落盘
+- 🧪 **`selftest_em.js` 重写（171 项，原 92 项）**：21 站点清单、29 分组全覆盖、真实文件探测地址校验、站点×分组取值（含「本站未收录」）、跨站回退 / 缺仓策略 / 手动覆盖 / 黑名单 / 学习缓存、`emNormDir`、`emEnvAll`、逐组开关与工具链检测、分组矩阵、`.npmrc` 写入移除、`testUrl3` 三态、真实网络探测
+- ✅ 静态校验 `check.js` 全绿：中英词条对齐 `zh=1039 / en=1039`、HTML 文案键 514 个全命中、DOM id 469 个全部存在、无重复 id、IPC 配对 131/131 + 事件 17/17、主进程 `t()` 249 个键全覆盖
+
 ## [2.29.0] - 2026-09-30
 
 ### Added
