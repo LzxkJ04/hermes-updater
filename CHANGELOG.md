@@ -3,6 +3,11 @@
 All notable changes to HermesUpdater are documented here.
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.26.0] - 2026-09-30
+
+### Added
+- 🔚 更新成功后强制结束全部 Hermes 进程：更新流程结束（`rc=0`）时无条件终止当前 Hermes 安装下的所有进程（含 Gateway），确保新版本代码生效、不再遗留旧进程；更新日志打印 `更新成功，已结束全部 Hermes 进程 (含 Gateway)`。更新失败仍沿用 `cleanup_after` / `keep_gateway` 设置，默认保留 Gateway。
+
 ## [2.25.0] - 2026-09-30
 
 ### Fixed

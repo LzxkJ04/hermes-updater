@@ -29,6 +29,7 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - **🌐 Webhook push** — POST JSON notifications on update/install/uninstall (WeCom / DingTalk / Slack friendly)
 - Auto countdown confirmation, snooze reminders, scheduled update plans, do-not-disturb window
 - Post-update smoke verification (`hermes --version`), rollback to any past commit, update backups with restore
+- **Terminate all Hermes processes after a successful update**: when the update finishes (`rc=0`), all processes under the current Hermes install (incl. Gateway) are forcibly stopped, so no stale process remains and the new version takes effect immediately. On failure, the `cleanup_after` / `keep_gateway` settings still apply (Gateway kept by default)
 - Network probe & **one-click network self-heal**, per-attempt network stats and failure classification
 
 ### Install & Uninstall

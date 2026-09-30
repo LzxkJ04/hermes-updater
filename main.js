@@ -155,6 +155,7 @@ const I18N = {
     "u.commits": (n) => `[更新内容] 本次共 ${n} 个新提交:`,
     "u.commits.more": (n) => `  ... 其余 ${n} 条已省略`,
     "u.cleanup2": (n, d) => `[清理] 已关闭 ${n} 个多余 Hermes 进程 (${d})`,
+    "u.killall.ok": (n) => `[收尾] 更新成功，已结束全部 Hermes 进程 (含 Gateway)，共 ${n} 个`,
     "res.ok": "✅ 更新成功，已是最新版本。",
     "res.partial": (b) => `⚠️ 更新流程结束 (rc=0) 但仍有落后 ${b} 个提交，可能未完全成功，请重试。`,
     "tag.build": "Node编译", "tag.deps": "Node依赖", "tag.locked": "文件占用", "tag.net": "网络", "tag.unknown": "未知",
@@ -242,6 +243,7 @@ const I18N = {
     "u.commits": (n) => `[Changes] ${n} new commit(s):`,
     "u.commits.more": (n) => `  ... ${n} more omitted`,
     "u.cleanup2": (n, d) => `[Cleanup] Closed ${n} extra Hermes process(es) (${d})`,
+    "u.killall.ok": (n) => `[Finalize] Update succeeded; terminated all Hermes processes (incl. Gateway), ${n} total`,
     "res.ok": "✅ Update succeeded. Already up to date.",
     "res.partial": (b) => `⚠️ Update finished (rc=0) but still ${b} commit(s) behind. It may not be complete, please retry.`,
     "tag.build": "Node build", "tag.deps": "Node deps", "tag.locked": "File locked", "tag.net": "Network", "tag.unknown": "Unknown",
@@ -1110,8 +1112,13 @@ async function classifyAndFinish(rc, label, win, sendLine) {
   }
   // 记录上次更新结果, 供刷新状态判定"是否真正完成" (防止 git pull 成功但依赖构建失败误报已是最新)
   try { saveUpdateState({ at: Date.now(), head, rc, incomplete: rkey === "fail", reason: rkey === "fail" ? (tag || "") : "" }); } catch {}
-  // 更新后清理 (可关; 可选保留 Gateway)
-  if (S.cleanup_after !== false) {
+  // 更新后清理:
+  // - 更新成功(rc===0) -> 无条件结束全部 Hermes 进程(含 Gateway), 确保新版生效
+  // - 更新失败 -> 沿用 cleanup_after / keep_gateway 设置, 仍保留 Gateway
+  if (rc === 0) {
+    const [kc] = await killHermesProcesses([], true);
+    sendLine(t("u.killall.ok", kc));
+  } else if (S.cleanup_after !== false) {
     const [kc, kd] = await killHermesProcesses([], S.keep_gateway === false);
     if (kc) sendLine(t("u.cleanup2", kc, kd));
   }
