@@ -17,7 +17,7 @@
     <div class="brand">
       <div class="logo">H</div>
       <div class="brand-name">HermesUpdater</div>
-      <div class="brand-ver" id="app-ver">v2.24.0 · <span data-i18n="brand.sub">更新工具</span></div>
+      <div class="brand-ver"><span id="app-ver">v—</span> · <span data-i18n="brand.sub">更新工具</span></div>
     </div>
     <nav id="nav">
       <button class="nav-item active" data-page="dash"><span class="ni-icon">📊</span><span data-i18n="nav.dash">仪表盘</span></button>
@@ -26,6 +26,7 @@
       <button class="nav-item" data-page="settings"><span class="ni-icon">⚙️</span><span data-i18n="nav.settings">设置</span></button>
       <button class="nav-item" data-page="diag"><span class="ni-icon">🩺</span><span data-i18n="nav.diag">诊断</span></button>
       <button class="nav-item" data-page="log"><span class="ni-icon">📜</span><span data-i18n="nav.log">日志</span></button>
+      <button class="nav-item" data-page="backup"><span class="ni-icon">💾</span><span data-i18n="nav.backup">备份与恢复</span></button>
     </nav>
     <div class="sidebar-foot">
       <span class="dot" id="status-dot"></span><span id="status-text">就绪</span>
@@ -428,6 +429,60 @@
         </div>
       </div>
       <div class="panel">
+        <h3 data-i18n="set.backup">💾 备份与恢复</h3>
+        <p class="prof-tip" data-i18n="set.backup.tip">备份 Hermes 的会话 / 技能 / 插件 / 配置等用户数据，出问题可一键还原（与「维护」里的数据包备份相互独立）。</p>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="s-bk-enabled"><span data-i18n="chk.bk.enabled">启用「备份与恢复」（关闭后禁止新建/恢复，仅可查看）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-auto"><span data-i18n="chk.bk.auto">定时自动备份（每天 / 每周一次）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-zip"><span data-i18n="chk.bk.zip">压缩为 .zip（关闭则保留文件夹形式）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-stop-proc"><span data-i18n="chk.bk.stop">备份 / 恢复前先停止 Hermes 进程（避免文件占用）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-verify"><span data-i18n="chk.bk.verify">备份后校验完整性（内容为空或产物缺失时报错）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-prune-after"><span data-i18n="chk.bk.prune">每次备份后自动清理超额份数（按保留份数）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-hash"><span data-i18n="chk.bk.hash">生成 manifest.sha256 校验清单（可事后核对文件是否被改动）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-restore-autobackup"><span data-i18n="chk.bk.restoreab">恢复前先自动备份当前状态（留一条后路）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-notify"><span data-i18n="chk.bk.notify">备份完成 / 恢复完成弹桌面通知</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-open-after"><span data-i18n="chk.bk.openafter">备份完成后自动打开备份目录</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-on-update"><span data-i18n="chk.bk.onupdate">每次更新 Hermes 前自动备份一次（更新失败可回滚用户数据）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-notify-fail-only"><span data-i18n="chk.bk.failonly">只在失败时弹通知（成功静默）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-skip-empty"><span data-i18n="chk.bk.skipempty">跳过空文件 / 空目录（让备份更精简）</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-include-hidden"><span data-i18n="chk.bk.hidden">包含 . 开头的隐藏项</span></label>
+          <label class="check"><input type="checkbox" id="s-bk-verify-restore"><span data-i18n="chk.bk.verifyrestore">恢复后校验落盘情况（日志里报告缺失数）</span></label>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="label.bk.dir">备份目录（留空 = 默认目录）</label><input id="s-bk-dir" data-i18n-ph="ph.bk.dir" placeholder="留空使用 文档\HermesUpdater-Backups\agent">
+          <label data-i18n="label.bk.every">自动备份频率</label>
+          <select id="s-bk-auto-every">
+            <option value="daily" data-i18n="opt.bk.daily">每天一次</option>
+            <option value="weekly" data-i18n="opt.bk.weekly">每周一次（周一）</option>
+          </select>
+          <label data-i18n="label.bk.time">自动备份时刻</label><input id="s-bk-auto-time" type="time" value="03:00">
+          <label data-i18n="label.bk.days">每周备份的周几 (0=周日, 逗号分隔)</label><input id="s-bk-schedule-days" placeholder="1" style="max-width:160px">
+          <label data-i18n="label.bk.keep">备份保留份数(1-60)</label><input id="s-bk-keep" type="number" min="1" max="60">
+          <label data-i18n="label.bk.days2">按天数保留 (超过 N 天自动清理, 0=不限)</label><input id="s-bk-retention-days" type="number" min="0" max="3650">
+          <label data-i18n="label.bk.level">zip 压缩级别</label>
+          <select id="s-bk-compress-level">
+            <option value="optimal" data-i18n="opt.bk.lvl.optimal">最佳压缩（体积最小，稍慢）</option>
+            <option value="fastest" data-i18n="opt.bk.lvl.fastest">最快（体积略大）</option>
+            <option value="none" data-i18n="opt.bk.lvl.none">不压缩（仅打包，最快）</option>
+          </select>
+          <label data-i18n="label.bk.scope">默认备份范围</label>
+          <div id="s-bk-scope-row" class="checks"></div>
+          <label data-i18n="label.bk.restorescope">恢复时只还原这些范围（全不选 = 整份还原）</label>
+          <div id="s-bk-restore-scope-row" class="checks"></div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <label data-i18n="label.bk.exclude">排除规则（每行一条，相对安装目录，支持 * 通配）</label>
+          <textarea id="s-bk-exclude" rows="3" style="resize:vertical;font-family:Consolas,monospace;font-size:12px;" data-i18n-ph="ph.bk.exclude" placeholder="logs&#10;data/cache&#10;*.tmp"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-bk-gopage" data-i18n="bk.btn.gopage">💾 打开备份与恢复页</button>
+          <button class="btn" id="btn-bk-opendir2" data-i18n="bk.btn.opendir">📂 打开备份目录</button>
+          <button class="btn" id="btn-bk-scope-all" data-i18n="bk.btn.scopeall">☑️ 全选范围</button>
+          <button class="btn" id="btn-bk-scope-def" data-i18n="bk.btn.scopedef">🔧 恢复默认范围</button>
+        </div>
+        <div class="hint" data-i18n="set.backup.hint">「会话 / 技能 / 插件」是最容易丢的用户数据，建议至少勾选这三类；数据库（state.db 等）运行中会被持续写入，勾选后请务必开启「备份前停止 Hermes 进程」。</div>
+      </div>
+      <div class="panel">
         <h3 data-i18n="set.system">🖥️ 系统集成 / 外观</h3>
         <div class="checks">
           <label class="check"><input type="checkbox" id="s-tray"><span data-i18n="chk.tray">关闭时最小化到托盘</span></label>
@@ -453,6 +508,7 @@
             <option value="settings" data-i18n="opt.page.settings">⚙️ 设置</option>
             <option value="diag" data-i18n="opt.page.diag">🩺 诊断</option>
             <option value="log" data-i18n="opt.page.log">📜 运行日志</option>
+            <option value="backup" data-i18n="opt.page.backup">💾 备份与恢复</option>
           </select>
           <label data-i18n="label.accent">强调色</label>
           <select id="s-accent">
@@ -675,6 +731,41 @@
         <button class="btn" id="btn-log-copy" data-i18n="btn.log.copy">📋 复制</button>
         <button class="btn" id="btn-log-open" data-i18n="btn.log.open">打开日志文件</button>
         <button class="btn warn" id="btn-log-clear" data-i18n="btn.log.clear">清空日志</button>
+      </div>
+    </section>
+
+    <!-- 备份与恢复 -->
+    <section class="page" id="page-backup">
+      <div class="banner">💾 <div><b data-i18n="nav.backup">备份与恢复</b><span data-i18n="bk.banner.s">备份 Hermes 会话 / 技能 / 插件 / 配置等数据，出问题可一键还原</span></div></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="bk.now.title">📦 创建备份</h3>
+          <span class="muted" id="bk-dir-tip" style="font-size:11px"></span>
+        </div>
+        <div class="form-grid">
+          <label data-i18n="bk.scope.label">本次备份范围</label>
+          <div id="bk-scope-row" class="checks"></div>
+          <label data-i18n="bk.note.label">备注（可选，会写进备份名）</label>
+          <input id="bk-note" type="text" maxlength="20" data-i18n-ph="bk.note.ph" placeholder="例如: 更新前">
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-bk-now" data-i18n="bk.btn.now">📦 立即备份</button>
+          <button class="btn" id="btn-bk-refresh" data-i18n="bk.btn.refresh">🔄 刷新列表</button>
+          <button class="btn" id="btn-bk-opendir" data-i18n="bk.btn.opendir">📂 打开备份目录</button>
+          <button class="btn warn" id="btn-bk-prune" data-i18n="bk.btn.prune">🧹 清理超额备份</button>
+          <button class="btn" id="btn-bk-settings" data-i18n="bk.btn.settings">⚙️ 备份设置</button>
+        </div>
+        <div class="hint" data-i18n="bk.hint">备份写入「文档\HermesUpdater-Backups\agent」（可在设置页改目录）。开启「备份前停止 Hermes 进程」可避免文件占用导致备份不全。恢复会覆盖同名文件，建议先给当前状态留一份备份。</div>
+        <div id="bk-status" class="muted" style="font-size:12px"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 data-i18n="bk.list.title">🕘 备份列表</h3>
+          <span class="muted" id="bk-count" style="font-size:11px"></span>
+        </div>
+        <div id="bk-list" class="rb-list"></div>
       </div>
     </section>
   </main>

@@ -1,7 +1,7 @@
 {
   "name": "hermes-updater",
   "productName": "HermesUpdater",
-  "version": "2.26.0",
+  "version": "2.27.0",
   "description": "Hermes Agent 更新工具 (Electron 版)",
   "main": "main.js",
   "author": "HermesUpdater",
@@ -18,7 +18,7 @@
   "build": {
     "appId": "com.hermes.updater",
     "productName": "HermesUpdater",
-    "directories": { "output": "release40" },
+    "directories": { "output": "release41" },
     "files": ["main.js", "preload.js", "renderer/**", "app.ico"],
     "win": { "icon": "app.ico", "target": ["portable", "nsis"] },
     "portable": { "artifactName": "HermesUpdater-Portable.exe" },

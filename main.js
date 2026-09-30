@@ -1,12 +1,13 @@
 // HermesUpdater Electron 版 - 主进程
 // 移植自 tkinter 版 hermes_updater.py 的后端逻辑
 const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, shell, dialog, nativeImage, nativeTheme, net, powerSaveBlocker, Notification } = require("electron");
-const { spawn, execFile } = require("child_process");
+const { spawn, execFile, execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const http = require("http");
 const https = require("https");
+const crypto = require("crypto");
 
 const APP_NAME = "HermesUpdater";
 const APP_DIR = path.join(os.homedir(), "AppData", "Roaming", APP_NAME);
@@ -81,6 +82,31 @@ const DEFAULTS = {
   log_auto_refresh: true,       // 日志页每 5 秒自动刷新
   backup_auto: false,           // 每日自动备份数据包 (文档目录/HermesUpdater-Backups)
   backup_keep: 5,               // 自动备份保留份数 (1-30)
+  bk_enabled: true,             // 启用「备份与恢复」(Hermes 配置/数据)
+  bk_dir: "",                   // 备份目录 (空=默认 文档/HermesUpdater-Backups/agent)
+  bk_auto: false,               // 定时自动备份 Hermes 数据
+  bk_auto_every: "daily",       // daily | weekly
+  bk_keep: 7,                   // 备份保留份数 (1-60)
+  bk_scope: ["config", "sessions", "skills", "plugins", "zhpatches"], // 备份内容: 会话/技能/插件/配置... (见 BK_SCOPE_KEYS)
+  bk_zip: true,                 // 压缩为 zip (关闭则保留文件夹)
+  bk_stop_proc: true,           // 备份/恢复前停止 Hermes 进程 (保证一致性)
+  bk_verify: true,              // 备份后做完整性校验
+  bk_auto_time: "03:00",        // 定时备份时刻 HH:MM (配合 bk_auto / bk_auto_every)
+  bk_prune_after: true,         // 每次备份后自动清理超额份数
+  bk_hash: false,               // 生成 manifest.sha256 校验清单
+  bk_restore_autobackup: true,  // 恢复前先自动备份当前状态 (留后路)
+  bk_restore_scope: [],         // 恢复时只还原这些范围 (空=整份还原)
+  bk_notify: true,              // 备份完成/失败弹桌面通知
+  bk_exclude: "",               // 排除规则 (每行一条, 支持 * 通配, 相对安装目录)
+  bk_open_after: false,         // 备份完成后自动打开备份目录
+  bk_on_update: true,           // 每次更新 Hermes 前自动备份一次 (更新失败可回滚用户数据)
+  bk_compress_level: "optimal", // 压缩级别 optimal | fastest | none
+  bk_retention_days: 0,         // 按天数保留 (超过 N 天自动清理, 0=只看份数)
+  bk_notify_fail_only: false,   // 只在失败时弹通知 (成功静默)
+  bk_skip_empty: false,         // 跳过空文件 / 空目录
+  bk_include_hidden: true,      // 包含 . 开头的隐藏项
+  bk_verify_restore: false,     // 恢复后校验落盘文件数
+  bk_schedule_days: "",         // 每周备份的周几 (0=周日, 逗号分隔; 空=周一)
   quiet_start: "",              // 自动检查免打扰开始 (HH:MM, 空=不禁用)
   quiet_end: "",                // 免打扰结束 (支持跨午夜, 如 23:00~08:00)
   tray_badge: true,             // 托盘角标: 有可更新提交时显示 ⬆️N
@@ -135,6 +161,7 @@ const I18N = {
   zh: {
     "tray.dash": "📊 仪表盘", "tray.update": "🔄 更新", "tray.settings": "⚙️ 设置",
     "tray.diag": "🩺 诊断", "tray.log": "📜 运行日志", "tray.check": "检查新版本", "tray.quit": "退出",
+    "tray.backup": "💾 备份与恢复", "tray.bk.now": "📦 立即备份", "tray.bk.restore": "♻️ 恢复备份…", "tray.bk.dir": "📂 打开备份目录", "tray.bk.settings": "⚙️ 备份设置", "tray.bk.done": "💾 备份完成", "tray.bk.fail": "💾 备份失败",
     "balloon.newver.title": "发现 Hermes 新版本",
     "balloon.newver.body": (n) => `落后 ${n} 个提交, 打开更新工具点击「立即更新」`,
     "balloon.done.ok.title": "Hermes 更新完成 ✅", "balloon.done.ok.body": "已更新到最新版本",
@@ -156,6 +183,18 @@ const I18N = {
     "u.commits.more": (n) => `  ... 其余 ${n} 条已省略`,
     "u.cleanup2": (n, d) => `[清理] 已关闭 ${n} 个多余 Hermes 进程 (${d})`,
     "u.killall.ok": (n) => `[收尾] 更新成功，已结束全部 Hermes 进程 (含 Gateway)，共 ${n} 个`,
+    "bk.none": "未检测到有效 Hermes 安装, 无法备份", "bk.stop": "已停止 Hermes 进程", "bk.auto": "定时备份",
+    "bk.disabled": "「备份与恢复」已在设置中关闭, 请先启用后再操作", "bk.export.title": "导出备份到...",
+    "bk.done": (n) => `💾 备份完成: ${n}`, "bk.fail": (e) => `💾 备份失败: ${e}`,
+    "bk.restored": (n) => `♻️ 已从备份恢复: ${n}`, "bk.restore.fail": (e) => `♻️ 恢复失败: ${e}`,
+    "bk.del": (n) => `🗑️ 已删除备份: ${n}`, "bk.pruned": (n) => `已清理 ${n} 份超额备份`, "bk.exported": (f) => `已导出: ${f}`,
+    "bk.scope.config": "配置", "bk.scope.env": "环境变量", "bk.scope.auth": "认证", "bk.scope.sessions": "会话", "bk.scope.skills": "技能/软件", "bk.scope.plugins": "插件", "bk.scope.zhpatches": "中文补丁",
+    "bk.scope.memories": "记忆库", "bk.scope.vault": "凭据库", "bk.scope.hooks": "钩子脚本", "bk.scope.cron": "定时任务", "bk.scope.kanban": "看板", "bk.scope.projects": "项目库", "bk.scope.state": "状态库",
+    "bk.scope.shared": "共享数据", "bk.scope.pets": "宠物", "bk.scope.platforms": "平台配置", "bk.scope.pairing": "配对/消息", "bk.scope.sandbox": "沙箱", "bk.scope.data": "数据包", "bk.scope.logs": "运行日志",
+    "bk.pre": "恢复前", "bk.pre.done": (n) => `[恢复前] 已先备份当前状态: ${n}`, "bk.pre.fail": (e) => `[恢复前] 自动备份失败: ${e}`,
+    "bk.preupd": "更新前", "bk.preupd.start": "📦 更新前自动备份用户数据...",
+    "bk.preupd.ok": (n) => `📦 更新前备份完成: ${n}`, "bk.preupd.fail": (e) => `📦 更新前备份失败(不阻断更新): ${e}`,
+    "bk.verify": (n, m) => `🔍 恢复校验: ${n} 项已落盘, ${m} 项缺失`,
     "res.ok": "✅ 更新成功，已是最新版本。",
     "res.partial": (b) => `⚠️ 更新流程结束 (rc=0) 但仍有落后 ${b} 个提交，可能未完全成功，请重试。`,
     "tag.build": "Node编译", "tag.deps": "Node依赖", "tag.locked": "文件占用", "tag.net": "网络", "tag.unknown": "未知",
@@ -223,6 +262,7 @@ const I18N = {
   en: {
     "tray.dash": "📊 Dashboard", "tray.update": "🔄 Update", "tray.settings": "⚙️ Settings",
     "tray.diag": "🩺 Diagnostics", "tray.log": "📜 Logs", "tray.check": "Check for updates", "tray.quit": "Quit",
+    "tray.backup": "💾 Backup & Restore", "tray.bk.now": "📦 Back up now", "tray.bk.restore": "♻️ Restore from backup…", "tray.bk.dir": "📂 Open backup folder", "tray.bk.settings": "⚙️ Backup settings", "tray.bk.done": "💾 Backup finished", "tray.bk.fail": "💾 Backup failed",
     "balloon.newver.title": "New Hermes version found",
     "balloon.newver.body": (n) => `${n} commit(s) behind. Open the updater and click "Update now".`,
     "balloon.done.ok.title": "Hermes update finished ✅", "balloon.done.ok.body": "Updated to the latest version.",
@@ -244,6 +284,18 @@ const I18N = {
     "u.commits.more": (n) => `  ... ${n} more omitted`,
     "u.cleanup2": (n, d) => `[Cleanup] Closed ${n} extra Hermes process(es) (${d})`,
     "u.killall.ok": (n) => `[Finalize] Update succeeded; terminated all Hermes processes (incl. Gateway), ${n} total`,
+    "bk.none": "No valid Hermes install detected, cannot back up", "bk.stop": "Hermes processes stopped", "bk.auto": "Scheduled backup",
+    "bk.disabled": "Backup & Restore is disabled in Settings; enable it first", "bk.export.title": "Export backup to...",
+    "bk.done": (n) => `💾 Backup finished: ${n}`, "bk.fail": (e) => `💾 Backup failed: ${e}`,
+    "bk.restored": (n) => `♻️ Restored from backup: ${n}`, "bk.restore.fail": (e) => `♻️ Restore failed: ${e}`,
+    "bk.del": (n) => `🗑️ Backup deleted: ${n}`, "bk.pruned": (n) => `Pruned ${n} excess backup(s)`, "bk.exported": (f) => `Exported: ${f}`,
+    "bk.scope.config": "Config", "bk.scope.env": "Env vars", "bk.scope.auth": "Auth", "bk.scope.sessions": "Sessions", "bk.scope.skills": "Skills/software", "bk.scope.plugins": "Plugins", "bk.scope.zhpatches": "zh-patches",
+    "bk.scope.memories": "Memories", "bk.scope.vault": "Vault", "bk.scope.hooks": "Hooks", "bk.scope.cron": "Cron jobs", "bk.scope.kanban": "Kanban", "bk.scope.projects": "Projects", "bk.scope.state": "State DB",
+    "bk.scope.shared": "Shared data", "bk.scope.pets": "Pets", "bk.scope.platforms": "Platforms", "bk.scope.pairing": "Pairing", "bk.scope.sandbox": "Sandboxes", "bk.scope.data": "Data", "bk.scope.logs": "Logs",
+    "bk.pre": "pre-restore", "bk.pre.done": (n) => `[Pre-restore] Current state backed up as: ${n}`, "bk.pre.fail": (e) => `[Pre-restore] Auto backup failed: ${e}`,
+    "bk.preupd": "pre-update", "bk.preupd.start": "📦 Auto-backing up user data before update...",
+    "bk.preupd.ok": (n) => `📦 Pre-update backup done: ${n}`, "bk.preupd.fail": (e) => `📦 Pre-update backup failed (update continues): ${e}`,
+    "bk.verify": (n, m) => `🔍 Restore verified: ${n} item(s) on disk, ${m} missing`,
     "res.ok": "✅ Update succeeded. Already up to date.",
     "res.partial": (b) => `⚠️ Update finished (rc=0) but still ${b} commit(s) behind. It may not be complete, please retry.`,
     "tag.build": "Node build", "tag.deps": "Node deps", "tag.locked": "File locked", "tag.net": "Network", "tag.unknown": "Unknown",
@@ -852,6 +904,13 @@ async function startUpdate(win) {
     let env = {}, label = "";
     notifyEvent("update", t("notif.upd.start"));
     sendLine(t("u.start"));
+    // 更新前自动备份 (bk_on_update): 更新把代码换掉前先留一份用户数据, 失败可回滚
+    if (S.bk_enabled !== false && S.bk_on_update) {
+      sendLine(t("bk.preupd.start"));
+      const pb = await bkBackupNow(t("bk.preupd"), S.bk_scope);
+      if (pb && pb.ok) { sendLine(t("bk.preupd.ok", pb.name)); log(`[备份] ${t("bk.preupd.ok", pb.name)}`); }
+      else { sendLine(t("bk.preupd.fail", (pb && pb.msg) || "?")); log(`[备份] ${t("bk.preupd.fail", (pb && pb.msg) || "?")}`); }
+    }
     // 更新前磁盘空间检查 (仅警告, 不阻断; 整个更新流程只查一次)
     if (S.disk_check !== false) {
       const free = await getFreeDiskGB(install());
@@ -1179,6 +1238,15 @@ function makeTray() {
       { label: t("tray.settings"), click: () => goto("settings") },
       { label: t("tray.diag"), click: () => goto("diag") },
       { label: t("tray.log"), click: () => goto("log") },
+      {
+        label: t("tray.backup"), submenu: [
+          { label: t("tray.bk.now"), click: async () => { const r = await bkBackupNow("", S.bk_scope); try { tray && tray.displayBalloon({ icon: path.join(__dirname, "app.ico"), title: r.ok ? t("tray.bk.done") : t("tray.bk.fail"), content: r.ok ? `${r.name} (${r.items.length} 项)` : (r.msg || "") }); } catch {} } },
+          { label: t("tray.bk.restore"), click: () => { win.show(); win.webContents.send("nav", "backup"); } },
+          { label: t("tray.bk.dir"), click: () => { try { bkOpenDir(); } catch {} } },
+          { type: "separator" },
+          { label: t("tray.bk.settings"), click: () => { win.show(); win.webContents.send("nav", "settings"); } },
+        ]
+      },
       { type: "separator" },
       { label: t("tray.check"), click: () => { goto("dash"); win.webContents.send("do-check"); } },
       { type: "separator" },
@@ -1211,6 +1279,7 @@ app.whenReady().then(() => {
   setupNetWatch();
   setupWatchdog();
   setupPathWatch();
+  setupBkAuto(); // 备份与恢复: 定时自动备份 (开关在设置页, 改动即时生效)
   autoDetectOnStartup(); // 安装路径自动识别 (后台执行, 不阻塞启动)
   setTimeout(autoBackup, 30000); // 启动 30 秒后做当日自动备份
   setInterval(autoBackup, 6 * 3600e3); // 之后每 6 小时补查一次 (每天只写一份)
@@ -1331,6 +1400,396 @@ async function autoBackup() {
     while (files.length > keep) fs.unlinkSync(path.join(dir, files.shift()));
     log(`[备份] 自动备份完成: ${file}`);
   } catch (e) { log(`[备份] 自动备份失败: ${e}`); }
+}
+
+// ---------------- 备份与恢复 (Hermes Agent 配置/数据, 独立于数据包备份) ----------------
+function bkRoot() {
+  const d = (S.bk_dir || "").trim();
+  if (d) { try { fs.mkdirSync(d, { recursive: true }); return d; } catch {} }
+  return path.join(backupDir(), "agent");
+}
+// 各备份范围 -> 候选源(绝对路径) + 还原时相对 install() 的落点
+// 只收"用户数据"(配置/会话/技能/插件/记忆/凭据/数据库...), 不收 tools/ desktop/ webui/ 等体积巨大或随版本重建的目录
+function bkMap() {
+  const inst = install(), ag = agentDir();
+  const F = (rel) => ({ src: path.join(inst, rel), rel });            // install() 根下
+  const A = (rel) => ({ src: path.join(ag, rel), rel: "hermes-agent/" + rel }); // hermes-agent/ 下
+  return {
+    config: [F("config.yaml"), A("config.yaml")],
+    env: [F(".env")],
+    auth: [F("auth.json")],
+    sessions: [F("sessions")],                                  // 会话
+    skills: [F("skills")],                                      // 技能 / 软件
+    plugins: [F("plugins"), F("desktop-plugins")],              // 插件
+    zhpatches: [F("zh-patches"), F("zh-patches-source"), A("zh-patches")],
+    memories: [F("memories")],                                  // 记忆库
+    vault: [F("vault")],                                        // 凭据 / 密钥
+    hooks: [F("hooks")],
+    cron: [F("cron")],                                          // 定时任务
+    kanban: [F("kanban.db"), F("kanban")],                      // 看板
+    projects: [F("projects.db")],                               // 项目库
+    state: [F("state.db")],                                     // 主状态库
+    shared: [F("shared"), F("shared-state.db")],                // 共享数据
+    pets: [F("pets")],
+    platforms: [F("platforms")],                                // 渠道 / 平台配置
+    pairing: [F("pairing"), F("pending_messages")],             // 配对与待发消息
+    sandbox: [F("sandboxes")],                                  // 沙箱
+    data: [F("data"), A("data")],                               // 数据包
+    logs: [F("logs"), A("logs")],
+  };
+}
+// 备份范围清单 (顺序即 UI 展示顺序); 渲染层通过 bk-scopes 拉取, 避免两边硬编码漂移
+const BK_SCOPE_KEYS = ["config", "env", "auth", "sessions", "skills", "plugins", "zhpatches", "memories", "vault", "hooks", "cron", "kanban", "projects", "state", "shared", "pets", "platforms", "pairing", "sandbox", "data", "logs"];
+// 范围 -> i18n key 映射: 用查表代替动态拼接出来的 key, 让静态校验能覆盖到每一条词条
+const BK_SCOPE_I18N = { config: "bk.scope.config", env: "bk.scope.env", auth: "bk.scope.auth", sessions: "bk.scope.sessions", skills: "bk.scope.skills", plugins: "bk.scope.plugins", zhpatches: "bk.scope.zhpatches", memories: "bk.scope.memories", vault: "bk.scope.vault", hooks: "bk.scope.hooks", cron: "bk.scope.cron", kanban: "bk.scope.kanban", projects: "bk.scope.projects", state: "bk.scope.state", shared: "bk.scope.shared", pets: "bk.scope.pets", platforms: "bk.scope.platforms", pairing: "bk.scope.pairing", sandbox: "bk.scope.sandbox", data: "bk.scope.data", logs: "bk.scope.logs" };
+// 反查: 备份产物里的相对路径 -> 属于哪个范围 (恢复时按范围过滤用)
+function bkScopeOfRel(rel) {
+  const r = String(rel || "").replace(/\\/g, "/");
+  for (const k of BK_SCOPE_KEYS) {
+    for (const { rel: rr } of (bkMap()[k] || [])) if (r === rr || r.startsWith(rr + "/")) return k;
+  }
+  return "";
+}
+// 排除规则: 设置里按行填写, 支持 * 通配与目录前缀; 命中则跳过
+function bkExcluded(rel) {
+  const raw = (S.bk_exclude || "").trim();
+  if (!raw) return false;
+  const r = String(rel || "").replace(/\\/g, "/");
+  return raw.split(/\r?\n/).map((x) => x.trim()).filter(Boolean).some((pat) => {
+    const p = pat.replace(/\\/g, "/").replace(/\/+$/, "");
+    if (!p) return false;
+    if (p.includes("*")) {
+      const re = new RegExp("^" + p.split("*").map((s) => s.replace(/[.+?^${}()|[\]]/g, "\\$&")).join(".*") + "$");
+      return re.test(r);
+    }
+    return r === p || r.startsWith(p + "/");
+  });
+}
+// 带过滤的复制: 支持「跳过空文件/空目录」与「是否包含 . 开头的隐藏项」
+// 返回是否真的复制了内容 (用于 bk_skip_empty 时剔除空目录)
+function bkCopyFiltered(src, dst) {
+  const st = fs.statSync(src);
+  if (!st.isDirectory()) {
+    if (S.bk_skip_empty && st.size === 0) return false;
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.copyFileSync(src, dst);
+    return true;
+  }
+  let got = false;
+  const walk = (s, d) => {
+    let ents = [];
+    try { ents = fs.readdirSync(s, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) {
+      if (!S.bk_include_hidden && e.name.startsWith(".")) continue;
+      const ss = path.join(s, e.name), dd = path.join(d, e.name);
+      try {
+        if (e.isDirectory()) walk(ss, dd);
+        else {
+          if (S.bk_skip_empty && fs.statSync(ss).size === 0) continue;
+          fs.mkdirSync(path.dirname(dd), { recursive: true });
+          fs.copyFileSync(ss, dd);
+          got = true;
+        }
+      } catch {}
+    }
+  };
+  fs.mkdirSync(dst, { recursive: true });
+  walk(src, dst);
+  return S.bk_skip_empty ? got : true;
+}
+// SHA256 清单: 备份时生成 manifest.sha256, 便于事后校验是否被改动
+function bkWriteHash(root, dir, items) {
+  const lines = [];
+  const walk = (base, relPref) => {
+    let ents = [];
+    try { ents = fs.readdirSync(base, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) {
+      const rel = relPref ? `${relPref}/${e.name}` : e.name;
+      const full = path.join(base, e.name);
+      if (e.isDirectory()) walk(full, rel);
+      else {
+        try {
+          const h = crypto.createHash("sha256").update(fs.readFileSync(full)).digest("hex");
+          lines.push(`${h}  ${rel}`);
+        } catch {}
+      }
+    }
+  };
+  for (const rel of items) {
+    const full = path.join(dir, rel);
+    if (!fs.existsSync(full)) continue;
+    if (fs.statSync(full).isDirectory()) walk(full, rel);
+    else {
+      try {
+        const h = crypto.createHash("sha256").update(fs.readFileSync(full)).digest("hex");
+        lines.push(`${h}  ${rel}`);
+      } catch {}
+    }
+  }
+  fs.writeFileSync(path.join(dir, "manifest.sha256"), lines.join("\n") + "\n", "utf8");
+  return lines.length;
+}
+const BK_NAME_RE = /^HermesAgent-\d{14}(-[\w\u4e00-\u9fa5-]+)?(\.zip)?$/;
+function bkNameOk(n) { return BK_NAME_RE.test(String(n || "")); }
+function bkSanitizeNote(s) { return String(s || "").replace(/[^\w\u4e00-\u9fa5-]/g, "").slice(0, 20); }
+function bkPs(cmd) { // PowerShell 压缩/解压 (Windows 内置, 无需额外依赖)
+  execFileSync("powershell", ["-NoProfile", "-Command", cmd], { windowsHide: true, timeout: 600000, maxBuffer: 32e6 });
+}
+function bkExpandZip(zip, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  bkPs(`Expand-Archive -Path '${zip.replace(/'/g, "''")}' -DestinationPath '${dst.replace(/'/g, "''")}' -Force`);
+  return dst;
+}
+function bkMetaPath(root, name) { return path.join(root, name.replace(/\.zip$/, "") + ".meta.json"); }
+function bkPruneSync() {
+  try {
+    const root = bkRoot();
+    if (!fs.existsSync(root)) return 0;
+    const keep = Math.min(Math.max(parseInt(S.bk_keep) || 7, 1), 60);
+    const entries = fs.readdirSync(root).filter((f) => /^HermesAgent-\d{14}/.test(f) && !f.endsWith(".meta.json"));
+    const stamps = [...new Set(entries.map((f) => (f.match(/^HermesAgent-(\d{14})/) || [])[1]).filter(Boolean))].sort().reverse();
+    // 按天数保留 (bk_retention_days > 0): 超过 N 天的直接清理, 与「保留份数」是并集
+    const days = parseInt(S.bk_retention_days) || 0;
+    const tooOld = (st) => {
+      if (days <= 0) return false;
+      const ts = Date.UTC(+st.slice(0, 4), +st.slice(4, 6) - 1, +st.slice(6, 8), +st.slice(8, 10), +st.slice(10, 12), +st.slice(12, 14));
+      return (Date.now() - ts) / 864e5 > days;
+    };
+    let removed = 0;
+    for (const st of stamps) {
+      if (!tooOld(st) && stamps.indexOf(st) < keep) continue; // 既没超期, 又在保留份数内 -> 留着
+      for (const f of entries.filter((e) => e.startsWith("HermesAgent-" + st))) {
+        try { fs.rmSync(path.join(root, f), { recursive: true, force: true }); removed++; } catch {}
+      }
+      try { fs.rmSync(bkMetaPath(root, `HermesAgent-${st}`), { force: true }); } catch {}
+    }
+    if (removed) log(`[备份] ${t("bk.pruned", removed)}`);
+    return removed;
+  } catch { return 0; }
+}
+async function bkBackupNow(note, scopeOverride) {
+  try {
+    if (S.bk_enabled === false) return { ok: false, msg: t("bk.disabled") };
+    const inst = install();
+    if (!fs.existsSync(inst)) return { ok: false, msg: t("bk.none") };
+    const root = bkRoot();
+    fs.mkdirSync(root, { recursive: true });
+    if (S.bk_stop_proc) {
+      const [kc] = await killHermesProcesses([], true);
+      if (kc) log(`[备份] ${t("bk.stop")}: ${kc}`);
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+    const scope = (scopeOverride && scopeOverride.length) ? scopeOverride : ((S.bk_scope && S.bk_scope.length) ? S.bk_scope : ["config"]);
+    const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+    const safe = bkSanitizeNote(note);
+    const name = `HermesAgent-${stamp}${safe ? "-" + safe : ""}`;
+    const work = path.join(root, name);
+    fs.mkdirSync(work, { recursive: true });
+    const map = bkMap(), items = [];
+    let skippedByExclude = 0;
+    for (const key of scope) {
+      for (const { src, rel } of (map[key] || [])) {
+        if (!fs.existsSync(src)) continue;
+        if (bkExcluded(rel)) { skippedByExclude++; continue; }
+        const dst = path.join(work, rel);
+        try {
+          const kept = bkCopyFiltered(src, dst); // 按 bk_skip_empty / bk_include_hidden 过滤后复制
+          if (kept) items.push(rel); else log(`[备份] 跳过(空/隐藏规则) ${rel}`);
+        } catch (e) { log(`[备份] 跳过 ${rel}: ${e}`); }
+      }
+    }
+    let head = "";
+    try { head = (await git(["rev-parse", "--short", "HEAD"], 30000) || "").trim(); } catch {}
+    // SHA256 清单要在压缩前写入, 否则会被打进 zip 之外
+    let hashes = 0;
+    if (S.bk_hash && items.length) { try { hashes = bkWriteHash(root, work, items); } catch (e) { log(`[备份] sha256 清单失败: ${e}`); } }
+    const manifest = { app: "HermesUpdater", version: app.getVersion(), createdAt: new Date().toISOString(), installPath: inst, hermesHead: head, scope, items, note: safe || "", hasHash: hashes > 0, excluded: skippedByExclude };
+    fs.writeFileSync(path.join(work, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
+    fs.writeFileSync(bkMetaPath(root, name), JSON.stringify({ ...manifest, name, isZip: !!S.bk_zip }, null, 2), "utf8");
+    let finalPath = work, sizeMB = 0;
+    if (S.bk_zip && items.length) {
+      const zip = path.join(root, name + ".zip");
+      const lvl = { optimal: "Optimal", fastest: "Fastest", none: "NoCompression" }[String(S.bk_compress_level || "optimal")] || "Optimal";
+      try {
+        bkPs(`Compress-Archive -Path '${work.replace(/'/g, "''")}' -DestinationPath '${zip.replace(/'/g, "''")}' -CompressionLevel ${lvl} -Force`);
+        fs.rmSync(work, { recursive: true, force: true });
+        finalPath = zip;
+      } catch (e) { log(`[备份] 压缩失败, 保留目录形式: ${e}`); }
+    }
+    try { sizeMB = Math.max(0, Math.round(fs.statSync(finalPath).size / 10485.76) / 100); } catch {}
+    if (S.bk_verify && !items.length) return { ok: false, msg: `${t("bk.fail", "无可备份内容 (scope 内未找到文件)")}` };
+    if (S.bk_verify && !fs.existsSync(finalPath)) return { ok: false, msg: t("bk.fail", "产物缺失") };
+    let pruned = 0;
+    if (S.bk_prune_after !== false) pruned = bkPruneSync();
+    log(`[备份] ${t("bk.done", name)} (${items.length} 项, ${sizeMB} MB, ${scope.map((k) => t(BK_SCOPE_I18N[k] || "bk.scope.config")).join("/")})`);
+    if (S.bk_notify !== false && S.bk_notify_fail_only !== true) {
+      try { new Notification({ title: t("tray.bk.done"), body: `${name} · ${items.length} 项 · ${sizeMB} MB` }).show(); } catch {}
+    }
+    if (S.bk_open_after && finalPath) { try { shell.openPath(finalPath.endsWith(".zip") ? root : finalPath); } catch {} }
+    return { ok: true, name, path: finalPath, sizeMB, items, pruned, hashes, excluded: skippedByExclude, msg: t("bk.done", name) };
+  } catch (e) {
+    bkNotifyFail(e);
+    return { ok: false, msg: t("bk.fail", e) };
+  }
+}
+// 失败通知: bk_notify 打开即可 (bk_notify_fail_only 只影响成功通知)
+function bkNotifyFail(e) {
+  if (S.bk_notify === false) return;
+  try { new Notification({ title: t("tray.bk.fail"), body: String(e).slice(0, 200) }).show(); } catch {}
+}
+function bkList() {
+  const root = bkRoot();
+  if (!fs.existsSync(root)) return [];
+  const out = [];
+  for (const f of fs.readdirSync(root)) {
+    const m = f.match(/^HermesAgent-(\d{14})(?:-([\w\u4e00-\u9fa5-]+))?(\.zip)?$/);
+    if (!m) continue;
+    const full = path.join(root, f);
+    let sizeMB = 0, items = [], note = "", createdAt = "", scope = [], version = "", head = "", hasHash = false;
+    try { sizeMB = Math.max(0, Math.round(fs.statSync(full).size / 10485.76) / 100); } catch {}
+    try {
+      const mf = JSON.parse(fs.readFileSync(bkMetaPath(root, f), "utf8"));
+      items = mf.items || []; note = mf.note || ""; createdAt = mf.createdAt || ""; scope = mf.scope || []; version = mf.version || ""; head = mf.hermesHead || ""; hasHash = !!mf.hasHash;
+    } catch {}
+    const stamp = m[1];
+    const time = `${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)} ${stamp.slice(8, 10)}:${stamp.slice(10, 12)}:${stamp.slice(12, 14)}`;
+    out.push({ name: f, isZip: f.endsWith(".zip"), time, sizeMB, items, note, createdAt, scope, version, head, hasHash });
+  }
+  return out.sort((a, b) => b.time.localeCompare(a.time));
+}
+async function bkRestore(name) {
+  let tmpdir = null;
+  try {
+    if (S.bk_enabled === false) return { ok: false, msg: t("bk.disabled") };
+    const inst = install();
+    if (!fs.existsSync(inst)) return { ok: false, msg: t("bk.none") };
+    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
+    const root = bkRoot();
+    const full = path.join(root, name);
+    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    let dir = full;
+    if (name.endsWith(".zip")) { tmpdir = path.join(os.tmpdir(), `hermes-bk-r-${Date.now()}`); dir = bkExpandZip(full, tmpdir); }
+    let manifest = {};
+    try { manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")); } catch {}
+    let items = (manifest.items && manifest.items.length) ? manifest.items : fs.readdirSync(dir).filter((x) => x !== "manifest.json");
+    // 恢复范围过滤: 设置里勾了 bk_restore_scope 就只还原这些范围 (空=整份)
+    const onlyScope = Array.isArray(S.bk_restore_scope) ? S.bk_restore_scope.filter(Boolean) : [];
+    const skippedScope = [];
+    if (onlyScope.length) {
+      items = items.filter((rel) => {
+        const k = bkScopeOfRel(rel);
+        if (k && onlyScope.includes(k)) return true;
+        skippedScope.push(rel);
+        return false;
+      });
+    }
+    // 恢复前留后路: 先把当前状态备份一份, 失败不阻断恢复 (只告警)
+    let preBackup = "";
+    if (S.bk_restore_autobackup !== false) {
+      try {
+        const pb = await bkBackupNow(t("bk.pre"), (manifest.scope && manifest.scope.length) ? manifest.scope : S.bk_scope);
+        if (pb && pb.ok) { preBackup = pb.name; log(`[备份] ${t("bk.pre.done", pb.name)}`); }
+        else log(`[备份] ${t("bk.pre.fail", (pb && pb.msg) || "?")}`);
+      } catch (e) { log(`[备份] ${t("bk.pre.fail", e)}`); }
+    }
+    if (S.bk_stop_proc) { await killHermesProcesses([], true); await new Promise((r) => setTimeout(r, 1200)); }
+    let copied = 0;
+    for (const rel of items) {
+      const src = path.join(dir, rel);
+      if (!fs.existsSync(src)) continue;
+      if (bkExcluded(rel)) continue;
+      const dst = path.join(inst, rel);
+      try {
+        fs.mkdirSync(path.dirname(dst), { recursive: true });
+        if (fs.statSync(src).isDirectory()) fs.cpSync(src, dst, { recursive: true, force: true });
+        else fs.copyFileSync(src, dst);
+        copied++;
+      } catch (e) { log(`[恢复] 跳过 ${rel}: ${e}`); }
+    }
+    log(`[备份] ${t("bk.restored", name)} (${copied} 项)`);
+    // 恢复后校验 (bk_verify_restore): 逐个确认落盘, 报告缺失数
+    let verified = 0, missing = 0;
+    if (S.bk_verify_restore) {
+      for (const rel of items) {
+        try { if (fs.existsSync(path.join(inst, rel))) verified++; else missing++; } catch { missing++; }
+      }
+      log(`[备份] ${t("bk.verify", verified, missing)}`);
+    }
+    if (S.bk_notify !== false) {
+      try { new Notification({ title: t("bk.restored", name), body: `${copied} 项${preBackup ? " · " + t("bk.pre.done", preBackup) : ""}` }).show(); } catch {}
+    }
+    return { ok: true, name, copied, preBackup, skipped: skippedScope.length, msg: t("bk.restored", name) };
+  } catch (e) {
+    return { ok: false, msg: t("bk.restore.fail", e) };
+  } finally {
+    if (tmpdir) { try { fs.rmSync(tmpdir, { recursive: true, force: true }); } catch {} }
+  }
+}
+async function bkDelete(name) {
+  try {
+    const root = bkRoot();
+    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, name);
+    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    fs.rmSync(full, { recursive: true, force: true });
+    try { fs.rmSync(bkMetaPath(root, name), { force: true }); } catch {}
+    log(`[备份] ${t("bk.del", name)}`);
+    return { ok: true, name, msg: t("bk.del", name) };
+  } catch (e) { return { ok: false, msg: String(e) }; }
+}
+async function bkExport(name, dest) {
+  try {
+    const root = bkRoot();
+    if (!bkNameOk(name)) return { ok: false, msg: t("bk.none") };
+    const full = path.join(root, name);
+    if (!fs.existsSync(full)) return { ok: false, msg: t("bk.none") };
+    let out = (dest || "").trim();
+    if (!out) { // 未给目标路径 -> 弹保存对话框 (zip 用 .zip, 目录形式用文件夹名)
+      const isZip = full.endsWith(".zip");
+      const r = await dialog.showSaveDialog(win, {
+        title: t("bk.export.title"),
+        defaultPath: path.join(app.getPath("documents"), name.replace(/\.zip$/, "") + (isZip ? ".zip" : "")),
+        filters: isZip ? [{ name: "ZIP", extensions: ["zip"] }] : [],
+      });
+      if (r.canceled || !r.filePath) return { ok: false, msg: "" };
+      out = r.filePath;
+    }
+    if (fs.statSync(full).isDirectory()) fs.cpSync(full, out, { recursive: true, force: true });
+    else fs.copyFileSync(full, out);
+    log(`[备份] ${t("bk.exported", out)}`);
+    return { ok: true, dest: out, msg: t("bk.exported", out) };
+  } catch (e) { return { ok: false, msg: String(e) }; }
+}
+async function bkOpenDir() {
+  try { fs.mkdirSync(bkRoot(), { recursive: true }); shell.openPath(bkRoot()); return { ok: true }; }
+  catch (e) { return { ok: false, msg: String(e) }; }
+}
+async function bkPrune() { const n = bkPruneSync(); return { ok: true, removed: n, msg: t("bk.pruned", n) }; }
+// 定时自动备份 (bk_auto / bk_auto_every / bk_auto_time; 开关在设置页改动即时生效, 无需重启)
+// 每分钟巡检一次: 到点且距上次备份已超过一个周期才执行, 避免每次启动都在启动后 1 分钟补跑
+function setupBkAuto() {
+  const periodMs = () => (S.bk_auto_every === "weekly" ? 7 : 1) * 864e5;
+  let last = 0;
+  const atTime = () => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(S.bk_auto_time || "").trim());
+    return m ? (parseInt(m[1], 10) % 24) * 60 + (parseInt(m[2], 10) % 60) : 3 * 60;
+  };
+  const weeklyDays = () => {
+    const raw = String(S.bk_schedule_days || "").trim();
+    const d = raw.split(",").map((x) => parseInt(x.trim())).filter((x) => x >= 0 && x <= 6);
+    return d.length ? d : [1]; // 空=周一
+  };
+  const tick = () => {
+    if (!S.bk_auto || S.bk_enabled === false) return;
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    if (cur !== atTime()) return;                                        // 只在设定时刻那一分钟触发
+    if (S.bk_auto_every === "weekly" && !weeklyDays().includes(now.getDay())) return;
+    if (Date.now() - last < periodMs() - 36e5) return;             // 同周期内不重复
+    last = Date.now();
+    bkBackupNow(t("bk.auto"), S.bk_scope).then((r) => log(`[备份] 自动: ${r.ok ? "OK " + r.name : r.msg}`)).catch(() => {});
+  };
+  setInterval(tick, 60000);
 }
 
 // 自动更新倒计时确认: 推送渲染层横幅, 用户可"立即更新"或"本次跳过", 超时自动开更
@@ -1694,6 +2153,16 @@ ipcMain.handle("restore-backup", async (e, name) => {
     return { ok: true, file };
   } catch (err) { return { ok: false, msg: String(err).slice(0, 120) }; }
 });
+
+// ---------------- 备份与恢复 (Hermes Agent 配置/数据) IPC ----------------
+ipcMain.handle("bk-scopes", () => BK_SCOPE_KEYS.slice());
+ipcMain.handle("bk-list", () => bkList());
+ipcMain.handle("bk-backup-now", (e, payload) => bkBackupNow(payload && payload.note, payload && payload.scope));
+ipcMain.handle("bk-restore", (e, name) => bkRestore(name));
+ipcMain.handle("bk-delete", (e, name) => bkDelete(name));
+ipcMain.handle("bk-export", (e, payload) => bkExport(payload && payload.name, payload && payload.dest));
+ipcMain.handle("bk-open-dir", () => bkOpenDir());
+ipcMain.handle("bk-prune", () => bkPrune());
 
 // ---------------- 空间清理向导 ----------------
 let cleaning = false;

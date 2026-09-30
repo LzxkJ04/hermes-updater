@@ -4,7 +4,7 @@
 
 A polished Windows desktop GUI (Electron) for updating, installing, and maintaining the **Hermes Agent** — with mirror acceleration for mainland-China networks, one-click network self-healing, update hooks, and a full dashboard. Install, update, and maintain Hermes Agent from a single app.
 
-> **Latest release: v2.25.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
+> **Latest release: v2.27.0** — portable & installer binaries at [Releases](https://github.com/LzxkJ04/hermes-updater/releases)。
 
 ---
 
@@ -43,8 +43,15 @@ A polished Windows desktop GUI (Electron) for updating, installing, and maintain
 - Update statistics (success rate, monthly trend, top failure reasons), update heatmap, disk cleanup wizard
 - App-internal notification center + Windows toast notifications
 
+### Backup & Restore
+- Snapshot Hermes **user data** into one backup (optionally `.zip`) and restore it with one click; the page lists every backup with **restore / export / delete**
+- **21 selectable scopes**: sessions, skills/software, plugins (+ desktop plugins), config, env vars, auth, zh-patches, memories, vault, hooks, cron, kanban, projects, state DB, shared data, pets, platforms, pairing, sandboxes, data, logs
+- **25 backup settings**: scheduled backups (daily/weekly + exact time + weekdays), keep-by-count, keep-by-age, restore-only-these-scopes, compression level, stop processes first, integrity check, `manifest.sha256`, auto-backup before restore, auto-backup before update, desktop notifications, exclude rules, and more
+- Safety net: optionally snapshot the current state before restoring, then verify what landed on disk
+- Tray submenu "💾 Backup & Restore": back up now (balloon) / open page / open folder / settings
+
 ### Settings
-- 70+ persisted settings across update / network / install / uninstall / appearance / automation
+- 95+ persisted settings across update / network / install / uninstall / backup / appearance / automation
 - Bilingual UI (简体中文 / English), dark mode + follow-system, UI zoom, single-instance lock
 
 ## 📘 Usage Guide

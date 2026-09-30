@@ -157,6 +157,7 @@ const STR = {
     "upd.busy": "已有更新在进行中", "upd.confirm": (b) => `当前状态: ${b}\n确定立即更新吗?\n\n更新前会自动备份并清理残留进程。`,
     "upd.cancelled": "已取消更新", "upd.preparing": "准备更新...", "upd.started": "开始更新...", "upd.done": "更新完成", "upd.fail": "更新失败",
     "st.upd.ok": "更新成功", "st.upd.fail": "更新失败",
+    "st.stage.pull": "拉取更新", "st.stage.delta": "解压增量", "st.stage.checkout": "检出文件", "st.stage.deps": "安装依赖", "st.stage.pack": "打包应用", "st.stage.finish": "收尾中",
     "theme.dark": "已切换深色主题", "theme.light": "已切换浅色主题",
     "top.trans": "翻译面板",
     "trans.title": "🌐 实时翻译", "trans.all": "翻译全部输出", "trans.clear": "清空", "trans.send": "翻译",
@@ -310,6 +311,52 @@ const STR = {
     "chk.dashconfirm": "仪表盘快捷卸载前需二次确认",
     "chk.dashhist": "仪表盘显示最近安装/卸载记录摘要",
     "label.dashhistrows": "安装记录摘要条数(1-10)",
+    // ---- 备份与恢复 ----
+    "nav.backup": "备份与恢复", "page.backup.t": "备份与恢复", "page.backup.s": "备份 / 还原 Hermes 会话、技能、插件、配置等数据",
+    "bk.banner.s": "备份 Hermes 会话 / 技能 / 插件 / 配置等数据，出问题可一键还原",
+    "bk.now.title": "📦 创建备份", "bk.scope.label": "本次备份范围", "bk.note.label": "备注（可选，会写进备份名）", "bk.note.ph": "例如: 更新前",
+    "bk.btn.now": "📦 立即备份", "bk.btn.refresh": "🔄 刷新列表", "bk.btn.opendir": "📂 打开备份目录", "bk.btn.prune": "🧹 清理超额备份",
+    "bk.btn.settings": "⚙️ 备份设置", "bk.btn.gopage": "💾 打开备份与恢复页", "bk.list.title": "🕘 备份列表",
+    "bk.hint": "备份写入「文档\\HermesUpdater-Backups\\agent」（可在设置页改目录）。开启「备份前停止 Hermes 进程」可避免文件占用导致备份不全。恢复会覆盖同名文件，建议先给当前状态留一份备份。",
+    "set.backup": "💾 备份与恢复", "set.backup.tip": "备份 Hermes 的会话 / 技能 / 插件 / 配置等用户数据，出问题可一键还原（与「维护」里的数据包备份相互独立）。",
+    "chk.bk.enabled": "启用「备份与恢复」（关闭后禁止新建/恢复，仅可查看）", "chk.bk.auto": "定时自动备份（每天 / 每周一次）",
+    "chk.bk.zip": "压缩为 .zip（关闭则保留文件夹形式）", "chk.bk.stop": "备份 / 恢复前先停止 Hermes 进程（避免文件占用）",
+    "chk.bk.verify": "备份后校验完整性（内容为空或产物缺失时报错）",
+    "label.bk.dir": "备份目录（留空 = 默认目录）", "ph.bk.dir": "留空使用 文档\\HermesUpdater-Backups\\agent",
+    "label.bk.every": "自动备份频率", "opt.bk.daily": "每天一次", "opt.bk.weekly": "每周一次",
+    "label.bk.keep": "备份保留份数(1-60)", "label.bk.scope": "默认备份范围",
+    "chk.bk.prune": "每次备份后自动清理超额份数（按保留份数）", "chk.bk.hash": "生成 manifest.sha256 校验清单（可事后核对文件是否被改动）",
+    "chk.bk.restoreab": "恢复前先自动备份当前状态（留一条后路）", "chk.bk.notify": "备份完成 / 恢复完成弹桌面通知",
+    "chk.bk.openafter": "备份完成后自动打开备份目录",
+    "chk.bk.onupdate": "每次更新 Hermes 前自动备份一次（更新失败可回滚用户数据）",
+    "chk.bk.failonly": "只在失败时弹通知（成功静默）",
+    "chk.bk.skipempty": "跳过空文件 / 空目录（让备份更精简）",
+    "chk.bk.hidden": "包含 . 开头的隐藏项",
+    "chk.bk.verifyrestore": "恢复后校验落盘情况（日志里报告缺失数）",
+    "label.bk.days": "每周备份的周几 (0=周日, 逗号分隔)", "label.bk.days2": "按天数保留 (超过 N 天自动清理, 0=不限)",
+    "label.bk.level": "zip 压缩级别", "opt.bk.lvl.optimal": "最佳压缩（体积最小，稍慢）", "opt.bk.lvl.fastest": "最快（体积略大）", "opt.bk.lvl.none": "不压缩（仅打包，最快）",
+    "label.bk.time": "自动备份时刻", "label.bk.restorescope": "恢复时只还原这些范围（全不选 = 整份还原）",
+    "label.bk.exclude": "排除规则（每行一条，相对安装目录，支持 * 通配）", "ph.bk.exclude": "logs\ndata/cache\n*.tmp",
+    "bk.btn.scopeall": "☑️ 全选范围", "bk.btn.scopedef": "🔧 恢复默认范围", "bk.scope.all": "已全选备份范围", "bk.scope.reset": "已恢复默认备份范围",
+    "set.backup.hint": "「会话 / 技能 / 插件」是最容易丢的用户数据，建议至少勾选这三类；数据库（state.db 等）运行中会被持续写入，勾选后请务必开启「备份前停止 Hermes 进程」。",
+    "bk.scope.config": "配置", "bk.scope.env": "环境变量", "bk.scope.auth": "认证", "bk.scope.sessions": "会话", "bk.scope.skills": "技能/软件",
+    "bk.scope.plugins": "插件", "bk.scope.zhpatches": "中文补丁", "bk.scope.memories": "记忆库", "bk.scope.vault": "凭据库",
+    "bk.scope.hooks": "钩子脚本", "bk.scope.cron": "定时任务", "bk.scope.kanban": "看板", "bk.scope.projects": "项目库", "bk.scope.state": "状态库",
+    "bk.scope.shared": "共享数据", "bk.scope.pets": "宠物", "bk.scope.platforms": "平台配置", "bk.scope.pairing": "配对/消息",
+    "bk.scope.sandbox": "沙箱", "bk.scope.data": "数据包", "bk.scope.logs": "运行日志",
+    "bk.empty": "还没有任何备份，点「📦 立即备份」创建第一份", "bk.count": (n) => `共 ${n} 份备份`, "bk.nitem": (n) => `${n} 项`,
+    "bk.doing": "正在备份（会先停止 Hermes 进程），请稍候...", "bk.noscope": "请至少勾选一项备份范围",
+    "bk.ok": (n, c, s) => `✅ 备份完成: ${n}（${c} 项, ${s} MB）`, "bk.err": (m) => `❌ 备份失败: ${m}`,
+    "bk.row.restore": "♻️ 恢复", "bk.row.export": "📤 导出", "bk.row.del": "🗑️ 删除",
+    "bk.restore.confirm": (n) => `确定从备份「${n}」恢复吗？\n\n恢复会覆盖当前安装目录中的同名文件，建议先备份当前状态。`,
+    "bk.restore.doing": "正在恢复，请稍候...", "bk.restore.ok": (n, c) => `✅ 已从「${n}」恢复 ${c} 项`, "bk.restore.err": (m) => `❌ 恢复失败: ${m}`,
+    "bk.del.confirm": (n) => `确定删除备份「${n}」吗？此操作不可撤销。`, "bk.del.ok": (n) => `🗑️ 已删除备份: ${n}`,
+    "bk.export.ok": (p) => `📤 已导出到: ${p}`, "bk.export.err": (m) => `❌ 导出失败: ${m}`,
+    "bk.prune.ok": (n) => `🧹 已清理 ${n} 份超额备份`, "bk.prune.none": "没有需要清理的超额备份",
+    "bk.list.fail": (m) => `读取备份列表失败: ${m}`, "bk.dir.tip": (d) => `备份目录: ${d}`,
+    "opt.page.backup": "💾 备份与恢复",
+    "bk.zip": "zip", "bk.folder": "文件夹", "bk.note.mark": (n) => `备注: ${n}`, "bk.ver.mark": (v) => `v${v}`,
+    "bk.head.mark": (h) => `@${h}`, "bk.scope.mark": (s) => `范围: ${s}`, "bk.preview": "浏览器预览模式，备份功能不可用",
   },
   en: {
     "brand.sub": "Updater", "boot.loading": "Loading HermesUpdater...",
@@ -462,6 +509,7 @@ const STR = {
     "upd.busy": "An update is already in progress", "upd.confirm": (b) => `Current status: ${b}\nUpdate now?\n\nA backup is made and leftover processes are killed first.`,
     "upd.cancelled": "Update cancelled", "upd.preparing": "Preparing...", "upd.started": "Updating...", "upd.done": "Done", "upd.fail": "Failed",
     "st.upd.ok": "Update succeeded", "st.upd.fail": "Update failed",
+    "st.stage.pull": "Fetching", "st.stage.delta": "Applying", "st.stage.checkout": "Checking out", "st.stage.deps": "Installing deps", "st.stage.pack": "Packaging", "st.stage.finish": "Finishing",
     "theme.dark": "Dark theme on", "theme.light": "Light theme on",
     "top.trans": "Translation panel",
     "trans.title": "🌐 Live Translation", "trans.all": "Translate all output", "trans.clear": "Clear", "trans.send": "Go",
@@ -615,6 +663,52 @@ const STR = {
     "chk.dashconfirm": "Require confirmation before dashboard quick uninstall",
     "chk.dashhist": "Show recent install/uninstall summary on the dashboard",
     "label.dashhistrows": "Install summary rows (1-10)",
+    // ---- Backup & Restore ----
+    "nav.backup": "Backup & Restore", "page.backup.t": "Backup & Restore", "page.backup.s": "Back up / restore Hermes sessions, skills, plugins, config and more",
+    "bk.banner.s": "Back up Hermes sessions / skills / plugins / config, restore with one click",
+    "bk.now.title": "📦 Create backup", "bk.scope.label": "Scope for this backup", "bk.note.label": "Note (optional, added to the backup name)", "bk.note.ph": "e.g. before-update",
+    "bk.btn.now": "📦 Back up now", "bk.btn.refresh": "🔄 Refresh list", "bk.btn.opendir": "📂 Open backup folder", "bk.btn.prune": "🧹 Prune excess backups",
+    "bk.btn.settings": "⚙️ Backup settings", "bk.btn.gopage": "💾 Open Backup & Restore page", "bk.list.title": "🕘 Backup list",
+    "bk.hint": "Backups are written to Documents\\HermesUpdater-Backups\\agent (change the folder in Settings). Enable \"Stop Hermes processes before backup\" to avoid incomplete copies. Restoring overwrites same-named files, so keep a backup of the current state first.",
+    "set.backup": "💾 Backup & Restore", "set.backup.tip": "Back up Hermes user data (sessions / skills / plugins / config) and restore it later (independent from the data-package backup under Maintenance).",
+    "chk.bk.enabled": "Enable Backup & Restore (when off, creating/restoring is blocked, list stays readable)", "chk.bk.auto": "Scheduled automatic backup (daily / weekly)",
+    "chk.bk.zip": "Compress into .zip (off = keep as a folder)", "chk.bk.stop": "Stop Hermes processes before backup / restore (avoid file locks)",
+    "chk.bk.verify": "Verify integrity after backup (fail if empty or artifact missing)",
+    "label.bk.dir": "Backup folder (blank = default)", "ph.bk.dir": "Blank = Documents\\HermesUpdater-Backups\\agent",
+    "label.bk.every": "Auto backup frequency", "opt.bk.daily": "Once a day", "opt.bk.weekly": "Once a week",
+    "label.bk.keep": "Backups to keep (1-60)", "label.bk.scope": "Default backup scope",
+    "chk.bk.prune": "Auto-prune excess backups after each backup", "chk.bk.hash": "Write a manifest.sha256 checksum list (verify files later)",
+    "chk.bk.restoreab": "Auto-backup current state before restoring (safety net)", "chk.bk.notify": "Desktop notification when backup / restore finishes",
+    "chk.bk.openafter": "Open the backup folder when a backup finishes",
+    "chk.bk.onupdate": "Auto-backup before every Hermes update (rollback safety net)",
+    "chk.bk.failonly": "Only notify on failure (stay silent on success)",
+    "chk.bk.skipempty": "Skip empty files / empty folders (leaner backups)",
+    "chk.bk.hidden": "Include dot-prefixed hidden entries",
+    "chk.bk.verifyrestore": "Verify on-disk result after restore (report missing count in log)",
+    "label.bk.days": "Weekly backup days (0=Sunday, comma separated)", "label.bk.days2": "Keep by age (auto-prune older than N days, 0=no limit)",
+    "label.bk.level": "ZIP compression level", "opt.bk.lvl.optimal": "Optimal (smallest, slower)", "opt.bk.lvl.fastest": "Fastest (slightly larger)", "opt.bk.lvl.none": "No compression (pack only, fastest)",
+    "label.bk.time": "Auto backup time", "label.bk.restorescope": "Only restore these scopes (none = restore everything)",
+    "label.bk.exclude": "Exclude rules (one per line, relative to install dir, * wildcard ok)", "ph.bk.exclude": "logs\ndata/cache\n*.tmp",
+    "bk.btn.scopeall": "☑️ Select all scopes", "bk.btn.scopedef": "🔧 Reset to default scopes", "bk.scope.all": "All backup scopes selected", "bk.scope.reset": "Backup scopes reset to default",
+    "set.backup.hint": "Sessions / skills / plugins are the easiest data to lose — keep at least those three checked. Databases (state.db etc.) are written continuously while running, so enable \"Stop Hermes processes before backup\" if you include them.",
+    "bk.scope.config": "Config", "bk.scope.env": "Env vars", "bk.scope.auth": "Auth", "bk.scope.sessions": "Sessions", "bk.scope.skills": "Skills/software",
+    "bk.scope.plugins": "Plugins", "bk.scope.zhpatches": "zh-patches", "bk.scope.memories": "Memories", "bk.scope.vault": "Vault",
+    "bk.scope.hooks": "Hooks", "bk.scope.cron": "Cron jobs", "bk.scope.kanban": "Kanban", "bk.scope.projects": "Projects", "bk.scope.state": "State DB",
+    "bk.scope.shared": "Shared data", "bk.scope.pets": "Pets", "bk.scope.platforms": "Platforms", "bk.scope.pairing": "Pairing",
+    "bk.scope.sandbox": "Sandboxes", "bk.scope.data": "Data", "bk.scope.logs": "Logs",
+    "bk.empty": "No backups yet — click \"📦 Back up now\" to create the first one", "bk.count": (n) => `${n} backup(s)`, "bk.nitem": (n) => `${n} item(s)`,
+    "bk.doing": "Backing up (Hermes processes will be stopped first), please wait...", "bk.noscope": "Select at least one backup scope",
+    "bk.ok": (n, c, s) => `✅ Backup finished: ${n} (${c} item(s), ${s} MB)`, "bk.err": (m) => `❌ Backup failed: ${m}`,
+    "bk.row.restore": "♻️ Restore", "bk.row.export": "📤 Export", "bk.row.del": "🗑️ Delete",
+    "bk.restore.confirm": (n) => `Restore from backup "${n}"?\n\nThis overwrites same-named files in the current install folder. Back up the current state first.`,
+    "bk.restore.doing": "Restoring, please wait...", "bk.restore.ok": (n, c) => `✅ Restored ${c} item(s) from "${n}"`, "bk.restore.err": (m) => `❌ Restore failed: ${m}`,
+    "bk.del.confirm": (n) => `Delete backup "${n}"? This cannot be undone.`, "bk.del.ok": (n) => `🗑️ Backup deleted: ${n}`,
+    "bk.export.ok": (p) => `📤 Exported to: ${p}`, "bk.export.err": (m) => `❌ Export failed: ${m}`,
+    "bk.prune.ok": (n) => `🧹 Pruned ${n} excess backup(s)`, "bk.prune.none": "No excess backups to prune",
+    "bk.list.fail": (m) => `Failed to read backup list: ${m}`, "bk.dir.tip": (d) => `Backup folder: ${d}`,
+    "opt.page.backup": "💾 Backup & Restore",
+    "bk.zip": "zip", "bk.folder": "folder", "bk.note.mark": (n) => `note: ${n}`, "bk.ver.mark": (v) => `v${v}`,
+    "bk.head.mark": (h) => `@${h}`, "bk.scope.mark": (s) => `scope: ${s}`, "bk.preview": "Browser preview mode — backup is unavailable",
   },
 };
 function tr(key, ...args) {
@@ -667,6 +761,7 @@ function showPage(key) {
   if (key === "dash") loadDashTools();
   if (key === "update") { refreshTargetCurrent(); }
   if (key === "settings") loadHooks();
+  if (key === "backup") refreshBackupList();
 }
 // 诊断页: 最近连通性测试历史 (label 为用户可输入内容, 插入前转义)
 async function renderConnTests() {
@@ -934,6 +1029,8 @@ function progressFromLine(line) {
   for (const [keys, pct] of rules) if (keys.some((k) => low.includes(k))) max = Math.max(max, pct);
   return max;
 }
+// 进度阶段文案 (与 progressFromLine 的档位对应, 让进度条更直观)
+const PCT_STAGE = { 45: "pull", 60: "delta", 78: "checkout", 88: "deps", 90: "pack", 96: "finish" };
 // 进度同步: 更新页 / 仪表盘 / 日志页 三处进度条统一驱动
 function syncProgress(pct, label, visible) {
   const spots = [
@@ -947,7 +1044,7 @@ function syncProgress(pct, label, visible) {
     we.hidden = !visible;
     if (le) le.hidden = !visible || !label;
     if (le && label) le.textContent = label;
-    if (be) be.style.width = pct + "%";
+    if (be) { be.style.width = pct + "%"; be.style.setProperty("--pct", pct + "%"); }
   }
 }
 if (rpc) {
@@ -959,7 +1056,7 @@ if (rpc) {
     appendUpdateLine(disp);
     transEnqueue(line);
     const pct = progressFromLine(line);
-    if (pct) { syncProgress(pct, `${pct}%`, true); }
+    if (pct) { const k = PCT_STAGE[pct]; syncProgress(pct, (k ? t("st.stage." + k) + " " : "") + pct + "%", true); }
   });
   rpc.onUpdateDone((d) => {
     updating = false;
@@ -1097,6 +1194,36 @@ async function loadSettingsUI() {
   $("#s-trans-provider").value = s.translate_provider || "auto";
   $("#s-trans-order").value = s.translate_engines_order || "";
   $("#s-trans-dict").value = (s.translate_custom_dict || []).join("\n");
+  // ---- 备份与恢复 (会话 / 技能 / 插件 / 配置等用户数据) ----
+  $("#s-bk-enabled").checked = s.bk_enabled !== false;
+  $("#s-bk-dir").value = s.bk_dir || "";
+  $("#s-bk-auto").checked = !!s.bk_auto;
+  $("#s-bk-auto-every").value = s.bk_auto_every === "weekly" ? "weekly" : "daily";
+  $("#s-bk-keep").value = Math.min(Math.max(parseInt(s.bk_keep) || 7, 1), 60);
+  $("#s-bk-zip").checked = s.bk_zip !== false;
+  $("#s-bk-stop-proc").checked = s.bk_stop_proc !== false;
+  $("#s-bk-verify").checked = s.bk_verify !== false;
+  $("#s-bk-prune-after").checked = s.bk_prune_after !== false;
+  $("#s-bk-hash").checked = !!s.bk_hash;
+  $("#s-bk-restore-autobackup").checked = s.bk_restore_autobackup !== false;
+  $("#s-bk-notify").checked = s.bk_notify !== false;
+  $("#s-bk-open-after").checked = !!s.bk_open_after;
+  $("#s-bk-on-update").checked = s.bk_on_update !== false;
+  $("#s-bk-notify-fail-only").checked = !!s.bk_notify_fail_only;
+  $("#s-bk-skip-empty").checked = !!s.bk_skip_empty;
+  $("#s-bk-include-hidden").checked = s.bk_include_hidden !== false;
+  $("#s-bk-verify-restore").checked = !!s.bk_verify_restore;
+  $("#s-bk-auto-time").value = /^\d{2}:\d{2}$/.test(s.bk_auto_time || "") ? s.bk_auto_time : "03:00";
+  $("#s-bk-schedule-days").value = s.bk_schedule_days || "";
+  $("#s-bk-retention-days").value = parseInt(s.bk_retention_days) || 0;
+  $("#s-bk-compress-level").value = ["optimal", "fastest", "none"].includes(s.bk_compress_level) ? s.bk_compress_level : "optimal";
+  $("#s-bk-exclude").value = s.bk_exclude || "";
+  await loadBkScopes(); // 范围清单由主进程提供, 避免两边硬编码漂移
+  const bkSel = (Array.isArray(s.bk_scope) && s.bk_scope.length) ? s.bk_scope : BK_DEFAULT_SCOPE;
+  renderBkScopes($("#s-bk-scope-row"), bkSel, "bk-scope-cb");
+  renderBkScopes($("#s-bk-restore-scope-row"), Array.isArray(s.bk_restore_scope) ? s.bk_restore_scope : [], "bk-restore-cb");
+  renderBkScopes($("#bk-scope-row"), bkSel, "bk-page-cb");
+  $("#bk-dir-tip").textContent = s.bk_dir ? t("bk.dir.tip", s.bk_dir) : "";
   $("#s-accent").value = s.accent || "blue";
   applyAccent(s.accent || "blue");
   renderProfileList(s.profiles || []);
@@ -1212,6 +1339,38 @@ function collectSettings() {
     translate_engines_order: $("#s-trans-order").value.trim(),
     translate_custom_dict: $("#s-trans-dict").value.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.includes("=")).slice(0, 200),
     accent: $("#s-accent").value,
+    // 备份与恢复: 范围复选框由 renderBkScopes 动态渲染, 未渲染时回落到默认范围
+    bk_enabled: $("#s-bk-enabled").checked,
+    bk_dir: $("#s-bk-dir").value.trim(),
+    bk_auto: $("#s-bk-auto").checked,
+    bk_auto_every: $("#s-bk-auto-every").value === "weekly" ? "weekly" : "daily",
+    bk_keep: (() => { const v = parseInt($("#s-bk-keep").value); return isNaN(v) ? 7 : Math.min(Math.max(v, 1), 60); })(),
+    bk_scope: (() => {
+      const boxes = $$("#s-bk-scope-row .bk-scope-cb");
+      return boxes.length ? boxes.filter((c) => c.checked).map((c) => c.value) : BK_DEFAULT_SCOPE;
+    })(),
+    bk_zip: $("#s-bk-zip").checked,
+    bk_stop_proc: $("#s-bk-stop-proc").checked,
+    bk_verify: $("#s-bk-verify").checked,
+    bk_auto_time: /^\d{2}:\d{2}$/.test($("#s-bk-auto-time").value) ? $("#s-bk-auto-time").value : "03:00",
+    bk_prune_after: $("#s-bk-prune-after").checked,
+    bk_hash: $("#s-bk-hash").checked,
+    bk_restore_autobackup: $("#s-bk-restore-autobackup").checked,
+    bk_restore_scope: $$("#s-bk-restore-scope-row .bk-restore-cb").filter((c) => c.checked).map((c) => c.value),
+    bk_notify: $("#s-bk-notify").checked,
+    bk_open_after: $("#s-bk-open-after").checked,
+    bk_exclude: $("#s-bk-exclude").value,
+    bk_on_update: $("#s-bk-on-update").checked,
+    bk_notify_fail_only: $("#s-bk-notify-fail-only").checked,
+    bk_skip_empty: $("#s-bk-skip-empty").checked,
+    bk_include_hidden: $("#s-bk-include-hidden").checked,
+    bk_verify_restore: $("#s-bk-verify-restore").checked,
+    bk_schedule_days: (() => {
+      const d = $("#s-bk-schedule-days").value.split(",").map((x) => parseInt(x.trim())).filter((x) => x >= 0 && x <= 6);
+      return [...new Set(d)].sort().join(",");
+    })(),
+    bk_retention_days: Math.min(Math.max(parseInt($("#s-bk-retention-days").value) || 0, 0), 3650),
+    bk_compress_level: $("#s-bk-compress-level").value,
     language: LANG,
   };
 }
@@ -2184,6 +2343,11 @@ $("#tr-input").addEventListener("keydown", (e) => { if (e.key === "Enter") manua
 if (rpc) {
   rpc.onNav((key) => showPage(key));
   rpc.onDoCheck(() => { refreshStatus(true); });
+  // 侧栏真实版本号 (修复原先 HTML 写死 v2.24.0 从不更新的问题)
+  rpc.getAppInfo().then((i) => {
+    const el = $("#app-ver");
+    if (el && i && i.version) el.textContent = "v" + i.version;
+  }).catch(() => {});
 }
 loadSettingsUI().then(() => armNextCheck());
 document.body.classList.add("booting");   // 卡片骨架屏, 快速填充完成后撤下
@@ -2521,6 +2685,133 @@ $("#btn-backup-list").addEventListener("click", async () => {
     if (r && r.ok) { toast(t("bkp.restored", f), "ok", 5000); loadSettingsUI(); }
     else toast((r && r.msg) || "fail", "err", 5000);
   }));
+});
+
+// ---------------- 备份与恢复: 会话 / 技能 / 插件 / 配置等用户数据 (v2.27.0) ----------------
+const BK_DEFAULT_SCOPE = ["config", "sessions", "skills", "plugins", "zhpatches"];
+const BK_SCOPE_FALLBACK = ["config", "env", "auth", "sessions", "skills", "plugins", "zhpatches", "memories", "vault", "hooks", "cron", "kanban", "projects", "state", "shared", "pets", "platforms", "pairing", "sandbox", "data", "logs"];
+let BK_SCOPE_CACHE = [];
+// 范围清单由主进程 bk-scopes 提供 (两边不各写一份, 避免漂移); 预览/失败时回落内置清单
+async function loadBkScopes() {
+  if (rpc) { try { const r = await rpc.bkScopes(); if (Array.isArray(r) && r.length) BK_SCOPE_CACHE = r; } catch {} }
+  if (!BK_SCOPE_CACHE.length) BK_SCOPE_CACHE = BK_SCOPE_FALLBACK.slice();
+  return BK_SCOPE_CACHE;
+}
+// 动态渲染范围复选框; 标签带 data-i18n, 切语言时 applyI18n 会自动刷新
+function renderBkScopes(container, selected, cls) {
+  if (!container) return;
+  const sel = Array.isArray(selected) ? selected : [];
+  container.innerHTML = "";
+  for (const k of BK_SCOPE_CACHE) {
+    const lab = document.createElement("label");
+    lab.className = "check";
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.className = cls; cb.value = k; cb.checked = sel.includes(k);
+    const sp = document.createElement("span");
+    sp.dataset.i18n = "bk.scope." + k;
+    sp.textContent = t("bk.scope." + k);
+    lab.appendChild(cb); lab.appendChild(sp);
+    container.appendChild(lab);
+  }
+}
+function bkPageScopes() { return $$("#bk-scope-row .bk-page-cb").filter((c) => c.checked).map((c) => c.value); }
+function bkStatus(msg, kind) {
+  const el = $("#bk-status");
+  if (!el) return;
+  el.textContent = msg || "";
+  el.style.color = kind === "ok" ? "var(--success)" : kind === "err" ? "var(--danger)" : "";
+}
+async function refreshBackupList() {
+  const list = $("#bk-list");
+  if (!list) return;
+  if (!rpc) { list.innerHTML = `<div class="rb-item muted">${t("bk.preview")}</div>`; return; }
+  try {
+    const items = await rpc.bkList();
+    $("#bk-count").textContent = t("bk.count", items.length);
+    if (!items.length) { list.innerHTML = `<div class="rb-item muted">${t("bk.empty")}</div>`; return; }
+    list.innerHTML = "";
+    for (const b of items) {
+      const scopes = (b.scope || []).map((k) => t("bk.scope." + k)).join("/");
+      const meta = [b.isZip ? t("bk.zip") : t("bk.folder"), `${b.sizeMB} MB`, t("bk.nitem", (b.items || []).length),
+        scopes, b.hasHash ? "🔐 sha256" : "", b.note ? t("bk.note.mark", b.note) : "", b.head ? t("bk.head.mark", b.head) : ""].filter(Boolean).join(" · ");
+      const row = document.createElement("div");
+      row.className = "rb-item";
+      row.innerHTML = `<span>💾</span><span class="mono">${escHtml(b.time)}</span>`
+        + `<span style="flex:1;min-width:0;word-break:break-all">${escHtml(b.name)}</span>`
+        + `<span style="font-size:11px;color:var(--muted)">${escHtml(meta)}</span>`;
+      const mk = (label, cls, fn) => {
+        const btn = document.createElement("button");
+        btn.className = `btn sm ${cls}`; btn.textContent = label; btn.style.marginLeft = "6px";
+        btn.addEventListener("click", fn); row.appendChild(btn);
+      };
+      mk(t("bk.row.restore"), "primary", async () => {
+        if (!confirm(t("bk.restore.confirm", b.name))) return;
+        toast(t("bk.restore.doing"), "info", 4000);
+        const r = await rpc.bkRestore(b.name);
+        if (r && r.ok) { const m = t("bk.restore.ok", b.name, r.copied || 0); toast(m, "ok", 5000); bkStatus(m, "ok"); }
+        else { const m = t("bk.restore.err", (r && r.msg) || "?"); toast(m, "err", 5000); bkStatus(m, "err"); }
+      });
+      mk(t("bk.row.export"), "", async () => {
+        const r = await rpc.bkExport({ name: b.name }); // dest 留空 -> 主进程弹保存对话框
+        if (r && r.ok) toast(t("bk.export.ok", r.dest), "ok", 5000);
+        else if (r && r.msg) toast(t("bk.export.err", r.msg), "err", 5000);
+      });
+      mk(t("bk.row.del"), "warn", async () => {
+        if (!confirm(t("bk.del.confirm", b.name))) return;
+        const r = await rpc.bkDelete(b.name);
+        if (r && r.ok) { toast(t("bk.del.ok", b.name), "ok", 4000); refreshBackupList(); }
+        else toast((r && r.msg) || "fail", "err", 4000);
+      });
+      list.appendChild(row);
+    }
+  } catch (e) {
+    list.innerHTML = `<div class="rb-item">${escHtml(t("bk.list.fail", e))}</div>`;
+  }
+}
+$("#btn-bk-now").addEventListener("click", async () => {
+  if (!rpc) return toast(t("bk.preview"), "info");
+  const scope = bkPageScopes();
+  if (!scope.length) return toast(t("bk.noscope"), "warn", 3000);
+  const btn = $("#btn-bk-now");
+  busy(btn, true);
+  toast(t("bk.doing"), "info", 5000);
+  bkStatus(t("bk.doing"));
+  try {
+    const r = await rpc.bkBackupNow({ note: $("#bk-note").value.trim(), scope });
+    if (r && r.ok) {
+      const m = t("bk.ok", r.name, (r.items || []).length, r.sizeMB || 0);
+      toast(m, "ok", 5000); bkStatus(m, "ok");
+      await refreshBackupList();
+    } else { const m = t("bk.err", (r && r.msg) || "?"); toast(m, "err", 6000); bkStatus(m, "err"); }
+  } finally { busy(btn, false); }
+});
+$("#btn-bk-refresh").addEventListener("click", () => refreshBackupList());
+async function bkOpenDir() {
+  if (!rpc) return toast(t("bk.preview"), "info");
+  const r = await rpc.bkOpenDir();
+  if (r && !r.ok) toast(r.msg || "fail", "err");
+}
+$("#btn-bk-opendir").addEventListener("click", bkOpenDir);
+$("#btn-bk-opendir2").addEventListener("click", bkOpenDir);
+$("#btn-bk-prune").addEventListener("click", async () => {
+  if (!rpc) return toast(t("bk.preview"), "info");
+  const r = await rpc.bkPrune();
+  if (r && r.ok) toast(r.removed > 0 ? t("bk.prune.ok", r.removed) : t("bk.prune.none"), "ok", 4000);
+  else toast((r && r.msg) || "fail", "err", 4000);
+  refreshBackupList();
+});
+$("#btn-bk-settings").addEventListener("click", () => showPage("settings"));
+$("#btn-bk-gopage").addEventListener("click", () => showPage("backup"));
+// 范围快捷操作: 全选 / 恢复默认 (改完走 onSettingsEdited, 保证脏检测与自动保存生效)
+$("#btn-bk-scope-all").addEventListener("click", () => {
+  $$("#s-bk-scope-row .bk-scope-cb").forEach((c) => { c.checked = true; });
+  toast(t("bk.scope.all"), "ok", 2200);
+  onSettingsEdited();
+});
+$("#btn-bk-scope-def").addEventListener("click", () => {
+  renderBkScopes($("#s-bk-scope-row"), BK_DEFAULT_SCOPE, "bk-scope-cb");
+  toast(t("bk.scope.reset"), "ok", 2200);
+  onSettingsEdited();
 });
 
 // ---------------- 仪表盘快捷中心: 安装 · 卸载 · 维护 (v2.22.0) ----------------
